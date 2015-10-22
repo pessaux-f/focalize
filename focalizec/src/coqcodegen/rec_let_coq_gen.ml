@@ -710,10 +710,23 @@ let print_user_binding_let binding =
     This output is lighter than its Coq version because it outputs
     some Focal source code.
 
+    {b Args}:
+    - [fun_params_n_tys]: *All* the parameters of the function with their
+      types.
+
     {b Exported}: Yes.                                                      *)
 (* ************************************************************************ *)
-let print_user_termination_obls_for_order fun_name recursive_calls user_order
-    rec_fun_used_arg_index =
+let print_user_termination_obls_for_order fun_name fun_params_n_tys
+    recursive_calls user_order rec_fun_used_arg_index =
+  (* Record the variables of the function appearing in the order
+     expression. *)
+  let vars_of_order_expr =
+    Parsetree_utils.get_free_local_vnames_from_expr_desc
+      user_order.Parsetree.ast_desc in
+  let params_in_order_expr =
+    List.filter
+      (fun (n, _) -> List.mem n vars_of_order_expr)
+      fun_params_n_tys in
   Format.printf
     "@\n\
     ---------------------------------------------------------------@\n\
@@ -761,9 +774,15 @@ let print_user_termination_obls_for_order fun_name recursive_calls user_order
       Format.printf ",@ %a)" Sourcify.pp_vname (fst initial_var) ;
       Format.printf "@]@\n")
     recursive_calls ;
-  (* Print the obligation stating the well-foundness of the order. *)
-  Format.printf "@[<2><1>%d prove is_well_founded@ (%a)@]@\n"
-    !counter Sourcify.pp_expr user_order ;
+  (* Print the obligation stating the well-foundedness of the order. *)
+  Format.printf "@[<2><1>%d prove " !counter ;
+  (* Bind the function parameters appearing in the measure expression. *)
+  List.iter
+    (fun (n, t) ->
+      Format.printf "all@ %a@ :@ %a,@ "
+        Sourcify.pp_vname n Types.pp_type_simple t)
+    params_in_order_expr ;
+  Format.printf "is_well_founded@ (%a)@]@\n" Sourcify.pp_expr user_order ;
   (* Print the conclusion step since it is always the same. *)
   Format.printf
     "@[<2><1>e qed coq proof {*wf_qed*}@]@\n\
@@ -779,10 +798,24 @@ let print_user_termination_obls_for_order fun_name recursive_calls user_order
     This output is lighter than its Coq version because it outputs
     some Focal source code.
 
+    {b Args}:
+    - [fun_params_n_tys]: *All* the parameters of the function with their
+      types.
+
     {b Exported}: Yes.                                                      *)
 (* ************************************************************************ *)
-let print_user_termination_obls_for_measure fun_name recursive_calls user_meas
-    rec_fun_used_arg_index rec_fun_used_param rec_fun_used_param_ty =
+let print_user_termination_obls_for_measure fun_name fun_params_n_tys
+    recursive_calls user_meas rec_fun_used_arg_index rec_fun_used_param
+    rec_fun_used_param_ty =
+  (* Record the variables of the function appearing in the order
+     expression. *)
+  let vars_of_meas_expr =
+    Parsetree_utils.get_free_local_vnames_from_expr_desc
+      user_meas.Parsetree.ast_desc in
+  let params_in_meas_expr =
+    List.filter
+      (fun (n, _) -> List.mem n vars_of_meas_expr)
+      fun_params_n_tys in
   Format.printf
     "@\n\
     ---------------------------------------------------------------@\n\
@@ -833,6 +866,12 @@ let print_user_termination_obls_for_measure fun_name recursive_calls user_meas
     recursive_calls ;
   (* Print the obligation stating the measure is always positive ot null. *)
   Format.printf "@[<2><1>%d prove@ " !counter   ;
+  (* Bind the function parameters appearing in the measure expression. *)
+  List.iter
+    (fun (n, t) ->
+      Format.printf "all@ %a@ :@ %a,@ "
+        Sourcify.pp_vname n Types.pp_type_simple t)
+    params_in_meas_expr ;
   Format.printf "all %a :@ %a,@ "
     Sourcify.pp_vname rec_fun_used_param
     Types.pp_type_simple rec_fun_used_param_ty ;
@@ -842,4 +881,220 @@ let print_user_termination_obls_for_measure fun_name recursive_calls user_meas
   Format.printf
     "@[<2><1>e qed coq proof {*mf_qed*}@]@\n\
      ---------------------------------------------------------------@\n"
+;;
+
+
+
+(** **************************************************************************
+    {b Descr} Create an application expr_desc.
+
+    {b Args}:
+    - [tuple_name] : The name of the tuple argument of the recursive function.
+      This tuple is the aggregation of the initial parameters of the recursive
+      function. This argument name is the one applied to the projection.
+    - [proj_name] : Name of the projection function to use.
+
+    {b Rem}: The compilation unit where to find the definition corresponding
+    to the projection function name is always assumed to be "basics".
+
+    {b Exported} : No.
+    ************************************************************************* *)
+let make_proj_app_desc ~tuple_name ~proj_name =
+  (* First, the argument of the projector. *)
+  let proj_arg_ident =
+    Parsetree_utils.make_ast
+      (Parsetree.EI_local (Parsetree.Vlident tuple_name)) in
+  let proj_arg = Parsetree_utils.make_ast (Parsetree.E_var proj_arg_ident) in
+  (* Then, the projector name. Assumed this will be always used with functions
+     coming from "basics". *)
+  let proj_name =
+    Parsetree_utils.make_ast
+      (Parsetree.E_var
+         (Parsetree_utils.make_ast
+            (Parsetree.EI_global
+               (Parsetree.Qualified ("basics",
+                                     (Parsetree.Vlident proj_name)))))) in
+  (* Finally, the application. *)
+  Parsetree.E_app (proj_name, [proj_arg])
+;;
+
+
+
+(** **************************************************************************
+    {b Descr} Substitute in an expression, all the occurrences of a function
+    parameters names by a projection on the variable [tuple_name] assumed to
+    be the tuple of all the parameters of the function.
+    This is used for the compilation of termination proofs (by measure or
+    order) of recursive functions.
+
+    {b Args}:
+    - [tuple_name] : The name of the tuple argument of the recursive function.
+      This tuple is the aggregation of the initial parameters of the recursive
+      function. This argument name is the one applied to the projection.
+    - [initial_expr] : The expression in which subsitutions are performed.
+    - [fun_arity] : The number of parameters of the recursive function
+      processed (the name of this function never appears here).
+
+    {b Exported} : No.
+    ************************************************************************* *)
+let subst_params_by_tuple_projections tuple_name initial_expr fun_arity
+    fun_params_n_tys =
+  (* Compute once for all the list containing only the parameters names. *)
+  let fun_params = List.map fst fun_params_n_tys in
+
+  (* Substitution in computational expressions. *)
+  let rec rec_subst_expr local_vars expr =
+    { expr with Parsetree.ast_desc =
+        rec_subst_expr_desc local_vars expr.Parsetree.ast_desc }
+  and rec_subst_expr_desc local_vars expr_desc =
+    match expr_desc with
+    | Parsetree.E_self | Parsetree.E_const _ | Parsetree.E_external _ ->
+        expr_desc
+    | Parsetree.E_fun (vnames, body) ->
+        Parsetree.E_fun (vnames, (rec_subst_expr (vnames @ local_vars) body))
+    | Parsetree.E_var id -> (
+        (* Function parameters are forcibly local identifiers. Hence ignore
+           the substitution for all the other kinds of identifiers. *)
+        match id.Parsetree.ast_desc with
+        | Parsetree.EI_local vname -> (
+            try
+              let p_index = Handy.list_index_of vname fun_params in
+              if p_index = 0 then (
+                make_proj_app_desc
+                  ~tuple_name
+                  ~proj_name: ("__tpl_firstpr" ^ (string_of_int fun_arity))
+               )
+              else (
+                make_proj_app_desc
+                  ~tuple_name
+                  ~proj_name: ("__tpl_lastprj" ^
+                               (string_of_int (fun_arity - p_index)))
+               )
+            with Not_found -> expr_desc
+          )
+        | Parsetree.EI_global _ | Parsetree.EI_method (_, _) -> expr_desc
+       )
+    | Parsetree.E_app (e, es) ->
+        let e' = rec_subst_expr local_vars e in
+        let es' = List.map (rec_subst_expr local_vars) es in
+        Parsetree.E_app (e', es')
+    | Parsetree.E_constr (constr_ident, es) ->
+        let es' = List.map (rec_subst_expr local_vars) es in
+        Parsetree.E_constr (constr_ident, es')
+    | Parsetree.E_match (e, pat_exprs) ->
+        let e' = rec_subst_expr local_vars e in
+        let pat_exprs' =
+          List.map
+            (fun (pat, ex) ->
+              (* Extract the variables of the pattern and add them to the
+                 known local variables. *)
+              let local_vars' =
+                (Parsetree_utils.get_local_idents_from_pattern pat)
+                @ local_vars in
+              (pat, (rec_subst_expr local_vars' ex)))
+            pat_exprs in
+        Parsetree.E_match (e', pat_exprs')
+    | Parsetree.E_if (e1, e2, e3) ->
+        let e1' = rec_subst_expr local_vars e1 in
+        let e2' = rec_subst_expr local_vars e2 in
+        let e3' = rec_subst_expr local_vars e3 in
+        Parsetree.E_if (e1', e2', e3')
+    | Parsetree.E_let (let_def, e) ->
+        let let_def' = rec_subst_let_def local_vars let_def in
+        let e' = rec_subst_expr local_vars e in
+        Parsetree.E_let (let_def', e')
+    | Parsetree.E_record label_exprs ->
+        let label_exprs' =
+          List.map
+            (fun (li, e) -> (li, rec_subst_expr local_vars e)) label_exprs in
+        Parsetree.E_record (label_exprs')
+    | Parsetree.E_record_access (e, label_name) ->
+        Parsetree.E_record_access ((rec_subst_expr local_vars e), label_name)
+    | Parsetree.E_record_with (e, label_exprs) ->
+        let e' = rec_subst_expr local_vars e in
+        let label_exprs' =
+          List.map
+            (fun (li, e) -> (li, (rec_subst_expr local_vars e))) label_exprs in
+        Parsetree.E_record_with (e', label_exprs')
+    | Parsetree.E_tuple es ->
+        Parsetree.E_tuple (List.map (rec_subst_expr local_vars) es)
+    | Parsetree.E_sequence es ->
+        Parsetree.E_sequence (List.map (rec_subst_expr local_vars) es)
+    | Parsetree.E_paren e -> Parsetree.E_paren (rec_subst_expr [] e)
+
+  (* Substitution in logical expressions. *)
+  and rec_subst_logical_expr local_vars log_expr =
+    { log_expr with Parsetree.ast_desc =
+        rec_subst_logical_expr_desc local_vars log_expr.Parsetree.ast_desc }
+  and rec_subst_logical_expr_desc local_vars log_expr_desc =
+    match log_expr_desc with
+    | Parsetree.Pr_forall (vars, ty_expr, lexpr) ->
+        let lexpr' = rec_subst_logical_expr (vars @ local_vars) lexpr in
+        Parsetree.Pr_forall (vars, ty_expr, lexpr')
+    | Parsetree.Pr_exists (vars, ty_expr, lexpr) ->
+        let lexpr' = rec_subst_logical_expr (vars @ local_vars) lexpr in
+        Parsetree.Pr_exists (vars, ty_expr, lexpr')
+    | Parsetree.Pr_imply (lexp1, lexp2) ->
+        Parsetree.Pr_imply
+          ((rec_subst_logical_expr local_vars lexp1),
+           (rec_subst_logical_expr local_vars lexp2))
+    | Parsetree.Pr_or (lexp1, lexp2) ->
+        Parsetree.Pr_or
+          ((rec_subst_logical_expr local_vars lexp1),
+           (rec_subst_logical_expr local_vars lexp2))
+    | Parsetree.Pr_and (lexp1, lexp2) ->
+        Parsetree.Pr_and
+          ((rec_subst_logical_expr local_vars lexp1),
+           (rec_subst_logical_expr local_vars lexp2))
+    | Parsetree.Pr_equiv (lexp1, lexp2) ->
+        Parsetree.Pr_equiv
+          ((rec_subst_logical_expr local_vars lexp1),
+           (rec_subst_logical_expr local_vars lexp2))
+    | Parsetree.Pr_not lexp ->
+        Parsetree.Pr_not (rec_subst_logical_expr local_vars lexp)
+    | Parsetree.Pr_expr exp ->
+        Parsetree.Pr_expr (rec_subst_expr local_vars exp)
+    | Parsetree.Pr_paren lexp ->
+        Parsetree.Pr_paren (rec_subst_logical_expr local_vars lexp)
+
+  (* Substitution in let definitions.
+     Note that we do not nedd to substitute in the termination proof since
+     it never appears as a computational part (hence as a measure or order
+     expression). *)
+  and rec_subst_let_def local_vars ldef =
+    { ldef with Parsetree.ast_desc =
+        rec_subst_let_def_desc local_vars ldef.Parsetree.ast_desc }
+  and rec_subst_let_def_desc local_vars ldef_desc =
+    (* Depending on whether the bindings are recursive, we add or not
+       the bound names in the local variables. *)
+    let local_vars_for_rec =
+      (match ldef_desc.Parsetree.ld_rec with
+      | Parsetree.RF_rec ->
+          (List.map
+             (fun b -> b.Parsetree.ast_desc.Parsetree.b_name)
+             ldef_desc.Parsetree.ld_bindings)
+          @ local_vars
+      | Parsetree.RF_no_rec -> local_vars) in
+    let bindings' =
+      List.map
+        (fun bnd ->
+          let body' =
+            match bnd.Parsetree.ast_desc.Parsetree.b_body with
+            | Parsetree.BB_logical log_e ->
+                Parsetree.BB_logical
+                  (rec_subst_logical_expr local_vars_for_rec log_e)
+            | Parsetree.BB_computational e ->
+                Parsetree.BB_computational
+                  (rec_subst_expr local_vars_for_rec e) in
+          (* Rebuild the new binding desc. *)
+          let descr' =
+            { bnd.Parsetree.ast_desc with Parsetree.b_body = body' } in
+          (* Rebuild the new binding. *)
+          { bnd with Parsetree.ast_desc = descr' })
+        ldef_desc.Parsetree.ld_bindings in
+    (* Rebuild the new let definition. *)
+    { ldef_desc with Parsetree.ld_bindings = bindings' } in
+
+  (* Now, really do the job. *)
+  rec_subst_expr [] initial_expr
 ;;

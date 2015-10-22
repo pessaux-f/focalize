@@ -1866,7 +1866,10 @@ let debug_available_steps steps =
 type zenon_statement_coq_generation_method =
   | ZSGM_from_logical_expr of Parsetree.logical_expr
   | ZSGM_from_termination_lemma of
-      (Rec_let_coq_gen.termination_expr_kind *  (** Expression representing the
+      ((Parsetree.vname * Types.type_simple) list *  (** The parameters of the
+           function with their types *appearing in the order or measure
+           expression*. Does *not* contains the other parameters! *)
+       Rec_let_coq_gen.termination_expr_kind *  (** Expression representing the
           measure or theorder. *)
         int *      (** Index of the recursive function parameter
            applied to the order/measure expression. This index will serve to
@@ -1909,7 +1912,7 @@ let rec zenonify_proof_node ~in_nested_proof ctx print_ctx env min_coq_env
           | None -> (
               match aim_coq_gen_method with
                | ZSGM_from_logical_expr lexpr -> lexpr
-               | ZSGM_from_termination_lemma (_, _, _) -> assert false
+               | ZSGM_from_termination_lemma (_, _, _, _) -> assert false
              )
           | Some logical_expr -> logical_expr) in
        (* Now, handle the nested proof of the conclusion of the statement or
@@ -1972,9 +1975,13 @@ and emit_zenon_theorem_for_proof ~in_nested_proof ctx print_ctx env min_coq_env
       Species_record_type_coq_generation.generate_logical_expr
         ~local_idents: [] ~in_recursive_let_section_of: []
         ~self_methods_status: Species_record_type_coq_generation.SMS_abstracted
-        ~recursive_methods_status: Species_record_type_coq_generation.RMS_regular
+        ~recursive_methods_status:
+          Species_record_type_coq_generation.RMS_regular
         ctx env aim
-  | ZSGM_from_termination_lemma (expr, used_param_index, rec_calls) ->
+  | ZSGM_from_termination_lemma
+        (fun_prms_in_expr, expr, used_param_index, rec_calls) ->
+      (* [Unsure] Same code than in [generate_theorem_section_if_by_zenon].
+         Need to factorize ? *)
       Rec_let_coq_gen.generate_termination_lemmas
         ctx print_ctx env
         ~explicit_order: (Rec_let_coq_gen.OK_expr (expr, used_param_index))
@@ -1983,8 +1990,17 @@ and emit_zenon_theorem_for_proof ~in_nested_proof ctx print_ctx env min_coq_env
       | Rec_let_coq_gen.TEK_order e ->
           (* Always end by the obligation of well-formation of the user-order
              eta-expanded to wrap its result with a Is_true. *)
+          Format.fprintf out_fmter "@ (" ;
+          (* Bind the parameters of the function that are used in the order
+             expression. *)
+          List.iter
+            (fun (n, t) ->
+              Format.fprintf out_fmter "forall@ %a@ :@ %a,@ "
+                Parsetree_utils.pp_vname_with_operators_expanded
+                n (Coq_pprint.pp_type_simple_to_coq print_ctx) t)
+            fun_prms_in_expr ;
           Format.fprintf out_fmter
-            "@ (well_founded@ (fun __a1 __a2 =>@ Is_true@ (" ;
+            "well_founded@ (fun __a1 __a2 =>@ Is_true@ (" ;
           Species_record_type_coq_generation.generate_expr
             ~local_idents: [] ~in_recursive_let_section_of: []
             ~self_methods_status:
@@ -1996,8 +2012,17 @@ and emit_zenon_theorem_for_proof ~in_nested_proof ctx print_ctx env min_coq_env
         | Rec_let_coq_gen.TEK_measure e ->
             (* Always end by the obligation of user measure always >= 0,
                eta-expanded to wrap its result with a Is_true. *)
+            Format.fprintf out_fmter "(" ;
+            (* Same than above for an order, bind the parameters of the
+               function. *)
+            List.iter
+              (fun (n, t) ->
+                Format.fprintf out_fmter "forall@ %a@ :@ %a,@ "
+                  Parsetree_utils.pp_vname_with_operators_expanded
+                  n (Coq_pprint.pp_type_simple_to_coq print_ctx) t)
+              fun_prms_in_expr ;
             Format.fprintf out_fmter
-              "(forall@ __x,@ Is_true@ (basics._lt__equal_@ 0@ (" ;
+              "forall@ __x,@ Is_true@ (basics._lt__equal_@ 0@ (" ;
             Species_record_type_coq_generation.generate_expr
               ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
@@ -2026,8 +2051,8 @@ and emit_zenon_theorem_for_proof ~in_nested_proof ctx print_ctx env min_coq_env
 
 and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
     ~self_manifest dependencies_from_params generated_fields available_hyps
-    available_steps section_name_seed aim_coq_gen_method aim_name parent_proof_opt
-    proof =
+    available_steps section_name_seed aim_coq_gen_method aim_name
+    parent_proof_opt proof =
   let out_fmter = ctx.Context.scc_out_fmter in
   match proof.Parsetree.ast_desc with
    | Parsetree.Pf_dk (enforced_deps, _)
@@ -2142,7 +2167,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
               ~recursive_methods_status:
                 Species_record_type_coq_generation.RMS_regular
               ctx env aim
-        | ZSGM_from_termination_lemma (_, _, _) ->
+        | ZSGM_from_termination_lemma (_, _, _, _) ->
             (* Termination proofs are always initiated by
                generate_theorem_section_if_by_zenon and are never nested.
                So there is no reason to find a nested step/proof dealing with
@@ -2163,7 +2188,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
          let aim =
            (match aim_coq_gen_method with
            | ZSGM_from_logical_expr lexpr -> lexpr
-           | ZSGM_from_termination_lemma (_, _, _) -> assert false) in
+           | ZSGM_from_termination_lemma (_, _, _, _) -> assert false) in
          Format.fprintf out_fmter "@[<2>Theorem %a :@ "
            Parsetree_utils.pp_vname_with_operators_expanded aim_name;
          Species_record_type_coq_generation.generate_logical_expr
@@ -2368,19 +2393,30 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
                 Species_record_type_coq_generation.RMS_regular
               ctx env logical_expr
         | ZSGM_from_termination_lemma
-            (expr, used_params_indices, rec_calls) ->
-            Rec_let_coq_gen.generate_termination_lemmas
+            (fun_prms_in_expr, expr, used_param_index, rec_calls) ->
+              (* [Unsure] Same code than in [emit_zenon_theorem_for_proof].
+                 Need to factorize ? *)
+              Rec_let_coq_gen.generate_termination_lemmas
               ctx print_ctx env
               ~explicit_order:
-                (Rec_let_coq_gen.OK_expr (expr, used_params_indices))
+                (Rec_let_coq_gen.OK_expr (expr, used_param_index))
                 rec_calls ;
             (match expr with
              | Rec_let_coq_gen.TEK_order e ->
                  (* Always end by the obligation of well-formation of the
                     user-order eta-expanded to wrap its result with a
                     Is_true. *)
+                 Format.fprintf out_fmter "@ (" ;
+                 (* Bind the parameters of the function that are used in the
+                    order expression. *)
+                 List.iter
+                   (fun (n, t) ->
+                     Format.fprintf out_fmter "forall@ %a@ :@ %a,@ "
+                       Parsetree_utils.pp_vname_with_operators_expanded
+                       n (Coq_pprint.pp_type_simple_to_coq print_ctx) t)
+                   fun_prms_in_expr ;
                  Format.fprintf out_fmter
-                   "@ (well_founded@ (fun __a1 __a2 =>@ Is_true@ (" ;
+                   "well_founded@ (fun __a1 __a2 =>@ Is_true@ (" ;
                  Species_record_type_coq_generation.generate_expr
                    ~local_idents: [] ~in_recursive_let_section_of: []
                    ~self_methods_status:
@@ -2392,8 +2428,17 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
              | Rec_let_coq_gen.TEK_measure e ->
                  (* Always end by the obligation of user measure always >= 0,
                     eta-expanded to wrap its result with a Is_true. *)
+                 Format.fprintf out_fmter "(" ;
+                 (* Same than above for an order, bind the parameters of the
+                    function. *)
+                 List.iter
+                   (fun (n, t) ->
+                     Format.fprintf out_fmter "forall@ %a@ :@ %a,@ "
+                       Parsetree_utils.pp_vname_with_operators_expanded
+                       n (Coq_pprint.pp_type_simple_to_coq print_ctx) t)
+                   fun_prms_in_expr ;
                  Format.fprintf out_fmter
-                   "(forall@ __x,@ Is_true@ (basics._lt__equal_@ 0@ (" ;
+                   "forall@ __x,@ Is_true@ (basics._lt__equal_@ 0@ (" ;
                  Species_record_type_coq_generation.generate_expr
                    ~local_idents: [] ~in_recursive_let_section_of: []
                    ~self_methods_status:
@@ -2403,7 +2448,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
                    ctx env e ;
                  Format.fprintf out_fmter "@ __x))) "
             )
-       ) ;
+       );
        Format.fprintf out_fmter ".@]@\n";
        (* Now, for each abstracted method we depend on we generate an assert. *)
        generate_asserts_for_dependencies
@@ -2669,14 +2714,23 @@ let generate_termination_order_for_Function ctx print_ctx env name
                 @[<2>(basics._lt__equal_@ \
                   0 @[<2>(" ;
             (* Generate the second application of the measure (hence to the
-               second argument). *)
+               second argument).
+               We must replace in the expression of the measure, all the
+               possible apparitions of any parameter of the function by the
+               corresponding projection. In effet, we are in the context of
+               the order as expected by Function. Hence, the function
+               definition receives its arguments as a tuple, not as separate
+               parameters. *)
+            let measure_expr__y =
+              Rec_let_coq_gen.subst_params_by_tuple_projections
+                "__y" measure_expr fun_arity fun_params_n_tys in
             Species_record_type_coq_generation.generate_expr
               ctx ~local_idents ~in_recursive_let_section_of: [name]
               ~self_methods_status:
                 Species_record_type_coq_generation.SMS_abstracted
               ~recursive_methods_status:
                 Species_record_type_coq_generation.RMS_regular
-              env measure_expr ;  (* [Unsure] TODO, subst parameters names *)
+              env measure_expr__y ;
             Format.fprintf out_fmter "@ " ;
             print_order_args_as_tuple
               out_fmter ~fun_arity "__y" [used_param_index] ;
@@ -2690,14 +2744,19 @@ let generate_termination_order_for_Function ctx print_ctx env name
                  basics._lt_ (abst_"mesfct" ... x) (abst_"mesfct" ... y) *)
             Format.fprintf out_fmter "@[<2>(basics._lt_@ @[<2>(" ;
             (* Generate the first application of the measure (hence to the
-               first argument). *)
+               first argument).
+               Same substitution process than above, but with the first
+               argument. *)
+            let measure_expr__x =
+              Rec_let_coq_gen.subst_params_by_tuple_projections
+                "__x" measure_expr fun_arity fun_params_n_tys in
             Species_record_type_coq_generation.generate_expr
               ctx ~local_idents ~in_recursive_let_section_of: [name]
               ~self_methods_status:
                 Species_record_type_coq_generation.SMS_abstracted
               ~recursive_methods_status:
                 Species_record_type_coq_generation.RMS_regular
-              env measure_expr ;
+              env measure_expr__x ;
             Format.fprintf out_fmter "@ " ;
             print_order_args_as_tuple
               out_fmter ~fun_arity "__x" [used_param_index] ;
@@ -2710,7 +2769,7 @@ let generate_termination_order_for_Function ctx print_ctx env name
                 Species_record_type_coq_generation.SMS_abstracted
               ~recursive_methods_status:
                 Species_record_type_coq_generation.RMS_regular
-              env measure_expr ;
+              env measure_expr__y ;
             Format.fprintf out_fmter "@ ";
             print_order_args_as_tuple
               out_fmter ~fun_arity "__y" [used_param_index] ;
@@ -2777,7 +2836,8 @@ let generate_measure_term_proof_for_Function
   (* Print to the user the termination obligations. *)
   if (Configuration.get_show_term_obls ()) then
     Rec_let_coq_gen.print_user_termination_obls_for_measure
-      name recursive_calls meas_expr used_param_index used_param used_param_ty ;
+      name fun_params_n_tys recursive_calls meas_expr used_param_index
+      used_param used_param_ty ;
   match proof.Parsetree.ast_desc with
   | Parsetree.Pf_assumed _
   | Parsetree.Pf_dk _ ->
@@ -2787,9 +2847,18 @@ let generate_measure_term_proof_for_Function
       Format.fprintf out_fmter
         "apply coq_builtins.magic_prove.@\nQed."
   | Parsetree.Pf_auto _  | Parsetree.Pf_node _ ->
-      (* Proof done by Zenon. Apply soldering stuff. *)
+      (* Proof done by Zenon. Apply soldering stuff. Make arithmetic operation
+         opaque to prevent Coq from simplifying (by the below 'simpl' tactic)
+         them, possibly altering the goal which would not have any more the
+         shape we are expecting.
+         After having invoked 'simpl', restore arithmetic stuff transparent.
+         IMHO, it is useless, bit this does not hurt. *)
       Format.fprintf out_fmter
-        "unfold %a_wforder;simpl.@\n\
+        "Opaque basics._plus_ basics._dash_ basics._slash_ \
+                basics._star_ basics._tilda__tilda_.@\n\
+        unfold %a_wforder;simpl.@\n\
+        Transparent basics._plus_ basics._dash_ basics._slash_ \
+                basics._star_ basics._tilda__tilda_.@\n\
         elim (for_zenon_abstracted_%a@ "
          Parsetree_utils.pp_vname_with_operators_expanded name
          Parsetree_utils.pp_vname_with_operators_expanded name ;
@@ -2818,28 +2887,37 @@ let generate_measure_term_proof_for_Function
          @[<2>change@ (well_founded@ (fun@ __c __d@ :@ " ;
       Format.fprintf out_fmter "%a@ =>@ R "
         (print_types_as_tuple_if_several print_ctx) fun_params_n_tys ;
-      (* Apply the user measure on the first projected argument. *)
+      let fun_arity = List.length fun_params_n_tys in
+      (* Apply the user measure on the first projected argument.
+         Same substitution mechanism than in
+         [generate_termination_order_for_Function]. *)
+      let measure_expr__c =
+        Rec_let_coq_gen.subst_params_by_tuple_projections
+          "__c" meas_expr fun_arity fun_params_n_tys in
       Format.fprintf out_fmter "@[<2>(" ;
       Species_record_type_coq_generation.generate_expr
         ~local_idents: [] ~in_recursive_let_section_of: []
         ~self_methods_status: Species_record_type_coq_generation.SMS_abstracted
         ~recursive_methods_status:
           Species_record_type_coq_generation.RMS_regular
-        ctx env meas_expr ;
+        ctx env measure_expr__c ;
       (* Print a space in case the function has only 1 argument, hence is not
          a tuple, hence is not between parens. Otherwise, all is glued together
          and may raise an "unbound identifier". *)
       Format.fprintf out_fmter "@ " ;
-      let fun_arity = List.length fun_params_n_tys in
       print_order_args_as_tuple
         out_fmter ~fun_arity "__c" [used_param_index] ;
       Format.fprintf out_fmter ")@ (" ;
+      (* Same substitution mechanism than above. *)
+      let measure_expr__d =
+        Rec_let_coq_gen.subst_params_by_tuple_projections
+          "__d" meas_expr fun_arity fun_params_n_tys in
       Species_record_type_coq_generation.generate_expr
         ~local_idents: [] ~in_recursive_let_section_of: []
         ~self_methods_status: Species_record_type_coq_generation.SMS_abstracted
         ~recursive_methods_status:
           Species_record_type_coq_generation.RMS_regular
-       ctx env meas_expr ;
+       ctx env measure_expr__d ;
       (* Again a space as just above, for the same reason. *)
       Format.fprintf out_fmter "@ " ;
       print_order_args_as_tuple
@@ -2887,7 +2965,7 @@ let generate_order_term_proof_for_Function
   (* Print to the user the termination obligations. *)
   if (Configuration.get_show_term_obls ()) then
     Rec_let_coq_gen.print_user_termination_obls_for_order
-      name recursive_calls order_expr used_param_index ;
+      name fun_params_n_tys recursive_calls order_expr used_param_index ;
   match proof.Parsetree.ast_desc with
   | Parsetree.Pf_assumed _
   | Parsetree.Pf_dk _ ->
@@ -2930,7 +3008,8 @@ let generate_order_term_proof_for_Function
       Species_record_type_coq_generation.generate_expr
         ~local_idents: [] ~in_recursive_let_section_of: []
         ~self_methods_status: Species_record_type_coq_generation.SMS_abstracted
-        ~recursive_methods_status: Species_record_type_coq_generation.RMS_regular
+        ~recursive_methods_status:
+          Species_record_type_coq_generation.RMS_regular
         ctx env order_expr ;
       Format.fprintf out_fmter " __a __b))).@\n" ;
       Format.fprintf out_fmter
@@ -2980,13 +3059,26 @@ let generate_termination_proof_for_Function ctx print_ctx env ~self_manifest
           order. *)
        let used_param_index =
          Handy.list_index_of used_param (List.map fst fun_params_n_tys) in
+       (* Record the variables of the function appearing in the order
+          expression. *)
+       let vars_of_order_expr =
+         Parsetree_utils.get_free_local_vnames_from_expr_desc
+           (match order_expr with
+           | Rec_let_coq_gen.TEK_order e | Rec_let_coq_gen.TEK_measure e ->
+               e.Parsetree.ast_desc) in
+       let params_in_order_expr =
+         List.filter
+           (fun (n, _) -> List.mem n vars_of_order_expr)
+           fun_params_n_tys in
        generate_theorem_section_if_by_zenon
          ctx print_ctx env
          ai.Env.TypeInformation.ad_min_coq_env ~self_manifest
          ai.Env.TypeInformation.ad_used_species_parameter_tys
          sorted_deps_from_params generated_fields name
          (ZSGM_from_termination_lemma
-            (order_expr, used_param_index, recursive_calls)) proof
+            (params_in_order_expr, order_expr, used_param_index,
+             recursive_calls))
+         proof
       )) ;
   (* Generate the Variables and Definitions for our dependencies. Since we
       are under a Section, do not lambda-lift. *)

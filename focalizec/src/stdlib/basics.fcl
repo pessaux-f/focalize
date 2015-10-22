@@ -926,6 +926,93 @@ let is_well_founded =
 ;;
 
 
+(** Projections used for termination proofs by order or measure. These
+    definitions are bound to their counterpart in coq_builtins.v. *)
+
+(** Rightmost level-1 projection of any tuple (..., x) *)
+let __tpl_lastprj1 =
+  internal ('a * 'b) -> 'b
+  external
+  | caml -> {* () *}
+  | coq -> {* (coq_builtins.__tpl_lastprj1 __var_a __var_b) *}
+  | dedukti -> {* Basics.fcl: __tpl_lastprj1 not handled yet. *}
+;;
+
+
+(** First projection of a 2-uple (x, _) *)
+let __tpl_firstprj2 =
+  internal ('a * 'b) -> 'a
+  external
+  | caml -> {* () *}
+  | coq -> {* (coq_builtins.__tpl_firstprj2 __var_a __var_b) *}
+  | dedukti -> {* Basics.fcl: __tpl_firstprj2 not handled yet. *}
+;;
+
+(** Rightmost level-2 projection of any tuple (...,(x, _)) *)
+let __tpl_lastprj2 =
+  internal ('a * 'b * 'c) -> 'b
+  external
+  | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
+  | coq -> {* (coq_builtins.__tpl_lastprj2 __var_a __var_b __var_c) *}
+  | dedukti -> {* Basics.fcl: __tpl_lastprj2 not handled yet. *}
+;;
+
+(** First projection of a 3-uple (x, (_, _)) *)
+let __tpl_firstprj3 =
+  internal ('a * 'b * 'c) -> 'a
+  external
+  | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
+  | coq -> {* (coq_builtins.__tpl_firstprj3 __var_a __var_b __var_c) *}
+  | dedukti -> {* Basics.fcl: __tpl_firstprj3 not handled yet. *}
+;;
+
+(** Rightmost level-3 projection of any tuple (...,(x, (_, _))) *)
+let __tpl_lastprj3 =
+  internal ('a * 'b * 'c * 'd) -> 'b
+  external
+  | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
+  | coq -> {* (coq_builtins.__tpl_lastprj3 __var_a __var_b __var_c __var_d) *}
+  | dedukti -> {* Basics.fcl: __tpl_lastprj3 not handled yet. *}
+;;
+
+(** First projection of a 4-uple (x, (_, (_, _))) *)
+let __tpl_firstprj4 =
+  internal ('a * 'b * 'c * 'd) -> 'a
+  external
+  | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
+  | coq -> {* (coq_builtins.__tpl_firstprj4 __var_a __var_b __var_c __var_d) *}
+  | dedukti -> {* Basics.fcl: __tpl_firstprj4 not handled yet. *}
+;;
+
+(** Rightmost level-4 projection of any tuple (...,(x, (_, (_, _)))) *)
+let __tpl_lastprj4 =
+  internal ('a * 'b * 'c * 'd * 'e) -> 'b
+  external
+  | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
+  | coq -> {* (coq_builtins.__tpl_lastprj4 __var_a __var_b __var_c __var_d __var_e) *}
+  | dedukti -> {* Basics.fcl: __tpl_lastprj4 not handled yet. *}
+;;
+
+(** First projection of a 5-uple (x, (_, (_, (_, _)))) *)
+let __tpl_firstprj5 =
+  internal ('a * 'b * 'c * 'd * 'e) -> 'a
+  external
+  | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
+  | coq -> {* (coq_builtins.__tpl_firstprj5 __var_a __var_b __var_c __var_d __var_e) *}
+  | dedukti -> {* Basics.fcl: __tpl_firstprj5 not handled yet. *}
+;;
+
+(** Rightmost level-5 projection of any tuple (...,(x, (_, (_, (_, _))))) *)
+let __tpl_lastprj5 =
+  internal ('a * 'b * 'c * 'd * 'e * 'f) -> 'b
+  external
+  | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
+  | coq -> {* (coq_builtins.__tpl_lastprj5 __var_a __var_b __var_c __var_d __var_e __var_f) *}
+  | dedukti -> {* Basics.fcl: __tpl_lastprj5 not handled yet. *}
+;;
+
+
+
 (* .......... SNIPED .......... *)
 
 type partiel ('a) =
