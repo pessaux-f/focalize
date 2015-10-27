@@ -64,7 +64,6 @@ val generate_logical_expr :
 
 type let_binding_pre_computation = {
   lbpc_value_body : Env.DkGenInformation.value_body ;
-  lbpc_params_names : Parsetree.vname list ;
   lbpc_nb_polymorphic_args : int ;
   lbpc_params_with_type : (Parsetree.vname * Types.type_simple option) list ;
   lbpc_result_ty : Types.type_simple option ;

@@ -126,8 +126,9 @@ let toplevel_let_def_compile ctx env let_def =
                      ctx print_ctx env2
                      [(*generated_fields*)] dummy_history
                      one_bnd.Parsetree.ast_desc.Parsetree.b_name
-                     one_pre_comp_info.Species_record_type_coq_generation.
-                       lbpc_params_names
+                     (List.map fst
+                        one_pre_comp_info.Species_record_type_coq_generation.
+                          lbpc_params_with_type)
                      decr_arg term_pr_loc
                      def_scheme one_bnd.Parsetree.ast_desc.Parsetree.b_body
                      dummy_abstr_info) ;
@@ -144,8 +145,9 @@ let toplevel_let_def_compile ctx env let_def =
                      ctx print_ctx env2
                      ~self_manifest: None [(*generated_fields*)] dummy_history
                      one_bnd.Parsetree.ast_desc.Parsetree.b_name
-                     one_pre_comp_info.Species_record_type_coq_generation.
-                       lbpc_params_names
+                     (List.map fst
+                        one_pre_comp_info.Species_record_type_coq_generation.
+                          lbpc_params_with_type)
                      def_scheme one_bnd.Parsetree.ast_desc.Parsetree.b_body
                      opt_term_proof dummy_abstr_info) ;
                 (* No need to extended the environment. This was done by

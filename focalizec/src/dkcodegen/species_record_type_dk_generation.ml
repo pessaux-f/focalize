@@ -780,7 +780,6 @@ let generate_pattern ctx dkctx env pattern
 
 type let_binding_pre_computation = {
   lbpc_value_body : Env.DkGenInformation.value_body ;
-  lbpc_params_names : Parsetree.vname list ;
   lbpc_nb_polymorphic_args : int ;
   lbpc_params_with_type : (Parsetree.vname * Types.type_simple option) list ;
   lbpc_result_ty : Types.type_simple option ;
@@ -838,7 +837,6 @@ let pre_compute_let_binding_info_for_rec env bd ~rec_status ~toplevel =
     | Env.DkGenInformation.RC_non_rec -> env) in
   (env',
    { lbpc_value_body = value_body ;
-     lbpc_params_names = params_names ;
      lbpc_params_with_type = params_with_type ;
      lbpc_nb_polymorphic_args = nb_polymorphic_args ;
      lbpc_result_ty = result_ty ;
@@ -1046,7 +1044,8 @@ let rec let_binding_compile ctx ~opt_term_proof
      With a NON-breakable space before to prevent uggly hyphenation ! *)
   Format.fprintf out_fmter " :=@\n" ;
   (* Here, each parameter name of the binding may mask a "in"-parameter. *)
-  let local_idents' = pre_computed_bd_info.lbpc_params_names @ local_idents in
+  let local_idents' =
+    (List.map fst pre_computed_bd_info.lbpc_params_with_type) @ local_idents in
   (* Now, let's generate the bound body. *)
   (match bd.Parsetree.ast_desc.Parsetree.b_body with
   | Parsetree.BB_computational e ->
