@@ -8,8 +8,8 @@
 (*                                                                            *)
 (*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
@@ -146,6 +146,23 @@ module TypeInformation :
 
     type min_coq_env_element = (min_coq_env_reason * min_coq_env_method)
 
+    type min_dk_env_method =
+        MDEM_Declared_carrier
+      | MDEM_Defined_carrier of Types.type_scheme
+      | MDEM_Declared_computational of (Parsetree.vname * Types.type_scheme)
+      | MDEM_Defined_computational of
+          (from_history * rec_status * Parsetree.vname *
+           (Parsetree.vname list) * Types.type_scheme * Parsetree.binding_body)
+      | MDEM_Declared_logical of (Parsetree.vname * Parsetree.logical_expr)
+      | MDEM_Defined_logical of
+          (from_history * Parsetree.vname * Parsetree.logical_expr)
+
+    type min_dk_env_reason =
+      | MDER_only_logical
+      | MDER_even_comput
+
+    type min_dk_env_element = (min_dk_env_reason * min_dk_env_method)
+
     type field_abstraction_info = {
       ad_used_species_parameter_tys : Parsetree.vname list ;
       ad_raw_dependencies_from_params :
@@ -155,7 +172,8 @@ module TypeInformation :
       ad_dependencies_from_parameters_in_type :
         (species_param * ordered_methods_from_params) list ;
 (*      ad_abstracted_methods : Parsetree.vname list ; *)
-      ad_min_coq_env : min_coq_env_element list
+      ad_min_coq_env : min_coq_env_element list ;
+      ad_min_dk_env : min_dk_env_element list
     }
 
     type species_description = {
@@ -284,6 +302,61 @@ module CoqGenInformation :
     type type_info = TypeInformation.type_description
   end
 
+
+module DkGenInformation :
+  sig
+  type collection_generator_parameters = {
+    cgp_abstr_param_carriers_for_record : Parsetree.vname list ;
+    cgp_abstr_param_methods_for_record :
+      (Parsetree.vname * ordered_methods_from_params) list ;
+    cgp_abstr_param_methods_for_coll_gen :
+      (Parsetree.vname * ordered_methods_from_params) list
+    }
+
+    type collection_generator_info = {
+      cgi_implemented_species_params_names :
+        (Parsetree.vname * ScopeInformation.species_parameter_kind) list ;
+      cgi_generator_parameters : collection_generator_parameters
+    }
+
+    type constructor_mapping_info = {
+      cmi_num_polymorphics_extra_args : int ;
+      cmi_external_translation : Parsetree.external_translation_desc option
+    }
+
+    type label_mapping_info = {
+      lmi_num_polymorphics_extra_args : int ;
+      lmi_external_translation : Parsetree.external_translation_desc option
+    }
+
+    type method_info = generic_code_gen_method_info
+
+    type species_binding_info =
+      ((TypeInformation.species_param list) *
+       (method_info list) *
+       (collection_generator_info option) * collection_or_species)
+
+    type rec_proof_kind =
+      | RPK_struct of Parsetree.vname
+      | RPK_other
+
+    type rec_status =
+      | RC_non_rec
+      | RC_rec of rec_proof_kind
+
+    type value_body =
+      | VB_non_toplevel
+      | VB_toplevel_let_bound of
+          (rec_status * (Parsetree.vname list) * Types.type_scheme *
+           Parsetree.binding_body)
+      | VB_toplevel_property of Parsetree.logical_expr
+
+    type value_mapping_info = (int * value_body)
+
+    type type_info = TypeInformation.type_description
+  end
+
+
 module ScopingEnv :
   sig
     type t
@@ -322,6 +395,8 @@ module ScopingEnv :
     val find_species :
         loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
       t -> ScopeInformation.species_binding_info
+
+    val append : t -> t -> t
   end
 
 type 'a binding_origin =
@@ -385,6 +460,7 @@ module TypingEnv :
         loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
           t -> TypeInformation.species_description
 
+    val append : t -> t -> t
   end
 
 (* For focaltest : *)
@@ -419,6 +495,8 @@ module MlGenEnv :
     val find_species :
       loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
         t -> MlGenInformation.species_binding_info
+
+    val append : t -> t -> t
   end
 
 module CoqGenEnv :
@@ -462,10 +540,59 @@ module CoqGenEnv :
     val find_type :
       loc: Location.t -> current_unit: Types.fname ->
       Parsetree.ident -> t -> CoqGenInformation.type_info
+
+    val append : t -> t -> t
+  end
+
+
+module DkGenEnv :
+  sig
+    type t
+    val empty : unit -> t
+    val pervasives : unit -> t
+
+    val add_species :
+      loc: Location.t ->
+      Parsetree.vname -> DkGenInformation.species_binding_info -> t -> t
+    val find_species :
+      loc: Location.t -> current_unit: Types.fname ->
+      Parsetree.ident -> t -> DkGenInformation.species_binding_info
+
+    val add_value :
+      toplevel: Location.t option -> Parsetree.vname ->
+        DkGenInformation.value_mapping_info -> t -> t
+    val find_value :
+      loc: Location.t ->
+      current_unit: Types.fname -> current_species_name:string option ->
+        Parsetree.expr_ident -> t -> DkGenInformation.value_mapping_info
+
+    val add_constructor :
+      Parsetree.constructor_name ->
+        DkGenInformation.constructor_mapping_info -> t -> t
+    val find_constructor :
+      loc: Location.t -> current_unit: Types.fname ->
+        Parsetree.constructor_ident -> t ->
+          DkGenInformation.constructor_mapping_info
+
+    val add_label :
+      Parsetree.vname -> DkGenInformation.label_mapping_info -> t -> t
+    val find_label :
+      loc: Location.t -> current_unit: Types.fname ->
+      Parsetree.label_ident -> t -> DkGenInformation.label_mapping_info
+
+    val add_type :
+      loc: Location.t -> Parsetree.vname ->
+        DkGenInformation.type_info -> t -> t
+    val find_type :
+      loc: Location.t -> current_unit: Types.fname ->
+        Parsetree.ident -> t -> DkGenInformation.type_info
+
+    val append : t -> t -> t
   end
 
 exception No_available_OCaml_code_generation_envt of Types.fname
 exception No_available_Coq_code_generation_envt of Types.fname
+exception No_available_Dk_code_generation_envt of Types.fname
 
 type fo_file_structure
 
@@ -481,10 +608,13 @@ val mlgen_open_module :
 val coqgen_open_module :
   loc: Location.t -> Types.fname -> CoqGenEnv.t -> CoqGenEnv.t
 
+val dkgen_open_module :
+  loc: Location.t -> Types.fname -> DkGenEnv.t -> DkGenEnv.t
+
 
 val make_fo_file :
   source_filename: Types.fname -> ScopingEnv.t -> TypingEnv.t ->
-    MlGenEnv.t option -> CoqGenEnv.t option -> unit
+    MlGenEnv.t option -> CoqGenEnv.t option -> DkGenEnv.t option -> unit
 
 val iter_on_species_scopped :
   (Parsetree.vname * ScopeInformation.species_binding_info binding_origin ->

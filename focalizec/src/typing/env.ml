@@ -617,8 +617,8 @@ module TypeInformation = struct
          (species_field list) *
          (** The species expression of the parameter. This expression has the
              normalized form compound of the above list of fields. This
-             expression is kept because Coq code generation need to know it
-             in order to make the type expression annotation the parameter
+             expression is kept because Coq/Dedukti code generation need to know
+             it in order to make the type expression annotation the parameter
              in the hosting species record type. *)
           Parsetree_utils.simple_species_expr (* [Unsure] Really used ? *) *
           (** The dependency graph of the methods of the species we are a
@@ -717,6 +717,77 @@ module TypeInformation = struct
 
   type min_coq_env_element = (min_coq_env_reason * min_coq_env_method)
 
+  (** {b Descr} Elements of the minimal Dk typing environment for methods.
+      We can't directly use [Env.TypeInformation.species_field] because they
+      can't make appearing the fact that the carrier belongs to the minimal
+      environment even if not *defined* (remind that in species fields, if
+      "rep" appears then is it *defined* otherwise; it is silently declared
+      and does't appear in the list of fields).
+
+      {b Rem} : Not exported outside this module.                               *)
+  type min_dk_env_method =
+    | MDEM_Declared_carrier    (** The carrier belongs to the environment but
+         only via a decl-dependency. Hence it doesn't need to be explicitely
+         defined, but need to be in the environment. *)
+    | MDEM_Defined_carrier of Types.type_scheme (** The carrier belongs to the
+                 environment via at least a def-dependency. Then is have to
+                 be explicitely declared. *)
+    | MDEM_Declared_computational of
+        (Parsetree.vname * Types.type_scheme) (** Abstract computational method,
+           i.e. abstracted Let or abstracted Let_rec or Sig other than "rep". *)
+    | MDEM_Defined_computational of
+        (from_history *
+           (** Tells if the method is recursive and if so which kind of
+               termination proof it involves. This is needed when generating
+               pseudo-Dk code for Zenon using a "by definition" of this method.
+               In effect, the body of the method contains the ident of this
+               method, but when generating the Zenon stuff, the definition of
+               the method will be named "abst_xxx".
+               So the internal recursive call to print when generating the
+               method's body must be replaced by "abst_xxx". This is related to
+               the bug report #199. Moreover, since currently structural
+               recursion is compiled with "Fixpoint" and other kinds with
+               "Function" in Dk, we need to remind what is the compilation
+               scheme used depending on the recursion kind. *)
+         rec_status *
+         Parsetree.vname * (Parsetree.vname list) * Types.type_scheme *
+         Parsetree.binding_body)  (** Defined computational method, i.e. Let or
+            Let_rec. *)
+    | MDEM_Declared_logical of
+        (Parsetree.vname * Parsetree.logical_expr)  (** Abstract logical
+            property, i.e. Property or abstracted Theorem. *)
+    | MDEM_Defined_logical of     (** Defined logical property, i.e. Theorem. *)
+        (from_history * Parsetree.vname * Parsetree.logical_expr)
+
+    (** {b Descr}: Tells by which kind of construct (i.e. only logical or
+        logical and/or computational) the method to add as dependency arrived.
+        In other words, this tag tells if only logical target languages must
+        take this dependency into account or if logical ANN also computational
+        target languages are also impacted.
+        This allows to compute the dependency calculus once for all, and not
+        once for each target language. After thi common pass of calculus, each
+        backend will select either [MDER_only_logical] AND [MDER_even_comput]
+        dependencies for logical targets or only [MDER_even_comput]
+        dependencies for computational targets.
+        Clearly, [MDER_even_comput] is absorbant, this means that if a method
+        is initiall present as dependency tagged by [MDER_only_logical], if it
+        appear to be also required for computational stuff, it will be added
+        with the tag [MDER_even_comput] whicb subsumes [MDER_only_logical].
+        Said again differently, [MDER_even_comput] concerns both computational
+        and logical targets although [MDER_only_logical] concerns only logical
+        targets. *)
+
+  type min_dk_env_reason =
+    | MDER_only_logical   (** The method is only induced by logical stuff and
+                              must not be taken into account by
+                              only-computational targets backend. *)
+    | MDER_even_comput    (** The method is induced by at least computational
+                              stuff and must be taken into account by
+                              only-computational and also logical targets
+                              backend. *)
+
+  type min_dk_env_element = (min_dk_env_reason * min_dk_env_method)
+
 
   type field_abstraction_info = {
     (** The positional list of parameters carrier abstracted in the method. *)
@@ -751,7 +822,9 @@ module TypeInformation = struct
     ad_dependencies_from_parameters_in_type :
       (species_param * ordered_methods_from_params) list ;
     (** Minimal Coq typing environnment. *)
-    ad_min_coq_env : min_coq_env_element list
+    ad_min_coq_env : min_coq_env_element list ;
+    (** Minimal Dedukti typing environnment. *)
+    ad_min_dk_env : min_dk_env_element list
   }
 
   (* *********************************************************************** *)
@@ -1060,8 +1133,8 @@ type method_type_kind =
 
 
 (* ************************************************************************ *)
-(** {b Descr} : Common for OCaml and Coq code generation environments. This
-    represent various information about the methods, their abstraction,
+(** {b Descr} : Common for OCaml, Coq and Dedukti code generation environments.
+    This represent various information about the methods, their abstraction,
     their body, their type scheme.
 
     {b Rem} : Exported outside this module.                                 *)
@@ -1254,6 +1327,142 @@ module CoqGenInformation = struct
 end
 ;;
 
+(* *********************************************************************** *)
+(* *********************************************************************** *)
+(* *********************************************************************** *)
+module DkGenInformation = struct
+  type collection_generator_parameters = {
+    (* The parameters carriers that have been abstracted in the record type.
+       They must be instancied each time one need to build a record value
+       or a record type. This list contains the crude names of the
+       parameters that can be found in the species declaration. *)
+    cgp_abstr_param_carriers_for_record : Parsetree.vname list;
+    (* The list of species parameters with their methods the record type
+       depends on (hence was abstracted with). *)
+    cgp_abstr_param_methods_for_record :
+      (Parsetree.vname * ordered_methods_from_params) list;
+    (* The list of species parameters with their methods the collection
+       generator depends on (hence was abstracted with). *)
+    cgp_abstr_param_methods_for_coll_gen :
+      (Parsetree.vname * ordered_methods_from_params) list
+    }
+
+  type collection_generator_info = {
+    (** The list of species parameters names and kinds the species whose
+        collection generator belongs to has. This list is positional, i.e.
+        that the first name of the list is the name of the first species
+        parameter and so on. *)
+    cgi_implemented_species_params_names :
+      (Parsetree.vname * ScopeInformation.species_parameter_kind) list;
+    (** First, the list of species parameters carriers required by the
+        mk_record. Third, the list mapping for each parameter name,
+        the set of methods the collection generator depends on, hence must be
+        provided an instance to be used. Note that the list is not guaranted
+        to be ordered according to the order of the species parameters names
+        (that's why we have the information about this order given in
+        [species_binding_info]). *)
+    cgi_generator_parameters : collection_generator_parameters
+  }
+
+  (** In Dk generation environment ALL the sum types value constructors are
+      entered in the environment because we always need to know their number
+      of extra leading "_" due to polymorphics. If the constructor does not
+      have an external mapping, we simply put "None" in the field
+      [cmi_external_translation]. *)
+  type constructor_mapping_info = {
+    (** The number of extra argument the constructor has due to its
+        polymorphism. *)
+    cmi_num_polymorphics_extra_args : int ;
+    cmi_external_translation : Parsetree.external_translation_desc option
+    }
+
+  (** The list of mappings according to external languages to know to which
+      string the record type field name corresponds. *)
+  type label_mapping_info = {
+    (** The number of extra argument the label has due to its
+        polymorphism. *)
+    lmi_num_polymorphics_extra_args : int ;
+    lmi_external_translation : Parsetree.external_translation_desc option
+  }
+
+  type method_info = generic_code_gen_method_info
+
+  type species_binding_info =
+    ((** The list of species parameters of the species with their kind. *)
+     (TypeInformation.species_param list) *
+     (** The list of methods the species has. *)
+     (method_info list) *
+     (** Optionnal because species that are non fully defined do not have
+         any collection generator although they are entered in the
+         environment. *)
+     (collection_generator_info option) *
+     (** Tells if the info is bound to a species or a collection. *)
+     collection_or_species)
+
+  (* ************************************************************************ *)
+  (** {b Descr}: Describes the kind of recursion, i.e. termination proof,
+      provided to a recursive definition. Currently, we only make the
+      difference between a structural termination and none/other proofs.
+      In case of structural termination we assume that the definition was
+      generated using "Fixpoint" using the provided parameter name as
+      decreasing argument. In any other case, we assume it has been generated
+      with "Function".
+      Note that this type may change/disapear when we will have a more unified
+      code generation model for recursion.
+
+      {b Visibility}: Exported outside this module.                           *)
+  (* ************************************************************************ *)
+  type rec_proof_kind =
+    | RPK_struct of Parsetree.vname
+    | RPK_other
+
+
+
+  (* ************************************************************************ *)
+  (** {b Descr}: Tells if a definition is recursive or not. Allows embedding
+      the kind of termination proof the definition has if it as one.
+      Since we currently have 2 Dk generation models: "Fixpoint" and "Function"
+      we need to remind which one was used in case a proof is done
+      "by definition" of a recursive definition. In effect, depending on the
+      used model, we must not generate the same code for Zenon.
+
+      {b Visibility}: Exported outside this module.                           *)
+  (* ************************************************************************ *)
+  type rec_status =
+    | RC_non_rec
+    | RC_rec of rec_proof_kind
+
+
+  type value_body =
+    | VB_non_toplevel
+    | VB_toplevel_let_bound of
+        (rec_status * (Parsetree.vname list) * Types.type_scheme *
+         Parsetree.binding_body)
+    | VB_toplevel_property of Parsetree.logical_expr
+
+  type value_mapping_info = (int * (** The number of polymorphic type variables
+                                       in the scheme of the ident. This will
+                                       lead to extra "_" following the ident
+                                       when it is used in applicative
+                                       position. *)
+                             value_body) (** The expression bound to the
+                                             ident. *)
+
+
+  type type_info = TypeInformation.type_description
+
+  (* ************************************************************** *)
+  (** {b Descr} : Type abbreviation to shorten the structure of the
+      scoping environments.
+
+      {b Exported} : No.                                            *)
+  (* ************************************************************** *)
+  type env =
+    (constructor_mapping_info, label_mapping_info, type_info,
+     value_mapping_info, species_binding_info) generic_env
+end
+;;
+
 
 
 
@@ -1283,13 +1492,22 @@ exception No_available_OCaml_code_generation_envt of Types.fname;;
 (* ************************************************************************* *)
 exception No_available_Coq_code_generation_envt of Types.fname;;
 
+(* ************************************************************************* *)
+(* {b Descr} : Exception raised when one tries to use a Dk code generation
+   environment although the corresponding file has been compiled without Dk
+   code generation enabled.
+
+   {b Exported} : Yes.                                                       *)
+(* ************************************************************************* *)
+exception No_available_Dk_code_generation_envt of Types.fname;;
+
 
 
 (* ************************************************************************** *)
 (** {b Descr} : Struture on disk that records the "object" file once a source
     file is compiled. "Object" file reminds the scoping, typing environments
-    and the OCaml/Coq code generation environments if the source file was
-    compiled with this target code generation enabled.
+    and the OCaml/Coq/Dedukti code generation environments if the source file
+    was compiled with this target code generation enabled.
 
     {b Exported} : Abstract.                                                  *)
 (* ************************************************************************** *)
@@ -1299,15 +1517,19 @@ type fo_file_structure = {
   (* Optional since the file may be compiled without OCaml code generation. *)
   ffs_mlgeneration : MlGenInformation.env option;
   (* Optional since the file may be compiled without Coq code generation. *)
-  ffs_coqgeneration : CoqGenInformation.env option }
+  ffs_coqgeneration : CoqGenInformation.env option;
+  (* Optional since the file may be compiled without Dedukti code generation. *)
+  ffs_dkgeneration : DkGenInformation.env option}
 ;;
 
 
 
 let (scope_find_module, type_find_module,
      mlgen_find_module, coqgen_find_module,
+     dkgen_find_module,
      scope_open_module, type_open_module,
-     mlgen_open_module, coqgen_open_module) =
+     mlgen_open_module, coqgen_open_module,
+     dkgen_open_module) =
   (* Let's just make the list used to bufferize opened files' content.
      Because ".fo" files contains always both the scoping and typing
      information, once loaded for scoping purpose, the typing info and ml code
@@ -1487,6 +1709,29 @@ let (scope_find_module, type_find_module,
              | None -> raise (No_available_Coq_code_generation_envt fname)
              | Some e -> e),
 
+   (* ********************************************************************* *)
+   (* dkgen_find_module                                                    *)
+   (*   loc: Location.t -> current_unit: Types.fname ->                     *)
+   (*   Types.fname option -> DkGenInformation.env ->                      *)
+   (*     DkGenInformation.env                                             *)
+   (** {b Descr} : Wrapper to lookup a ml generation environment inside
+       an external interface file. Note that if it is requested to lookup
+       inside the current compilation unit's environment (the current file
+       has the same name than the looked-up module), then returned
+       environment is the one initially passed as argument.
+
+       {b Rem} : Not exported outside this module.                          *)
+   (* ********************************************************************* *)
+   (fun ~loc ~current_unit fname_opt dkgen_env ->
+     match fname_opt with
+      | None -> dkgen_env
+      | Some fname ->
+          if current_unit = fname then dkgen_env
+          else
+            match (internal_find_module ~loc fname).ffs_dkgeneration with
+             | None -> raise (No_available_Dk_code_generation_envt fname)
+             | Some e -> e),
+
 
 
    (* *********************************************************************** *)
@@ -1552,7 +1797,25 @@ let (scope_find_module, type_find_module,
        match (internal_find_module ~loc fname).ffs_coqgeneration with
         | None -> raise (No_available_Coq_code_generation_envt fname)
         | Some e -> e in
-     internal_extend_env fname loaded_coqgen_env env)
+     internal_extend_env fname loaded_coqgen_env env),
+
+
+   (* ****************************************************************** *)
+   (* dkgen_open_module                                                 *)
+   (*   loc: Location.t -> Types.fname ->  DkGenEnv.t -> DkGenEnv.t    *)
+   (** {b Descr} : Performs a full "open" directive on a dk generation
+       environment. It add in head of the environment the bindings found
+       in the "module" content, tagging them as beeing "opened".
+
+       {b Rem} : Exported outside this module.                           *)
+   (* ****************************************************************** *)
+   (fun ~loc fname env ->
+     let loaded_dkgen_env =
+       match (internal_find_module ~loc fname).ffs_dkgeneration with
+        | None -> raise (No_available_Dk_code_generation_envt fname)
+        | Some e -> e in
+     internal_extend_env fname loaded_dkgen_env env)
+
   )
 ;;
 
@@ -2145,6 +2408,14 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
         | _ ->  raise (Unbound_type (vname, loc)));
         (* If we found a species with this name, issue the better message. *)
         raise (Unbound_collection (vname, loc))
+
+
+  let append (env1 : t) (env2 : t) =
+    { constructors = env1.constructors @ env2.constructors ;
+      labels = env1.labels @ env2.labels ;
+      types = env1.types @ env2.types ;
+      values = env1.values @ env2.values ;
+      species = env1.species @ env2.species }
 end
 ;;
 
@@ -2339,10 +2610,41 @@ end
 module CoqGenEnv = Make (CoqGenEMAccess);;
 
 
+module DkGenEMAccess = struct
+  type constructor_bound_data = DkGenInformation.constructor_mapping_info
+  type label_bound_data = DkGenInformation.label_mapping_info
+  type type_bound_data = DkGenInformation.type_info
+  type value_bound_data = DkGenInformation.value_mapping_info
+  type species_bound_data = DkGenInformation.species_binding_info
+
+  let find_module = dkgen_find_module
+  let pervasives () =
+    { constructors = []; labels = []; types = []; values = []; species = [] }
+
+
+  let make_value_env_from_species_methods _species (_, meths_info, _, _) =
+    (* Because methods are never polymorphics this was checked before), we can
+       safely insert each method as a value bound to 0 extra parameters that
+       woud come from ... polymorphism. *)
+    let values_bucket =
+      List.map
+        (fun { mi_name = field_name } ->
+          (field_name, (BO_absolute (0, DkGenInformation.VB_non_toplevel))))
+        meths_info in
+    { constructors = []; labels = []; types = []; values = values_bucket;
+      species = [] }
+
+
+
+  (* No real need in the ml code generation environment case. *)
+  let post_process_method_value_binding _collname data = data
+end
+;;
+module DkGenEnv = Make (DkGenEMAccess);;
 
 (* **************************************************************** *)
 (* source_filename: Types.fname -> ScopingEnv.t -> TypingEnv.t ->   *)
-(*   MlGenEnv.t -> CoqGenEnv.t -> unit                              *)
+(*   MlGenEnv.t -> CoqGenEnv.t -> DkGenEnv.t -> unit                *)
 (** {b Descr} : Create the "fo file" on disk related to the current
     compilation unit.
     This "fo file" contains :
@@ -2352,7 +2654,7 @@ module CoqGenEnv = Make (CoqGenEMAccess);;
     {b Rem} : Exported outside this module.                         *)
 (* **************************************************************** *)
 let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env
-    opt_mlgen_toplevel_env opt_coqgen_toplevel_env =
+    opt_mlgen_toplevel_env opt_coqgen_toplevel_env opt_dkgen_toplevel_env =
   (* First, recover from the scoping environment only bindings coming from
      definitions of our current compilation unit. *)
   let scoping_toplevel_env' =
@@ -2367,10 +2669,16 @@ let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env
     match opt_mlgen_toplevel_env with
      | None -> None
      | Some e -> Some (env_from_only_absolute_bindings e) in
-  (* Finally, recover from the coq generation environment only bindings coming
+  (* Recover from the coq generation environment only bindings coming
      from definitions of our current compilation unit. *)
   let opt_coqgen_toplevel_env' =
     match opt_coqgen_toplevel_env with
+     | None -> None
+     | Some e -> Some (env_from_only_absolute_bindings e) in
+  (* Finally, recover from the dedukti generation environment only bindings
+     coming from definitions of our current compilation unit. *)
+  let opt_dkgen_toplevel_env' =
+    match opt_dkgen_toplevel_env with
      | None -> None
      | Some e -> Some (env_from_only_absolute_bindings e) in
   let module_name = Filename.chop_extension source_filename in
@@ -2386,7 +2694,8 @@ let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env
   output_value
     out_hd
     (scoping_toplevel_env', typing_toplevel_env',
-     opt_mlgen_toplevel_env', opt_coqgen_toplevel_env');
+     opt_mlgen_toplevel_env', opt_coqgen_toplevel_env',
+     opt_dkgen_toplevel_env');
   (* Just don't forget to close the output file... *)
   close_out out_hd
 ;;

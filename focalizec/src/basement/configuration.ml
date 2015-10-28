@@ -17,7 +17,7 @@
 exception No_input_file ;;
 
 
-let focalize_version_number = (0, 9, 0) ;;
+let focalize_version_number = (0, 9, 1) ;;
 
 let focalize_short_version =
   let (major, minor, patch_level) = focalize_version_number in
@@ -119,6 +119,12 @@ let (get_generate_coq, unset_generate_coq) =
   (fun () -> generate_coq := false)
 ;;
 
+let (get_generate_dk, unset_generate_dk) =
+  let generate_dk = ref true in
+  (fun () -> !generate_dk),
+  (fun () -> generate_dk := false)
+;;
+
 let (get_fancy_ansi, unset_fancy_ansi) =
   let fancy_ansi = ref true in
   (fun () -> !fancy_ansi),
@@ -174,6 +180,12 @@ let (set_stop_before_coq, get_stop_before_coq) =
   (fun () -> !stop_before_coq)
 ;;
 
+let (set_stop_before_dk, get_stop_before_dk) =
+  let stop_before_dk = ref false in
+  (fun () -> stop_before_dk := true),
+  (fun () -> !stop_before_dk)
+;;
+
 let require_plugin, get_plugins =
   let plugin_list = ref [] in
   (fun s -> plugin_list := s :: !plugin_list),
@@ -196,4 +208,10 @@ let (set_zvtov_extra_opts, get_zvtov_extra_opts) =
   let zvtov_extra_opts = ref "" in
   (fun s -> zvtov_extra_opts := !zvtov_extra_opts ^ " " ^ s),
   (fun () -> !zvtov_extra_opts)
+;;
+
+let (set_show_term_obls, get_show_term_obls) =
+  let show_term_obls = ref false in
+  (fun () -> show_term_obls := true),
+  (fun () -> !show_term_obls)
 ;;

@@ -7,11 +7,13 @@
 #            François Pessaux                                                #
 #            Pierre Weis                                                     #
 #            Damien Doligez                                                  #
+#            Raphaël Cauderlier                                              #
 #                                                                            #
 #                               LIP6  --  INRIA Rocquencourt                 #
 #                                                                            #
 #  Copyright 2007 - ... LIP6 and INRIA                                       #
 #            2012 - ... ENSTA ParisTech                                      #
+#            2013 - ... CNAM CEDRIC-CPR                                      #
 #  Distributed only by permission.                                           #
 #                                                                            #
 # ************************************************************************** #
@@ -187,6 +189,107 @@ else
     COQDEP=coqdep
 fi
 
+
+if [ $TOOLS_PREFIX_GIVEN != true ]
+then
+    DKWITNESS=`which dkcheck`
+    DKDIR=`dirname $DKWITNESS`
+    if [ "$DKDIR" != "" ] ;
+    then
+        if [ $INTERACTIVE = true ]
+        then
+            echo $BOLDTAG"Dedukti installation found in $DKDIR."$NORMALTAG
+            echo "Press enter to use default or specify another location."
+            read USER_INPUT
+            if [ "$USER_INPUT" != "" ] ;
+            then
+                DKDIR=$USER_INPUT
+            else
+                # Default path kept: trim it to just let the PATH acting.
+                DKDIR=""
+            fi
+        else
+            # Default path: trim it
+            DKDIR=""
+        fi
+    else
+        # No dkcheck command found and no explicit prefix given.
+        echo $BOLDTAG"Dedukti installation not found."$NORMALTAG
+        echo "Specify the path where to find Dedukti commands."
+        read USER_INPUT
+        DKDIR=$USER_INPUT
+        # Finally check that a director was entered by the user.
+        if [ "$DKDIR" = "" ] ;
+        then
+            echo "Error. Dedukti not available. Install it first."
+            exit 1
+        fi
+    fi
+else
+    # Explicit tools prefix given, keep it blindly.
+    DKDIR=$TOOLS_PREFIX
+fi
+
+if [ $TOOLS_PREFIX_GIVEN != true ]
+then
+    SKWITNESS=`which skcheck`
+    SKDIR=`dirname $SKWITNESS`
+    if [ "$SKDIR" != "" ] ;
+    then
+        if [ $INTERACTIVE = true ]
+        then
+            echo $BOLDTAG"Sukerujo installation found in $SKDIR."$NORMALTAG
+            echo "Press enter to use default or specify another location."
+            read USER_INPUT
+            if [ "$USER_INPUT" != "" ] ;
+            then
+                SKDIR=$USER_INPUT
+            else
+                # Default path kept: trim it to just let the PATH acting.
+                SKDIR=""
+            fi
+        else
+            # Default path: trim it
+            SKDIR=""
+        fi
+    else
+        # No skcheck command found and no explicit prefix given.
+        echo $BOLDTAG"Sukerujo installation not found."$NORMALTAG
+        echo "Specify the path where to find Sukerujo commands."
+        read USER_INPUT
+        SKDIR=$USER_INPUT
+        # Finally check that a director was entered by the user.
+        if [ "$SKDIR" = "" ] ;
+        then
+            echo "Error. Sukerujo not available. Install it first."
+            exit 1
+        fi
+    fi
+else
+    # Explicit tools prefix given, keep it blindly.
+    SKDIR=$TOOLS_PREFIX
+fi
+
+# If path to Dedukti is empty here, then ocaml was found but using the PATH.
+# So do not prefix it explicitly, letting PATH finding the commands.
+if [ "$DKDIR" != "" ] ;
+then
+    DKCHECK=$DKDIR/dkcheck
+else
+    DKCHECK=dkcheck
+fi
+
+# If path to Sukerujo is empty here, then ocaml was found but using the PATH.
+# So do not prefix it explicitly, letting PATH finding the commands.
+if [ "$SKDIR" != "" ] ;
+then
+    SKCHECK=$SKDIR/skcheck
+    SKDEP=$SKDIR/skdep
+else
+    SKCHECK=skcheck
+    SKDEP=skdep
+fi
+
 # #############################################################################
 # Generate the installation and configuration file containing tools vars.
 CONFIGURATION_VARS_FILE=.config_var
@@ -200,6 +303,9 @@ echo "CAMLDOC=$CAMLDOC" >> $CONFIGURATION_VARS_FILE
 echo "CAMLDEP=$CAMLDEP" >> $CONFIGURATION_VARS_FILE
 echo "COQC=$COQC" >> $CONFIGURATION_VARS_FILE
 echo "COQDEP=$COQDEP" >> $CONFIGURATION_VARS_FILE
+echo "DKCHECK=$DKCHECK" >> $CONFIGURATION_VARS_FILE
+echo "SKDEP=$SKDEP" >> $CONFIGURATION_VARS_FILE
+echo "SKCHECK=$SKCHECK" >> $CONFIGURATION_VARS_FILE
 echo "WARN_ERROR=a" >> $CONFIGURATION_VARS_FILE
 chmod a-w $CONFIGURATION_VARS_FILE
 
@@ -214,4 +320,7 @@ echo "  ocamldoc = $CAMLDOC"
 echo "  ocamldep = $CAMLDEP"
 echo "  coqc = $COQC"
 echo "  coqdep = $COQDEP"
+echo "  dkcheck = $DKCHECK"
+echo "  skdep = $SKDEP"
+echo "  skcheck = $SKCHECK"
 echo "Done"

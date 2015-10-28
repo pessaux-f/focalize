@@ -1,25 +1,475 @@
 \index{recursion}
-In the current alpha-release, the logical counterpart of recursive
-functions is not completely handled for the {\coq} code generation. We
-are still working on the point: recursive functions are planed to be
-fully supported as soon as possible, in addition with new material to
-help writing the required termination proofs.
 
-In the current state {\focal} provides 2 ways to write recursive
-functions depending on whether they involve a structural or general
-recursion. The difference in the generated code only affects the
-{\coq} code. Recursive structural functions are compiled to the
-construct {\tt Fixpoint} of {\coq}, hence avoiding the user to provide a
-termination proof. Functions that are not recursive structural are
-currently compiled to the {\tt Function} construct of {\coq}. Currently,
-the termination proof that should be provided by the user is ignored
-and turned assumed.
+When defining a recursive function {\focal}, as {\coq}, expects a proof that
+this function terminates. A termination proof is stated immediately after the
+body of its related recursive function definition:
+
+\noindent
+{\scriptsize
+\begin{lstlisting}
+let rec f (...) = ...
+termination proof = ...
+\end{lstlisting}
+}
+
+Termination proofs apply to recursive methods of species as well as to toplevel
+recursive functions with the limitations presented in the next section.
+Recursive functions or methods can be used as {\zenon} hints in proofs like
+any other ones (\lstinline"by definition of").
+
+As usually, proving that a function terminates implies showing that each
+recursive call is made on an argument which is ``smaller'' than the initial
+one. The notion of ``smaller'' can be stated by different means.
+
+
+\section{Limitations}
+Termination proofs are not supported for some forms of recursion. In such
+cases, it may be possible to omit the proof of the related functions, letting
+the compiler generating an assumed proof. The following shapes of recursion
+or recursive functions do not currently support termination proofs:
+
+\begin{compact-itemize}
+\item Local recursive functions (nested in functions or more generally
+      expressions).
+\item Nested recursive calls, i.e. of the form \lstinline"f (f (e))".
+\item Mutually recursive functions other than those structural on their first
+   argument.
+\item Termination proofs using a {\em measure} can only refer to {\bf one}
+   parameter of the function among all the ones it has.
+\item In this early state, {\bf polymorphic} toplevel recursive functions
+  may be incorrectly generated, leading to a {\coq} error.
+\end{compact-itemize}
+
+
+\section{Kinds of termination proofs}
+{\focal} proposes 3 ways to prove the termination of a function: by a
+structural decreasing of an argument, using a well-founded relation or
+using a measure. Each possibility is detailed in the following sections.
+
+
+From a technical point of view, the difference in the generated code only
+affects the {\coq} code. Recursive structural functions are compiled to the
+construct {\tt Fixpoint} of {\coq}. Functions that are not recursive
+structural or that do not have termination proofs are compiled to the
+{\tt Function} construct of {\coq}.
+
+
+\subsection{Structural termination}
+A structural recursive function is characterized by recursive calls performed
+on a subterm of the initial decreasing argument. Hence this argument must be of
+an inductive type. The termination proof is stated by:
+{\tt termination proof = structural on $arg$}.
+
+\subsubsection{Example}
+This function is a simple computation of the length of a list. The recursive
+call is performed on the tail of the list thanks to the pattern-matching.
+We have {\tt l = \_ :: q}, hence {\tt q} is structurally smaller than
+{\tt l}.
+
+\noindent
+{\scriptsize
+\begin{lstlisting}
+open "basics" ;;
+
+let rec length (l : list (int)) =
+  match l with
+  | [] -> 0
+  | _ :: q ->  1 + (length (q))
+termination proof = structural l ;;
+\end{lstlisting}
+}
+
+\subsubsection{Example}
+This function tests if a value {\tt x} belongs to the list {\tt l}. The
+decreasing is the same than in the previous example. This example illustrates
+the possibility to have a function with several arguments and state the
+chosen one as decreasing.
+
+{\scriptsize
+\begin{lstlisting}
+open "basics" ;;
+
+let rec mem (x, l) =
+  match l with
+  | [] -> false
+  | h :: q ->  if x = x then true else mem (x, q)
+termination proof = structural l ;;
+\end{lstlisting}
+}
+
+\subsubsection{{\bf Wrong} Example}
+\noindent
+{\scriptsize
+\begin{lstlisting}
+open "basics" ;;
+
+let rec zero (x) =
+  match x with
+  | 0 -> 0
+  | n -> zero (n - 1)
+termination proof = structural x ;;
+\end{lstlisting}
+}
+
+In this case $(n - 1)$ is not a subterm of $n$. This latter has type
+{\tt int} which is not an inductive type. Currently, the compiler does not
+ensure that the type is inductive, leading to a {\coq} error. This is a
+known limitation and weakness of the compiler which should be fixed in a
+future release.
+
+\subsubsection{Example}
+
+\noindent
+{\scriptsize
+\begin{lstlisting}
+open "basics" ;;
+
+type pint_t =
+ | Z
+ | S (pint_t)
+;;
+
+let rec zero (x) =
+  match x with
+  | Z -> 0
+  | S (n) -> zero (n)
+termination proof = structural x ;;
+\end{lstlisting}
+}
+
+This new function uses a representation of the integers being an inductive
+type (Peano's integer indeed). The structural decreasing is now ensured and
+this definition is correct.
+
+
+\subsection{Termination by a well-founded relation}
+{\bf Note}: some explanations of this section come from
+\cite{Dubois-Pessaux-termproofs-TFP2015}.
 
 \medskip
-(OUT-OF-DATE:
-Recursive structural functions are introduced by the {\tt let recstruct}
-whereas general recursive functions are introduced by {\tt let rec}.)
+The core of terminating recursion is that there are no infinite
+chains of nested recursive calls. This intuition is commonly mapped to
+the mathematical idea of a well-founded relation.
 
 \medskip
-Mutually recursive functions are currently not supported for {\coq}
-code generation.
+We illustrate this section with a function {\tt div} computing the quotient
+in the Euclidien division of two integers. We made this function total by
+returning the (wrong) value 0 in order to only focus on termination.
+
+\noindent
+{\scriptsize
+\begin{lstlisting}
+open "basics" ;;
+open "wellfoundation" ;;
+
+let rec div (a, b) =
+  if a <= 0 || b <= 0 then 0
+  else ( if (a < b) then 0 else 1 + div ((a - b), b) )
+termination proof = order pos_int_order on a ... ;
+\end{lstlisting}
+}
+
+From the user's point of view, despite {\tt div} has two arguments,
+only the first one {\tt a} is of interest for termination. The
+well-founded relation used here, {\tt pos\_int\_order}
+(of type {\tt int} $\rightarrow$ {\tt int}  $\rightarrow$ {\tt bool}) is the
+usual ordering on positive integers provided by the standard library.
+The well-foundedness obligation of this relation, is stated by
+\lstinline"is_well_founded (pos_int_order)", which also provided by the
+\focal\ standard library (in the module {\tt wellfoundation.fcl}).
+
+The function {\tt div} having only one recursive call, the only
+decreasing proof obligation will be:
+
+$\forall a : int, \forall b : int,
+      \lnot (a \leq 0 \lor b \leq 0) \rightarrow
+      ~\lnot(a < b)  \rightarrow pos\_int\_order (a - b, a)
+$
+
+\noindent where the conditions on the execution path leading to the
+recursion must be accumulated as hypotheses.
+
+The termination proof consists in as many steps as there are recursive
+calls, each one proving the ordering (according to the relation) of the
+decreasing argument and the
+initial one, then one step proving that the termination relation
+is well-founded and
+an immutable concluding step (\lstinline"<1>e qed coq proof {*wf_qed*}")
+telling to the compiler to assemble the previous steps, generate some stub
+code using a built-in \coq\ script to close the proof.
+The complete termination proof for {\tt div} is:
+
+\noindent
+{\scriptsize
+\begin{lstlisting}
+open "basics" ;;
+open "wellfoundation" ;;
+
+let rec div (a, b) = ...
+  termination proof = order pos_int_order on a
+    <1>1 prove all a : int, all b : int,
+      ~ (a <= 0 || b <= 0) ->
+      ~ (a < b) -> pos_int_order (a - b, a)
+      <2>1 assume  a : int, b : int,
+           hypothesis H1: ~ (a <= 0 || b <= 0),
+           hypothesis H2: ~ (a < b),
+           prove pos_int_order (a - b, a)
+           <3>1 prove b <= a
+                by property int_not_lt_ge, int_ge_le_swap hypothesis H2
+           <3>2 prove 0 <= a
+                by property int_not_le_gt, int_ge_le_swap, int_gt_implies_ge
+                hypothesis H1
+           <3>3 prove 0 < b
+                by property int_not_le_gt, int_gt_lt_swap hypothesis H1
+           <3>4 prove (a - b) < a
+                by step <3>1, <3>2, <3>3 property int_diff_lt
+           <3>e qed by step <3>4, <3>2 definition of pos_int_order
+      <2>e conclude
+    <1>2 prove is_well_founded (pos_int_order)
+       by  property pos_int_order_wf
+   <1>e qed coq proof {*wf_qed*} ;;
+\end{lstlisting}
+}
+
+Proof obligations can be printed by the compiler to prevent the user from
+guessing them. For this, the termination proof must be stated as
+{\tt order on ...} with an {\tt assumed} {\zenon} proof:
+
+{\scriptsize
+\begin{lstlisting}
+open "basics" ;;
+open "wellfoundation" ;;
+
+let rec div (a, b) = ...
+  termination proof = order pos_int_order on a
+  assumed ;;
+\end{lstlisting}
+}
+
+Then invoke the {\focalizec} compiler with the option {\tt -show-term-obls}
+(or shorter {\tt -sto}).
+During the compilation, the obligations get printed on the standard output
+like:
+
+\noindent
+{\scriptsize
+\begin{verbatim}
+---------------------------------------------------------------
+Termination proof obligations for the recursive function 'div':
+<1>1 prove all a : basics#int, all b : basics#int,
+  (basics#|| (basics#<= (a, 0), basics#<= (b, 0)) = false) ->
+  ((basics#< (a, b)) = false) -> wellfoundation#pos_int_order
+  ((basics#- (a, b)), a)
+<1>2 prove is_well_founded (wellfoundation#pos_int_order)
+<1>e qed coq proof {*wf_qed*}
+---------------------------------------------------------------
+\end{verbatim}
+}
+
+To summarize, a recursive function whose termination relies on a well-founded
+relation is given by the four following points:
+
+\begin{compact-enumerate}
+\item the relation (which can be an arbitrary expression, not only an
+      identifier),
+\item the theorem stating that this relation is well-founded,
+\item a theorem for each recursive call, stating that the arguments
+  of the recursive calls are smaller than the initial arguments
+  according to the given relation,
+\item the recursive function with a termination proof of the shape
+  (the order of the obligations does not matter):
+  \noindent
+  {\scriptsize
+  \begin{lstlisting}[mathescape=true,frame=none]
+<1>$x$ proofs of right ordering for each recursive call
+     (the same statements than corresponding theorems in point 3,
+      even if it is possible to directly inline the proofs instead)
+<1>$x+1$ proof of the relation being well-founded
+     (same statement than in point 2, same remark than in steps <1>$x$)
+<1>$x+2$ qed coq proof {*wf_qed*}
+  \end{lstlisting}
+  }
+\end{compact-enumerate}
+
+
+
+\subsection{Termination by a measure}
+{\bf Note}: some explanations of this section come from
+\cite{Dubois-Pessaux-termproofs-TFP2015}.
+
+We consider here the particular case when the termination relies on a
+\emph{measure} -- a  function that returns a natural number --
+which must decrease at each recursive call.
+We want to ease such termination proofs even if it would
+be possible for the user to use the previous approach, by constructing
+himself a well-founded relation from the measure. Precisely, the compiler
+does this job for him.
+
+A measure has to be positive, which will be a proof obligation.
+However, the relation built from the  measure being internalized, its
+well-foundedness is no more asked
+to the user. From the user's point of view, the proof obligation for each
+recursive call must now show that the measure decreases on the
+argument of interest between each call.
+
+\medskip
+We illustrate this section with a function {\tt mem} checking if an element
+belongs to a list. Although a structural argument could also be used, we
+chose to rely on the decreasing {\em length} of the list where the element
+(whose ``type'' is a parameter of the hosting species) is recursively
+searched.  We first write the method {\tt length} whose termination is simply
+structural on its argument {\tt l}. Then we write the method {\tt mem},
+stating a termination proof using the measure {\tt length} on its argument
+{\tt l}.
+
+\noindent
+{\scriptsize
+\begin{lstlisting}
+species Ex_mes (A is Basic_object) =
+  let rec length (l : list(A)) =
+    match l with
+    | [] -> 0
+    | h :: q ->  1 + length (q)
+  termination proof = structural l ;
+
+let rec mem (l, x: A) =
+    match l with
+    | [] -> false
+    | h :: q ->  h = x || mem (q, x)
+  termination proof =
+    measure length on l ... ;
+end ;;
+\end{lstlisting}
+}
+
+From the user's point of view, despite {\tt mem} has two arguments,
+only {\tt l} is of interest for the termination. The measure being
+{\tt length}, the first proof obligation is:
+
+$\forall l: list (A), 0 \leq length (l)$
+
+\noindent
+Then, the method {\tt mem} having only one recursive call, the only
+decreasing proof obligation is:
+
+$\forall l : list(A), \forall q : list(A), \forall h : A,
+  \ l = h :: q \rightarrow length (q) < length (l)$
+
+\noindent where variables bound on the execution path leading to the
+recursion must be accumulated as hypotheses. Here, the recursion being
+in a pattern-matching case, {\tt h} and {\tt q} must be related to the
+matched value {\tt l}. The core of the decreasing fact is the $<$
+relation between the argument of the recursive call and the one in the
+current call.
+
+For readability, instead of inlining the proofs of these obligations,
+the user can state two related properties or theorems before the
+function {\tt mem} itself.
+
+\noindent
+{\scriptsize
+\begin{lstlisting}[frame=none]
+  property length_pos : all l: list (A), 0 <= length (l) ;
+
+  theorem mes_decr : all l : list(A) , all q : list(A), all h : A,
+    l = h :: q -> length (q) < length (l)
+  proof = ... ;
+\end{lstlisting}
+}
+
+Note that {\tt length\_pos} is a {\em property}, not a theorem: it is not
+yet proved.
+Now the termination proof consists in as many steps as there are
+recursive calls, each one proving the strict decreasing of the measure,
+then one step proving that the measure is positive and an immutable
+concluding step (\lstinline"<1>$x+2$ qed coq proof {*mf_qed*}" telling to the
+compiler to assemble the previous steps and generate some stub code to close
+the proof. Note that {\tt mf\_qed} and {\tt wf\_qed} are equivalent. Both
+keywords are provided for users willing to make a difference between
+termination by a well-founded relation and a measure in their source code.
+
+\noindent
+{\scriptsize
+\begin{lstlisting}
+  let rec mem (l, x: A) = ...
+  termination proof = measure length on l
+    <1>1 prove all l : list(A) , all q : list(A), all h : A,
+           l = h :: q -> length (q) < length (l)
+         by property mes_decr
+    <1>2 prove all l: list (A), 0 <= length (l)
+         by property length_pos
+    <1>e qed coq proof {*mf_qed*} ;
+\end{lstlisting}
+}
+
+To summarize, from the user's point of view, a recursive function
+whose termination relies on a measure is given by the four following
+points:
+\begin{compact-enumerate}
+\item The measure function returning a regular integer (which
+  raises the issue that $<$ is well-founded on naturals, not integers). The
+  measure can be an arbitrary expression, not only an identifier
+  (c.f. Section \ref{measure-arbitrary-expr} for a more detailled
+        discussion).
+\item The theorem stating that the measure is always positive or null.
+\item A theorem for each recursive call, stating that the measure on the
+  argument of interest decreases.
+\item The recursive function with a termination proof of the shape:
+  \noindent
+  {\scriptsize
+  \begin{lstlisting}[mathescape=true,frame=none]
+<1>$x$ proofs of  decreasing for each recursive call
+     (the same statements than corresponding theorems in point 3,
+      even if it is possible to directly inline the proofs instead)
+<1>$x+1$ proof of the measure being always positive or null
+     (same statement than in point 2, same remark than in steps <1>$x$)
+<1>$x+2$ qed coq proof {*mf_qed*}
+  \end{lstlisting}
+  }
+\end{compact-enumerate}
+
+
+
+\subsubsection{Using Other Function Parameters or Arbitrary Expression}
+\label{measure-arbitrary-expr}
+As previously stated, although the user usually states his relation or his
+measure by giving the name of the corresponding function, any arbitrary
+expression can be used. In the case of a measure, this makes possible
+to also use some other parameters of the function than the decreasing one.
+
+In the (non-meaningful and dummy) following example, the function
+{\tt mem} (whose termination could be proved in a simpler way since it
+is structural) has twos parameters and the non-decreasing one, {\tt x}, is
+also used in the measure expression.
+
+\noindent
+{\scriptsize
+\begin{lstlisting}
+let dummy (x : int) = 0 ;;
+let rec mem (l, x: int) =
+  match l with
+  | [] -> false
+  | h :: q ->  h = x || (mem (q, x))
+termination proof = measure (function ll -> dummy (x) + length (ll)) on l
+...
+\end{lstlisting}
+}
+
+This obviously impacts the proof obligations since {\tt x} must be
+bound in their statements, leading to an additional
+\lstinline"all x : int" to bind {\tt x}. The compiler takes care of
+this point while printing the obligations to the user.
+
+\noindent
+{\scriptsize
+\begin{lstlisting}
+  (* Obligation 1: strict decreasing at each recursive call. *)
+  <1>1 prove all l : list(int) , all x : int, all q : list(int), all h : int,
+         l = h :: q -> dummy (x) + length (q) < dummy (x) + length (l)
+       ...
+  (* Obligation 2: measure always >= 0. *)
+  <1>2 prove all x : int, all l: list (int), 0 <= dummy (x) + length (l)
+       ...
+  <42>e qed coq proof {*wf_qed*} ;;
+\end{lstlisting}
+}

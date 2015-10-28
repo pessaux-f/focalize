@@ -324,7 +324,7 @@ let pp_constant_desc ppf = function
   | Parsetree.C_string s -> Format.fprintf ppf "\"%s\"" (String.escaped s)
   | Parsetree.C_char c ->
       let tmp_s = " " in
-      tmp_s.[0] <- c;
+      tmp_s.[0] <- c ;
       Format.fprintf ppf "%s" tmp_s
 ;;
 
@@ -413,6 +413,7 @@ and pp_pattern ppf = pp_ast pp_pat_desc ppf
 let pp_external_language ppf = function
   | Parsetree.EL_Caml -> Format.fprintf ppf "caml@ "
   | Parsetree.EL_Coq -> Format.fprintf ppf "coq@ "
+  | Parsetree.EL_Dk -> Format.fprintf ppf "dedukti@ "
   | Parsetree.EL_external s -> Format.fprintf ppf "%s@ " s
 ;;
 
@@ -639,6 +640,11 @@ and pp_proof_desc ppf = function
         (pp_enforced_dependencies " ") enf_deps;
       if enf_deps <> [] then Format.fprintf ppf " ";
       Format.fprintf ppf "@ {*%s*}@]" s
+  | Parsetree.Pf_dk (enf_deps, s) ->
+      Format.fprintf ppf "@[<2>dedukti proof@ %a"
+        (pp_enforced_dependencies " ") enf_deps;
+      if enf_deps <> [] then Format.fprintf ppf " ";
+      Format.fprintf ppf "@ {*%s*}@]" s
   | Parsetree.Pf_node proof_nodes ->
       Format.fprintf ppf "%a" (pp_proof_nodes "") proof_nodes
 and pp_proof ppf = pp_ast pp_proof_desc ppf
@@ -649,12 +655,15 @@ and pp_termination_proof_desc ppf = function
   | Parsetree.TP_lexicographic (orders_exprs, param_list, proof) ->
       Format.fprintf ppf "@[<2>lexicographic@ %a@ on %a@ %a@]"
         (pp_exprs ",") orders_exprs pp_param_list param_list pp_proof proof
-  | Parsetree.TP_measure (expr, param_list, proof) ->
+  | Parsetree.TP_measure (expr, param, proof) ->
       Format.fprintf ppf "@[<2>measure@ %a@ on %a@ %a@]"
-        pp_expr expr pp_param_list param_list pp_proof proof
-  | Parsetree.TP_order (expr, param_list, proof) ->
+        pp_expr expr pp_param param pp_proof proof
+  | Parsetree.TP_order (expr, param, proof) ->
       Format.fprintf ppf "@[<2>order@ %a@ on %a@ %a@]"
-        pp_expr expr pp_param_list param_list pp_proof proof
+        pp_expr expr pp_param param pp_proof proof
+and pp_param ppf (vname, ty_expr_opt) =
+  Format.fprintf ppf "(%a,@ %a)"
+    pp_vname vname (Handy.pp_generic_explicit_option pp_type_expr) ty_expr_opt
 and pp_param_list =
     (Handy.pp_generic_separated_list
        ","

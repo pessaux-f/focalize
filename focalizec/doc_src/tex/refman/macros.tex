@@ -1,6 +1,6 @@
-\def\month{October}
-\def\year{2014}
-\def\focalizeversion{\sf 0.9.0}
+\def\month{May}
+\def\year{2015}
+\def\focalizeversion{\sf 0.9.1}
 
 \def\focalizeversiondate{\sf {\month} {\year}}
 
@@ -111,3 +111,19 @@
 % \def\nextsyntaxclassleft#1{
 % \cr\noalign{\smallskip\goodbreak}$\hfilneg#1\quad\hfil$
 % }
+
+\newenvironment{compact-itemize}{
+\begin{itemize}
+     \setlength{\itemsep}{1pt}
+     \setlength{\parskip}{0pt}
+     \setlength{\parsep}{0pt}}
+{\end{itemize}
+}
+
+\newenvironment{compact-enumerate}{
+\begin{enumerate}
+     \setlength{\itemsep}{1pt}
+     \setlength{\parskip}{0pt}
+     \setlength{\parsep}{0pt}}
+{\end{enumerate}
+}

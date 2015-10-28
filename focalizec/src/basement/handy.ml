@@ -346,7 +346,7 @@ let list_mem_n_remove elem l =
   let rec rec_mem = function
     | [] -> raise Not_found
     | h :: q -> if h = elem then q else h :: (rec_mem q) in
-  rec_mem l                                                     
+  rec_mem l
 ;;
 
 
@@ -357,11 +357,10 @@ let list_first_index predicate l =
     | [] -> raise Not_found
     | h :: q ->
         if predicate h then !cnt
-        else
-          (begin
+        else (
           incr cnt ;
           rec_index q
-          end) in
+         ) in
   rec_index l
 ;;
 
@@ -403,6 +402,10 @@ let rec list_drop l num =
 let list_indices_of_present_in ~all ~subset =
    List.map (fun s_e -> list_first_index (fun a_e -> a_e = s_e) all) subset
 ;;
+
+
+
+let list_index_of e l = list_first_index (fun a_e -> a_e = e) l ;;
 
 
 

@@ -14,8 +14,9 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-val name_of_vname : Parsetree.vname -> string
+
 (** Extracts the inner string name of the [vname] variable name. *)
+val name_of_vname : Parsetree.vname -> string
 
 module SelfDepSet :
   sig

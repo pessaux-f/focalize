@@ -117,7 +117,7 @@ species Meet_semi_lattice =
          <2>4 qed
               by step <2>3
                  definition of order_inf
-       <1>2 conclude
+       <1>2 qed by step <1>1 property order_inf
      ;
   (** any element smaller than x and y is smaller than their infimum *)
   theorem order_inf_is_infimum : all x y i : Self,
@@ -138,7 +138,7 @@ species Meet_semi_lattice =
           by step <2>1
              property inf_is_associative, equal_transitive
              definition of order_inf
-      <1>2 conclude
+      <1>2 qed by step <1>1 property order_inf
     ;
 
 end
@@ -231,7 +231,7 @@ species Join_semi_lattice =
                property equal_symmetric, equal_transitive,
                         sup_left_substitution_rule
                definition of order_sup
-       <1>2 conclude
+       <1>2 qed by step <1>1 property order_sup
      ;
 
   (** any element bigger than two elements is bigger than their supremum *)
@@ -253,7 +253,7 @@ species Join_semi_lattice =
           by step <2>1
              property sup_is_associative, equal_transitive
              definition of order_sup
-      <1>2 conclude
+      <1>2 qed by step <1>1 property order_sup
     ;
 
 end
@@ -280,7 +280,6 @@ species Lattice =
        (* x = x v y; x ^ y = x ^ (x v y) = x *)
        <1>1 assume x : Self, y : Self,
             hypothesis H : !order_sup(y, x),
-            notation s = !sup (x, y),
             prove !order_inf(x, y)
             <2>1 prove !equal(!inf(x, y), x)
                  <3>1 prove !equal(y, !sup(x, y))
@@ -297,7 +296,7 @@ species Lattice =
             <2>z qed by step <2>1
                         property equal_symmetric
                         definition of order_inf
-       <1>2 conclude
+       <1>2 qed by step <1>1 property order_inf, order_sup
      ;
 
   (** in a lattice there is only one ordering *)
@@ -317,7 +316,7 @@ species Lattice =
                step <2>1
                property equal_transitive, equal_symmetric, inf_absorbes_sup
                definition of order_sup
-       <1>2 conclude
+       <1>2 qed by step <1>1 property order_inf, order_sup
      ;
 
 (*
@@ -455,7 +454,8 @@ species Distributive_lattice =
          <2>f qed by step <2>1, <2>3, <2>4 property equal_transitive
     <1>2 qed by
            step <1>1
-           property sup_left_distributes, equal_transitive, equal_symmetric
+           property sup_left_distributes, equal_transitive, equal_symmetric,
+                    order_inf
   ;
 
 end

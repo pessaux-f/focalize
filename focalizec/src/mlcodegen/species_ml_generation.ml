@@ -141,7 +141,7 @@ let generate_rep_definition ctx fields =
                let ty = Types.specialize sch in
                Format.fprintf ctx.Context.scc_out_fmter
                  "me_as_carrier =@ %a@]@\n"
-                 (Types.pp_type_simple_to_ml
+                 (Ml_pprint.pp_type_simple_to_ml
                     ~current_unit: ctx.Context.scc_current_unit
                     ctx.Context.scc_collections_carrier_mapping)
                  ty
@@ -233,7 +233,7 @@ let generate_record_type ctx species_descr =
                  and we don't need to keep name sharing with anythin else. *)
               Format.fprintf out_fmter "@[<2>rf_%a : %a ;@]@\n"
                 Parsetree_utils.pp_vname_with_operators_expanded n
-                (Types.pp_type_simple_to_ml
+                (Ml_pprint.pp_type_simple_to_ml
                    ~current_unit: ctx.Context.scc_current_unit
                    collections_carrier_mapping)
                 ty
@@ -255,7 +255,7 @@ let generate_record_type ctx species_descr =
                    and we don't need to keep name sharing with anythin else. *)
                 Format.fprintf out_fmter "@[<2>rf_%a : %a ;@]@\n"
                   Parsetree_utils.pp_vname_with_operators_expanded n
-                  (Types.pp_type_simple_to_ml
+                  (Ml_pprint.pp_type_simple_to_ml
                      ~current_unit: ctx.Context.scc_current_unit
                      collections_carrier_mapping)
                     ty
@@ -334,7 +334,7 @@ let generate_collection_module_interface ctx collection_descr =
                  and we don't need to keep name sharing with anythin else. *)
               Format.fprintf out_fmter "@[<2>val %a : %a@]@\n"
                 Parsetree_utils.pp_vname_with_operators_expanded n
-                (Types.pp_type_simple_to_ml
+                (Ml_pprint.pp_type_simple_to_ml
                    ~current_unit: ctx.Context.scc_current_unit
                    collections_carrier_mapping)
                 ty
@@ -355,7 +355,7 @@ let generate_collection_module_interface ctx collection_descr =
                    and we don't need to keep name sharing with anythin else. *)
                 Format.fprintf out_fmter "@[<2>val %a : %a@]@\n"
                   Parsetree_utils.pp_vname_with_operators_expanded n
-                  (Types.pp_type_simple_to_ml
+                  (Ml_pprint.pp_type_simple_to_ml
                      ~current_unit: ctx.Context.scc_current_unit
                      collections_carrier_mapping)
                     ty
@@ -449,7 +449,7 @@ let find_inherited_method_generator_abstractions ~current_unit from_species
 
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
-let generate_one_field_binding ctx env min_coq_env ~let_connect ~self_manifest
+let generate_ml_one_field_binding ctx env min_coq_env ~let_connect ~self_manifest
     dependencies_from_params (from, name, params, scheme, body) =
   let out_fmter = ctx.Context.scc_out_fmter in
   let collections_carrier_mapping =
@@ -540,7 +540,7 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect ~self_manifest
          | Some param_ty ->
              Format.fprintf out_fmter "@ (%a : %a)"
                Parsetree_utils.pp_vname_with_operators_expanded param_vname
-               (Types.pp_type_simple_to_ml
+               (Ml_pprint.pp_type_simple_to_ml
                   ~current_unit: ctx.Context.scc_current_unit
                   collections_carrier_mapping)
                param_ty
@@ -649,7 +649,7 @@ let generate_methods ctx env ~self_manifest fields_abstraction_infos field =
                context. *)
             let abstr_inf = List.assoc name fields_abstraction_infos in
             let coq_min_typ_env_names =
-              generate_one_field_binding
+              generate_ml_one_field_binding
                 ctx env abstr_inf.Env.TypeInformation.ad_min_coq_env
                 ~let_connect: Misc_common.LC_first_non_rec ~self_manifest
                 abstr_inf.Env.TypeInformation.ad_dependencies_from_parameters
@@ -735,7 +735,7 @@ let generate_methods ctx env ~self_manifest fields_abstraction_infos field =
                  let first_ai = List.assoc name rec_bound_ais in
                  (* Now, generate the first method, introduced by "let rec". *)
                  let first_coq_min_typ_env_names =
-                   generate_one_field_binding
+                   generate_ml_one_field_binding
                      ctx' env first_ai.Env.TypeInformation.ad_min_coq_env
                      ~let_connect: Misc_common.LC_first_rec ~self_manifest
                      first_ai.Env.TypeInformation.ad_dependencies_from_parameters
@@ -771,7 +771,7 @@ let generate_methods ctx env ~self_manifest fields_abstraction_infos field =
                           | Parsetree.BB_computational e -> e) in
                        let ai = List.assoc name rec_bound_ais in
                        let coq_min_typ_env_names =
-                         generate_one_field_binding
+                         generate_ml_one_field_binding
                            ctx' env ai.Env.TypeInformation.ad_min_coq_env
                            ~let_connect: Misc_common.LC_following ~self_manifest
                            ai.Env.TypeInformation.ad_dependencies_from_parameters

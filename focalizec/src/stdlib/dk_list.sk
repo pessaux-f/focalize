@@ -1,0 +1,143 @@
+#NAME dk_list.
+
+(; list, nil and cons are keywords in Sukerujo ;)
+
+(; Polymorphic lists ;)
+List : cc.uT -> Type.
+[A] cc.eT (list A) --> List A.
+
+def call_by_value_list : A : cc.uT ->
+                         R : cc.uT ->
+                         (List A -> cc.eT R) ->
+                         List A ->
+                         cc.eT R.
+
+[ A : cc.uT, R : cc.uT, f : List A -> cc.eT R ]
+    call_by_value_list A R f (nil _)
+      --> f (nil A)
+[ A : cc.uT, R : cc.uT, f : List A -> cc.eT R, a : cc.eT A, l : List A ]
+    call_by_value_list A R f (cons _ a l)
+      --> f (cons A a l).
+
+(; Case distinction ;)
+def match : A : cc.uT ->
+            P : (List A -> cc.uT) ->
+            cc.eT (P (nil A)) ->
+            (a : cc.eT A -> l : List A -> cc.eT (P (cons A a l))) ->
+            l : List A ->
+            cc.eT (P l).
+
+[A : cc.uT,
+ P : List A -> cc.uT,
+ Hnil : cc.eT (P (nil A)),
+ Hcons : a : cc.eT A -> l : List A -> cc.eT (P (cons A a l))]
+    match A P Hnil Hcons (nil _) --> Hnil
+
+[A : cc.uT,
+ P : List A -> cc.uT,
+ Hnil : cc.eT (P (nil A)),
+ Hcons : a : cc.eT A -> l : List A -> cc.eT (P (cons A a l)),
+ a : cc.eT A,
+ l : List A]
+    match A P Hnil Hcons (cons _ a l) --> Hcons a l.
+
+(; Non dependant case distinction ;)
+def simple_match : A : cc.uT ->
+                   return : cc.uT ->
+                   cc.eT return ->
+                   (cc.eT A -> List A -> cc.eT return) ->
+                   List A ->
+                   cc.eT return
+                :=
+                   A : cc.uT =>
+                   return : cc.uT =>
+                   match A (_x : List A => return).
+
+def match__nil : A : cc.uT ->
+                 List A ->
+                 return : cc.uT ->
+                 cc.eT return ->
+                 cc.eT return ->
+                 cc.eT return.
+[ A : cc.uT, ret : cc.uT, ncase : cc.eT ret, ccase : cc.eT ret ]
+    match__nil A (nil _) ret ncase ccase --> ncase
+[ A : cc.uT, a : cc.eT A, l : List A, ret : cc.uT, ncase : cc.eT ret, ccase : cc.eT ret ]
+    match__nil A (cons _ a l) ret ncase ccase --> ccase.
+
+def match__cons : A : cc.uT ->
+                  List A ->
+                  return : cc.uT ->
+                  (cc.eT A -> List A -> cc.eT return) ->
+                  cc.eT return ->
+                  cc.eT return.
+[ A : cc.uT, l : List A, ret : cc.uT, ncase : cc.eT ret, ccase : cc.eT A -> List A -> cc.eT ret ]
+    match__cons A l ret ccase ncase --> simple_match A ret ncase ccase l.
+
+(; Append ;)
+def append : A : cc.uT -> List A -> List A -> List A.
+[ A : cc.uT, l2 : List A ]
+    append A (nil _) l2 --> l2
+[ A : cc.uT, a1 : cc.eT A, l1 : List A, l2 : List A ]
+    append A (cons _ a1 l1) l2 --> cons A a1 (append A l1 l2)
+[ A : cc.uT, l1 : List A, l2 : List A, l3 : List A]
+    append A l1 (append _ l2 l3) --> append A (append A l1 l2) l3.
+
+(; Map ;)
+def map : A : cc.uT ->
+          B : cc.uT ->
+          (cc.eT A -> cc.eT B) -> List A -> List B.
+[A : cc.uT,
+ B : cc.uT,
+ f : cc.eT A -> cc.eT B] map A B f (nil _) --> nil B
+[A : cc.uT,
+ B : cc.uT,
+ f : cc.eT A -> cc.eT B,
+ a : cc.eT A,
+ l : cc.eT (list A)] map A B f (cons _ a l) --> cons B (f a) (map A B f l)
+[A : cc.uT,
+ B : cc.uT,
+ C : cc.uT,
+ f : cc.eT A -> cc.eT B,
+ g : cc.eT B -> cc.eT C,
+ l : cc.eT (list A)] map B C g (map A _ f l) --> map A C (x : cc.eT A => g (f x)) l.
+
+def mem : A : cc.uT ->
+          (cc.eT A -> cc.eT A -> cc.eT dk_bool.bool) ->
+          cc.eT A ->
+          List A ->
+          cc.eT dk_bool.bool.
+[ A : cc.uT, eq : cc.eT A -> cc.eT A -> cc.eT dk_bool.bool, a : cc.eT A ]
+    mem A eq a (nil _) --> dk_bool.false
+[ A : cc.uT, eq : cc.eT A -> cc.eT A -> cc.eT dk_bool.bool, a1 : cc.eT A, a2 : cc.eT A, l : cc.eT (list A) ]
+    mem A eq a1 (cons _ a2 l) --> dk_bool.or (eq a1 a2) (mem A eq a1 l).
+
+
+
+def map_id :
+  B : cc.uT ->
+  l : cc.eT (list B) ->
+  dk_logic.eP (dk_logic.equal (list B) (map B B (x : cc.eT B => x) l) l).
+[B : cc.uT]
+    map_id B (nil _) --> dk_logic.refl (list B) (nil B)
+[A : cc.uT,
+ a : cc.eT A,
+ l : cc.eT (list A)]
+    map_id A (cons _ a l)
+      -->
+    dk_logic.equal_congr
+      (list A)
+      (list A)
+      (cons A a)
+      (map A A (x : cc.eT A => x) l)
+      l
+        (map_id A l).
+
+
+dlist : A : cc.uT -> cc.eT A -> cc.uT.
+dnil : A : cc.uT -> a : cc.eT A -> cc.eT (dlist A a).
+dcons : A : cc.uT ->
+        a : cc.eT A ->
+        f : (cc.eT (dlist A a) -> cc.uT) ->
+        l : cc.eT (dlist A a) ->
+        cc.eT (f l) ->
+        cc.eT (dlist A a).

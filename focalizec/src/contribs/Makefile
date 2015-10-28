@@ -20,10 +20,7 @@ ROOT_DIR=../../..
 include $(ROOT_DIR)/Makefile.common
 
 # Fill here to add a new directory for a new contribution
-SUB_DIRS=\
- utils\
- voter
-# automata
+SUB_DIRS= utils voter #automata
 
 lib: all
 

@@ -59,29 +59,40 @@ let generic_level = 100000000 ;;
 
 (* **************************************************** *)
 (** {b Descr} : Describes the type algebra of FoCaLize.
+    Actually, this is a view of it. Internally type_simple
+    and type_simple_view are the same type but only
+    the definition of type_simple_view is (privately)
+    exported.
 
-    {b Exported} : Abstract.                            *)
+    {b Exported} : Private.                             *)
 (* **************************************************** *)
-type type_simple =
-  | ST_var of type_variable                   (** Type variable. *)
-  | ST_arrow of (type_simple * type_simple)   (** Functional type. *)
-  | ST_tuple of type_simple list              (** Tuple type. *)
-  | ST_sum_arguments of type_simple list      (** Type of sum type value
-                                                  constructor's arguments. To
-                                                  prevent them from being
-                                                  confused with tuples. *)
+type type_simple_view =
+  | ST_var of type_variable                             (** Type variable. *)
+  | ST_arrow of (type_simple_view * type_simple_view)   (** Functional type. *)
+  | ST_tuple of type_simple_view list                   (** Tuple type. *)
+  | ST_sum_arguments of type_simple_view list
+      (** Type of sum type value constructor's arguments. To prevent them from
+          being confused with tuples. *)
+  | ST_prop                                             (** The type of logical
+                                                            formulae *)
   | ST_construct of
       (** Type constructor, possibly with arguments. Encompass the types
           related to records and sums. Any value of these types are typed as
           a [ST_construct] whose name is the name of the record (or sum)
           type. *)
-      (type_name * type_simple list)
+      (type_name * type_simple_view list)
   | ST_self_rep     (** Carrier type of the currently analysed species. *)
   | ST_species_rep of
       (** Carrier type of a collection hosted in the specified module. *)
       (fname * collection_name)
 
 
+(* *********************************************************** *)
+(** {b Descr} : Non-canonical internal version of simple types.
+
+    {b Exported} : Abstract.                                   *)
+(* *********************************************************** *)
+and type_simple = type_simple_view
 
 (* ************************************************************************** *)
 (** {b Descr} : Variable of type (type variable).
@@ -208,11 +219,36 @@ exception Arity_mismatch of (type_name * int * int  * Location.t) ;;
     {b Exported} : No                                                    *)
 (* ********************************************************************* *)
 let rec repr = function
-  | ST_var ({ tv_value = TVV_known ty1 } as var) ->
+  | ST_var ({ tv_value = TVV_known ty1; _ } as var) ->
       let val_of_ty1 = repr ty1 in
       var.tv_value <- TVV_known val_of_ty1 ;
       val_of_ty1
   | ty -> ty
+;;
+
+(* ********************************************************************* *)
+(* type_simple -> type_simple_view                                       *)
+(** {b Descr} : Recursively call `repr`.
+    This is useful for printing since we have to call repr at each step
+    when printing. Since the output of this function is canonical, we can
+    use it as a view function.
+
+    {b Exported} : Yes                                                   *)
+(* ********************************************************************* *)
+let rec view_type_simple ty =
+  match repr ty with
+    | ST_arrow (ty1, ty2) ->
+       ST_arrow (view_type_simple ty1, view_type_simple ty2)
+    | ST_sum_arguments tys ->
+       ST_sum_arguments (List.map view_type_simple tys)
+    | ST_tuple tys ->
+       ST_tuple (List.map view_type_simple tys)
+    | ST_construct (type_name, arg_tys) ->
+       ST_construct (type_name, List.map view_type_simple arg_tys)
+    | ST_var _
+    | ST_prop
+    | ST_self_rep
+    | ST_species_rep _ as ty' -> ty'
 ;;
 
 
@@ -323,7 +359,7 @@ let type_unit () = type_basic ("basics", "unit") [] ;;
 
 let type_arrow t1 t2 = ST_arrow (t1, t2) ;;
 
-let type_prop () = type_basic ("coq_builtins", "prop") [] ;;
+let type_prop () = ST_prop ;;
 
 let type_tuple tys = ST_tuple tys ;;
 
@@ -338,6 +374,9 @@ let type_sum_arguments_from_type_tuple ty =
    | _ -> assert false
 ;;
 
+
+
+let is_generalized_type_variable ty_var = (ty_var.tv_level = generic_level);;
 
 
 (* ************************************************************************* *)
@@ -365,9 +404,9 @@ let type_rep_species ~species_module ~species_name =
 
 
 (* ************************************************************************** *)
-(** {b Descr}: Verifies if the type is "bool" or "Self". This is used in Coq
-    generation to determine if an expression must be surrounded by a wrapper
-    applying Coq's "Is_true".
+(** {b Descr}: Verifies if the type is "bool" or "Self". This is used in Coq and
+    Dedukti generation to determine if an expression must be surrounded by a
+    wrapper applying Coq's and Dedukti's "Is_true".
     See the comment in species_record_type_generation.ml in the function
     [rec_generate_logical_expr] to understand why the type Self must also be
     considered.
@@ -413,7 +452,7 @@ let (pp_type_simple, pp_type_scheme) =
 
       This mapping is purely local to the pretty-print function of type into
       the FoCaLize syntax. It is especially not shared with the type
-      printing routine used to generate the OCaml or Coq code.
+      printing routine used to generate the OCaml, Coq or Dedukti code.
       {b Exported} : No.                                                     *)
   (* *********************************************************************** *)
   let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
@@ -426,7 +465,7 @@ let (pp_type_simple, pp_type_scheme) =
 
       This counter is purely local to the pretty-print function of type into
       the FoCaLize syntax. It is especially not shared with the type printing
-      routine used to generate the OCaml or Coq code.
+      routine used to generate the OCaml, Coq or Dedukti code.
 
       {b Exported} : No.                                                      *)
   (* ************************************************************************ *)
@@ -440,7 +479,7 @@ let (pp_type_simple, pp_type_scheme) =
      {b Rem} : Not exported. This counter is purely local to the
       pretty-print function of type into the FoCaLize syntax. It is
       especially not shared with the type printing routine used to
-      generate the OCaml or Coq code.                              *)
+      generate the OCaml, Coq or Dedukti code.                     *)
   (* ************************************************************* *)
   let reset_type_variables_mapping () =
     type_variable_names_mapping := [] ;
@@ -497,6 +536,7 @@ let (pp_type_simple, pp_type_scheme) =
                pp_type_name type_name
                (Handy.pp_generic_separated_list "," (rec_pp 0)) arg_tys
         end)
+    | ST_prop -> Format.fprintf ppf "prop"
     | ST_self_rep -> Format.fprintf ppf "Self"
     | ST_species_rep (module_name, collection_name) ->
         Format.fprintf ppf "%s#%s" module_name collection_name in
@@ -540,6 +580,7 @@ let (specialize, specialize_with_args) =
      | ST_construct (name, args) ->
          ST_construct (name, List.map copy_type_simple args)
      | ST_self_rep -> ST_self_rep
+     | ST_prop
      | ST_species_rep _ -> ty in
 
 
@@ -625,6 +666,7 @@ let copy_type_simple_but_variables ~and_abstract =
           | Some coll_name -> ST_species_rep coll_name
           | None -> ST_self_rep
          end)
+     | ST_prop
      | (ST_species_rep _) as tdesc -> tdesc in
   (* ******************** *)
   (* The function itself. *)
@@ -685,11 +727,21 @@ let generalize =
      | ST_sum_arguments tys -> List.iter find_parameters tys
      | ST_tuple tys -> List.iter find_parameters tys
      | ST_construct (_, args) -> List.iter find_parameters args
-     | ST_self_rep | ST_species_rep _ -> () in
+     | ST_prop | ST_self_rep | ST_species_rep _ -> () in
   (* Let's do the job now. *)
   (fun ty ->
     find_parameters ty ;
-    let scheme = { ts_vars = !found_ty_parameters ; ts_body = ty } in
+    (* Attention to reverse the list of the variables found otherwise they
+       will be in the wrong order compared to the (_ : Set)'s generated for
+       Coq. This was a long lasting bug that has never been found !
+       In effect, in a type scheme all 'a, 'b, 'c, 'a -> 'b -> 'c
+       correscponding to a function fun x y z -> ... we find the variables
+       in the order 'a, then 'b, then 'c. Since we add them in head of the
+       accumulation list, they are in reverse order. Hence, when binding
+       variable to their type (using bind_parameters_to_types_from_type_scheme
+       from MiscHelpers), not reversing this list would bind the variables to
+       their type variable in reverse order. *)
+    let scheme = { ts_vars = List.rev !found_ty_parameters ; ts_body = ty } in
     (* Clean up found parameters for further usages. *)
     found_ty_parameters := [] ;
     scheme)
@@ -755,7 +807,7 @@ let rec lowerize_levels max_level ty =
    | ST_sum_arguments tys -> List.iter (lowerize_levels max_level) tys
    | ST_tuple tys -> List.iter (lowerize_levels max_level) tys
    | ST_construct (_, args) -> List.iter (lowerize_levels max_level) args
-   | ST_self_rep | ST_species_rep _ -> ()
+   | ST_prop | ST_self_rep | ST_species_rep _ -> ()
 ;;
 
 
@@ -777,7 +829,7 @@ let scheme_contains_variable_p scheme =
      | ST_sum_arguments tys -> List.exists rec_check tys
      | ST_tuple tys -> List.exists rec_check tys
      | ST_construct (_, args) -> List.exists rec_check args
-     | ST_self_rep | ST_species_rep _ -> false in
+     | ST_prop | ST_self_rep | ST_species_rep _ -> false in
   rec_check scheme.ts_body
 ;;
 
@@ -820,6 +872,30 @@ let extract_fun_ty_result ~self_manifest ty =
              | _ -> assert false
        end)
    | _ -> assert false
+;;
+
+(* *********************************************************************** *)
+(* type_simple -> type_simple                                              *)
+(** {b Descr} : Extracts from a product type the list of simple types it is composed of.
+                Sum arguments are considered as a product
+    {b Rem} : Exported outside this module.                                *)
+(* *********************************************************************** *)
+let extract_prod_ty ~self_manifest ty =
+  let ty = repr ty in
+  match ty with
+   | ST_tuple l -> l
+   | ST_sum_arguments l -> l
+   | ST_self_rep ->
+       (begin
+       match self_manifest with
+        | None -> [ST_self_rep]
+        | Some t ->
+            let t = repr t in
+            match t with
+             | ST_tuple l -> l
+             | _ -> [t]
+       end)
+   | _ -> [ty]
 ;;
 
 
@@ -883,7 +959,7 @@ let refers_to_self_p ty =
      | ST_tuple tys -> List.exists test tys
      | ST_construct (_, args) -> List.exists test args
      | ST_self_rep -> true
-     | ST_species_rep _ -> false in
+     | ST_prop | ST_species_rep _ -> false in
   test ty
 ;;
 
@@ -903,8 +979,8 @@ let refers_to_prop_p ty =
      | ST_arrow (ty1, ty2) -> test ty1 || test ty2
      | ST_sum_arguments tys -> List.exists test tys
      | ST_tuple tys -> List.exists test tys
-     | ST_construct (cstr_name, args) ->
-         cstr_name = ("coq_builtins", "prop") || List.exists test args
+     | ST_construct (_, args) -> List.exists test args
+     | ST_prop -> true
      | ST_self_rep -> false
      | ST_species_rep _ -> false in
   test ty
@@ -990,6 +1066,7 @@ let occur_check ~loc var ty =
      | ST_sum_arguments tys -> List.iter test tys
      | ST_tuple tys -> List.iter test tys
      | ST_construct (_, args) -> List.iter test args
+     | ST_prop
      | ST_species_rep _ -> ()
      | ST_self_rep ->
          (* There is a dependency on the carrier. Note it ! *)
@@ -1098,6 +1175,55 @@ let unify ~loc ~self_manifest type1 type2 =
   rec_unify type1 type2
 ;;
 
+(* ************************************************************************* *)
+(** {b Descr} : Returns a copy of the variable [v].
+
+    {b Rem} : Not exported oustide this module.                              *)
+(* ************************************************************************* *)
+let clone_variable v =
+  {tv_value = v.tv_value;
+   tv_level = v.tv_level}
+;;
+
+(* ************************************************************************* *)
+(** {b Descr} : Copy the content of variable [v1] in [v2].
+
+    {b Rem} : Not exported oustide this module.                              *)
+(* ************************************************************************* *)
+let copy_variable v1 v2 =
+  v2.tv_value <- v1.tv_value;
+  v2.tv_level <- v1.tv_level
+;;
+
+(* ************************************************************************* *)
+(** {b Descr} : Unifies the type scheme [ts]
+    with the simple type [st].
+
+    [st] is assumed to be an instance of [ts].
+
+    This functions returns a list of simple types
+    corresponding to the instantiations of the variables in the scheme.
+
+    This funcition is used in the Dedukti backend to fill
+    type arguments which are passed as underscores to Coq.
+
+    {b Rem} : Exported oustide this module.                              *)
+(* ************************************************************************* *)
+let unify_with_instance ts st =
+  (* First make a copy because we don't want to change the scheme. *)
+  let ts_vars = List.map clone_variable ts.ts_vars in
+  (* Perform the unification *)
+  ignore (unify ~loc:Location.none ~self_manifest:None ts.ts_body st);
+  let results =
+    List.map (fun v -> match v.tv_value with
+                    | TVV_known t -> t
+                    | TVV_unknown -> ST_var v)
+             ts.ts_vars
+  in
+  (* Put the copied variables back in the scheme. *)
+  List.iter2 copy_variable ts_vars ts.ts_vars;
+  results
+;;
 
 
 (* ********************************************************************* *)
@@ -1158,6 +1284,7 @@ let subst_type_simple (fname1, spe_name1) c2 =
      | ST_construct (name, args) ->
          ST_construct (name, List.map rec_copy args)
      | ST_self_rep -> ST_self_rep
+     | ST_prop -> ST_prop
      | ST_species_rep (fname, coll_name) ->
          if fname = fname1 && coll_name = spe_name1 then
            (begin
@@ -1209,8 +1336,8 @@ type species_collection_kind =
 (* {b Descr}: Describes in the [scc_collections_carrier_mapping] the kind
    of species parameter.
    It can either be a "IS" parameter.
-   Otherwise, it is a "IN" parameter. For Coq, we hence need to know if
-   the type of this parameter is built from another of our species
+   Otherwise, it is a "IN" parameter. For Coq and Dedukti, we hence need to know
+   if the type of this parameter is built from another of our species
    parameters of from a toplevel species/collection.
 
    {b Rem} : Exported outside this module.                                *)
@@ -1225,8 +1352,8 @@ type collection_carrier_mapping_info =
 
 
 (** Correspondance between collection parameters names and
-    the names they are mapped onto in the Caml/Coq code and their kind.
-    Note that in Coq, the mapped name doesn't have the trailing "_T". *)
+    the names they are mapped onto in the Caml/Coq/Dedukti code and their kind.
+    Note that in Coq/Dedukti, the mapped name doesn't have the trailing "_T". *)
 type collection_carrier_mapping =
   (type_collection * (string * collection_carrier_mapping_info)) list
 ;;
@@ -1262,449 +1389,6 @@ let debug_collection_carrier_mapping cmap =
 ;;
 
 
-
-(** ****************************************************************************
-    {b Descr} : "Compile", i.e. generate the OCaml source representation of
-    a type. Basically, proceeds like the regular [pp_type_simple]
-    except in 2 cases:
-      - when encountering [Self] : in this case, generates the type variable
-        name representing [Self], i.e. by convention "'abst_T",
-      - when encountering a species carrier type : in this case, generate
-        the type variable name representing this species (recover it thanks
-        to the mapping between collections names and type variables names
-        [collections_carrier_mapping]).
-
-    Be carreful : because we generate OCaml code, remind that in OCaml
-    expressions, variables that are present in "source code types" do not
-    involve any notion of "generalized" or "not generalized". Hence, if we
-    want to write a type variable in an OCaml source code, we always write
-    it as "'a" and never as "'_a" otherwise it is lexically incorrect.
-    OCaml will do the job itself to check whether the variable is
-    generalizable or not.
-    FOR THIS REASON, when we print type variables here, we only consider
-    that they are generalised, to get a printing without any underscore
-    in the variable's name.
-
-    {b Args} :
-      - [current_unit] : The string giving the name of the current
-          compilation unit we are generating the OCaml code of. This is
-          required to prevent, when printin types, to qualify type
-          constructors with the OCaml module name if the type belongs
-          to the currently compiled compilation unit. Hence this
-          prevents things like in a "bar.foc" file containing
-          [type t1 = ... ; type t2 = t1 * t2], getting in the generated
-          OCaml file definitions like [type t1 = ... ;
-          type t2 = Bar.t1 * Bar.t1] which would lead to an OCaml module
-          depending of itself.
-      - [collections_carrier_mapping] : Mapping giving for each collection
-          in the scope of the printing session, which type variable name is
-          used to represent in OCaml this collection carrier's type.
-      - [ppf] : Out channel where to send the text of the printed type.
-      - [whole_type] : Tye type expression to print.
-
-    {b Visibility} : Exported outside this module.
- **************************************************************************** *)
-let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
-  (* ********************************************************************** *)
-  (* ((type_variable * string) list) ref                                    *)
-  (** {b Descr} : The mapping giving for each variable already seen the
-                name used to denote it while printing it.
-
-      {b Rem} : Not exported. This mapping is purely local to the
-      pretty-print function of type into the OCaml syntax. It is especially
-      not shared with the type printing routine used to generate the FoCaLize
-      feedback and the Coq code.                *)
-  (* ********************************************************************** *)
-  let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
-
-  (* ******************************************************************* *)
-  (* int ref                                                             *)
-  (** {b Descr} : The counter counting the number of different variables
-      already seen hence printed. It serves to generate a fresh name to
-      new variables to print.
-
-      {b Rem} : Not exported. This counter is purely local to the
-      pretty-print function of type into the FoCaLize syntax. It is
-      especially not shared with the type printing routine used to
-      generate the FoCaLize feedback and the Coq code.                      *)
-  (* ******************************************************************* *)
-  let type_variables_counter = ref 0 in
-
-  (* ************************************************************* *)
-  (* unit -> unit                                                  *)
-  (** {b Descr} : Resets the variables names mapping an counter.
-      This allows to stop name-sharing between type prints.
-
-     {b Rem} : Exported outside this module.
-      However, this counter is purely local to the pretty-print
-      function of type into the FoCaLize syntax. It is especially not
-      shared with the type printing routine used to generate the
-      FoCaLize feedback and the Coq code.                             *)
-  (* ************************************************************* *)
-  let reset_type_variables_mapping_to_ml () =
-    type_variable_names_mapping := [] ;
-    type_variables_counter := 0 in
-
-  let get_or_make_type_variable_name_to_ml var =
-    (* No need to repr, [rec_pp_to_ml] already did it. *)
-    try List.assq var !type_variable_names_mapping with
-    | Not_found ->
-        let name = Handy.int_to_base_26 !type_variables_counter in
-        incr type_variables_counter ;
-        type_variable_names_mapping :=
-          (var, name) :: !type_variable_names_mapping ;
-        name in
-
-  let pp_type_name_to_ml ~current_unit ppf (hosting_module, constructor_name) =
-    let constructor_name' =
-      Anti_keyword_conflict.string_to_no_keyword_string constructor_name in
-    if current_unit = hosting_module then
-      Format.fprintf ppf "_focty_%s" constructor_name'
-    else
-      Format.fprintf ppf "%s._focty_%s"
-        (String.capitalize hosting_module) constructor_name' in
-
-  let rec rec_pp_to_ml ~current_unit collections_carrier_mapping prio ppf ty =
-    (* First of all get the "repr" guy ! *)
-    let ty = repr ty in
-    match ty with
-    | ST_var var ->
-        (* Read the justification in the current function's header about the
-           fact that we amways consider variables as generalized. *)
-        let ty_variable_name = get_or_make_type_variable_name_to_ml var in
-        Format.fprintf ppf "'%s" ty_variable_name
-    | ST_arrow (ty1, ty2) ->
-        (* Arrow priority: 2. *)
-        if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
-        Format.fprintf ppf "@[<2>%a@ ->@ %a@]"
-          (rec_pp_to_ml ~current_unit collections_carrier_mapping 2) ty1
-          (rec_pp_to_ml ~current_unit collections_carrier_mapping 1) ty2 ;
-        if prio >= 2 then Format.fprintf ppf ")@]"
-    | ST_sum_arguments tys  (** Printed like tuples in OCaml. *)
-    | ST_tuple tys ->
-        (* Tuple priority: 3. *)
-        if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
-        Format.fprintf ppf "@[<2>%a@]"
-          (Handy.pp_generic_separated_list " *"
-             (rec_pp_to_ml ~current_unit collections_carrier_mapping 3)) tys ;
-        if prio >= 3 then Format.fprintf ppf ")@]"
-    | ST_construct (type_name, arg_tys) ->
-        (begin
-        (* Priority of arguments of a sum type constructor :
-           like tuples if only one argument : 3
-           otherwise 0 if already a tuple because we force parens. *)
-        match arg_tys with
-         | [] ->
-             (* Just the special case for type "prop" that maps onto bool...
-                The problem is that we can't really "define" "prop" in the
-                file "basic.foc" because "prop" is a keyword. Hence, we make
-                directly the shortcut between "prop" and the type "bool"
-                defined in the "coq_builtins.v" file. *)
-             if type_name = ("coq_builtins", "prop") then
-               Format.fprintf ppf "Basics._focty_bool"
-             else
-               Format.fprintf ppf "%a"
-                 (pp_type_name_to_ml ~current_unit) type_name
-         | [one] ->
-             Format.fprintf ppf "%a@ %a"
-               (rec_pp_to_ml ~current_unit collections_carrier_mapping 3) one
-               (pp_type_name_to_ml ~current_unit) type_name
-         | _ ->
-             Format.fprintf ppf "@[<1>(%a)@]@ %a"
-               (Handy.pp_generic_separated_list ","
-                  (rec_pp_to_ml ~current_unit collections_carrier_mapping 0))
-               arg_tys
-               (pp_type_name_to_ml ~current_unit) type_name
-        end)
-    | ST_self_rep ->
-        (* Here is the major difference with the regular [pp_type_simple].
-           We print the type variable that represents our carrier in the
-           OCaml translation. *)
-        Format.fprintf ppf "'abst_T"
-    | ST_species_rep (module_name, collection_name) ->
-        (begin
-        try
-          let (coll_type_variable, _) =
-            List.assoc
-              (module_name, collection_name) collections_carrier_mapping in
-          Format.fprintf ppf "%s" coll_type_variable
-        with Not_found ->
-          (* If the carrier is not in the mapping created for the species
-             parameters, that's because the searched species carrier's is not
-             a species parameter, i.e. it's a toplevel species.
-             And as always, the type's name representing a species's carrier
-             is "me_as_carrier". *)
-          if current_unit = module_name then
-            Format.fprintf ppf "%s.me_as_carrier" collection_name
-          else
-            Format.fprintf ppf "%s.%s.me_as_carrier"
-              (String.capitalize module_name) collection_name
-        end) in
-
-  (* ************************************************** *)
-  (* Now, the real definition of the printing functions *)
-  (
-   (fun ~current_unit collections_carrier_mapping ppf whole_type ->
-     rec_pp_to_ml ~current_unit collections_carrier_mapping 0 ppf whole_type),
-
-   (fun () -> reset_type_variables_mapping_to_ml ()))
-;;
-
-
-
-type coq_print_context = {
-  cpc_current_unit : fname ;
-  cpc_current_species : type_collection option ;
-  cpc_collections_carrier_mapping : collection_carrier_mapping
-} ;;
-
-
-
-let (pp_type_simple_to_coq, pp_type_variable_to_coq, pp_type_simple_args_to_coq,
-     purge_type_simple_to_coq_variable_mapping
-     (* DEBUG
-     , debug_variable_mapping *)) =
-  (* ************************************************************** *)
-  (* ((type_simple * string) list) ref                              *)
-  (** {b Descr} : The mapping giving for each variable already seen
-      the name used to denote it while printing it.
-
-      {b Rem} : Not exported. This mapping is purely local to the
-      pretty-print function of type into the FoCaLize syntax. It is
-      especially not shared with the type printing routine used to
-      generate the OCaml code or the FoCaLize feedback.               *)
-  (* ************************************************************* *)
-  let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
-
-  (* ************************************************************** *)
-  (* int ref                                                        *)
-  (** {b Descr} : The counter counting the number of different
-      variables already seen hence printed. It serves to generate a
-      fresh name to new variables to print.
-
-      {b Rem} : Not exported. This counter is purely local to the
-      pretty-print function of type into the FoCaLize syntax. It is
-      especially not shared with the type printing routine used to
-      generate the OCaml or Coq code.                               *)
-  (* ************************************************************** *)
-  let type_variables_counter = ref 0 in
-
-  (* ************************************************************* *)
-  (* unit -> unit                                                  *)
-  (** {b Descr} : Resets the variables names mapping an counter.
-      This allows to stop name-sharing between type prints.
-
-      {b Rem} : Not exported. This counter is purely local to the
-      pretty-print function of type into the FoCaLize syntax. It is
-      especially not shared with the type printing routine used to
-      generate the OCaml or Coq code.                              *)
-  (* ************************************************************* *)
-  let reset_type_variables_mapping_to_coq () =
-    type_variable_names_mapping := [] ;
-    type_variables_counter := 0 in
-
-  let get_or_make_type_variable_name_to_coq ty_var =
-    (* No need to repr, [rec_pp_to_coq] already did it. *)
-    try List.assq ty_var !type_variable_names_mapping with
-    | Not_found ->
-        let name =
-          (if ty_var.tv_level <> generic_level then
-            (* Attention this is a weak-polymorphic variable. Hence, it is
-               *not* bound by any extra forall ! Generating a new variable
-               name will lead to an unbound type variable !
-               Instead, we "cheat" replacing this variable by the internal
-               type we defined in Coq: 'coq_builtins.weak_poly_var_ty' *)
-            "coq_builtins.weak_poly_var_ty"
-          else
-            let tmp =
-              "__var_" ^ (Handy.int_to_base_26 !type_variables_counter) in
-            incr type_variables_counter ;
-            tmp) in
-        type_variable_names_mapping :=
-          (ty_var, name) :: !type_variable_names_mapping ;
-        name in
-
-
-  let pp_type_name_to_coq ~current_unit ppf (hosting_module, constructor_name) =
-    let constructor_name' =
-      Anti_keyword_conflict.string_to_no_keyword_string constructor_name in
-    if current_unit = hosting_module then
-      Format.fprintf ppf "%s__t" constructor_name'
-    else
-      (* In Coq, no file name capitalization ! *)
-      Format.fprintf ppf "%s.%s__t" hosting_module constructor_name' in
-
-
-  let internal_pp_var_to_coq ppf ty_var =
-    let ty_variable_name = get_or_make_type_variable_name_to_coq ty_var in
-    Format.fprintf ppf "%s" ty_variable_name
-    (* DEBUG
-    ; Format.fprintf ppf "(*%d,l:%d*)" ty_var.tv_debug ty_var.tv_level *)
-    in
-
-
-  let rec rec_pp_to_coq ctx prio ppf ty =
-    (* First of all get the "repr" guy ! *)
-    let ty = repr ty in
-    match ty with
-    | ST_var ty_var -> internal_pp_var_to_coq ppf ty_var
-    | ST_arrow (ty1, ty2) ->
-        (* Arrow priority: 2. *)
-        if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
-        Format.fprintf ppf "@[<2>%a@ ->@ %a@]"
-          (rec_pp_to_coq ctx 2) ty1
-          (rec_pp_to_coq ctx 1) ty2 ;
-        if prio >= 2 then Format.fprintf ppf ")@]"
-    | ST_sum_arguments tys ->
-        (* In coq, constructors' arguments are curried, not tupled. *)
-        if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
-        Format.fprintf ppf "@[<2>%a@]"
-          (rec_pp_to_coq_sum_arguments ctx 3) tys ;
-        if prio >= 3 then Format.fprintf ppf ")@]"
-    | ST_tuple tys ->
-        (* Tuple priority: 3. *)
-        if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
-        Format.fprintf ppf "@[<2>((%a)%%type)@]"
-          (rec_pp_to_coq_tuple ctx 3) tys ;
-        if prio >= 3 then Format.fprintf ppf ")@]"
-    | ST_construct (type_name, arg_tys) ->
-        (begin
-        (* Priority of arguments of a sum type constructor : like an regular
-           application : 0. *)
-        match arg_tys with
-         | [] -> Format.fprintf ppf "%a"
-               (pp_type_name_to_coq ~current_unit: ctx.cpc_current_unit)
-               type_name
-         | _ ->
-             Format.fprintf ppf "@[<1>(%a@ %a)@]"
-               (pp_type_name_to_coq ~current_unit: ctx.cpc_current_unit)
-               type_name
-               (Handy.pp_generic_separated_list " "
-                  (rec_pp_to_coq ctx 0)) arg_tys
-        end)
-    | ST_self_rep ->
-        (begin
-        match ctx.cpc_current_species with
-         | None ->
-             (* Referencing "Self" outside a species should have been caught
-                earlier, i.e. at typechecking stage. *)
-             assert false
-         | Some (species_modname, _) ->
-             (begin
-             (* Obviously, Self should refer to the current species. This
-                means that the CURRENT species MUST be in the CURRENT
-                compilation unit ! *)
-             assert (species_modname = ctx.cpc_current_unit) ;
-             (* If "Self" is kept abstract, then it won't appear in the
-                collection_carrier_mapping and must be printed like "abst_T"
-                (for instance when printing in a field definition). Otherwise
-                it may show the species from which it is the carrier (when
-                printing the record type) and must appear in the
-                collection_carrier_mapping. *)
-             try
-               let (self_as_string, _) =
-                 List.assoc
-                   (species_modname, "Self")
-                   ctx.cpc_collections_carrier_mapping in
-               Format.fprintf ppf "%s_T" self_as_string
-             with Not_found ->  Format.fprintf ppf "abst_T"
-             end)
-        end)
-    | ST_species_rep (module_name, collection_name) ->
-        (begin
-        try
-          let (coll_type_variable, kind) =
-            List.assoc
-              (module_name, collection_name)
-              ctx.cpc_collections_carrier_mapping in
-          match kind with
-           | CCMI_is -> Format.fprintf ppf "%s_T" coll_type_variable
-           | CCMI_in provenance -> (
-               match provenance with
-               | SCK_toplevel_collection | SCK_toplevel_species ->
-                   Format.fprintf ppf "%s.me_as_carrier" collection_name
-               | SCK_species_parameter ->
-                   Format.fprintf ppf "%s_T" coll_type_variable
-              )
-        with Not_found ->
-          (* If the carrier is not in the mapping created for the species
-             parameters, that's because the searched species carrier's is not
-             a species parameter, i.e. it's a toplevel species.
-             And as always, the type's name representing a species's carrier
-             is the species's name + "me_as_carrier" with a possible module
-             prefix qualification if the species belongs to a file that is not
-             the currently compiled one. *)
-          if ctx.cpc_current_unit = module_name then
-            Format.fprintf ppf "%s.me_as_carrier" collection_name
-          else
-            Format.fprintf ppf "%s.%s.me_as_carrier" module_name collection_name
-        end)
-
-  (* ********************************************************************* *)
-  (** {b Descr} : Encodes FoCaLize tuples into nested pairs because Coq
-      doesn't have tuples with abitrary arity: it just has pairs.
-      Associativity is on the left, i.e, a FoCaLize tuple "(1, 2, 3, 4)" will
-      be mapped onto the Coq "(prod 1 (prod 2 (prod 3 4)))" data structure.
-
-      {b Rem} : Not exported outside this module.                          *)
-  (* ********************************************************************* *)
-  and rec_pp_to_coq_tuple ctx prio ppf = function
-    | [] -> assert false  (* Tuples should never have 0 component. *)
-    | [last] ->
-        Format.fprintf ppf "%a" (rec_pp_to_coq ctx prio) last
-    | ty1 :: ty2 :: rem ->
-        Format.fprintf ppf "%a@ * %a"
-          (rec_pp_to_coq ctx prio) ty1
-          (rec_pp_to_coq_tuple ctx prio)
-          (ty2 :: rem)
-
-
-
-  and rec_pp_to_coq_sum_arguments ctx prio ppf = function
-    | [] -> ()
-    | [last] ->
-        Format.fprintf ppf "%a" (rec_pp_to_coq ctx prio) last
-    | ty1 :: ty2 :: rem ->
-        Format.fprintf ppf "%a@ -> %a"
-          (rec_pp_to_coq ctx prio) ty1
-          (rec_pp_to_coq_sum_arguments ctx prio)
-          (ty2 :: rem)
-
-
-
-  and rec_pp_to_coq_args ctx ppf t n =
-    match repr t with
-    | ST_construct (_, arg_tys) ->
-       Format.fprintf ppf " %a" (Handy.pp_generic_separated_list ""
-                                  (rec_pp_to_coq ctx 0)) arg_tys
-    | _ -> for _i = 0 to n - 1 do Format.fprintf ppf "@ _" done in
-
-
-
-  (* ************************************************** *)
-  (* Now, the real definition of the printing functions *)
-  ((* pp_type_simple_to_coq *)
-   (fun ctx ppf ty -> rec_pp_to_coq ctx 0 ppf ty),
-   (* pp_type_variable_to_coq *)
-   (fun ppf ty_var -> internal_pp_var_to_coq ppf ty_var),
-   (* pp_type_simple_args_to_coq *)
-   (fun ctx ppf ty n -> rec_pp_to_coq_args ctx ppf ty n),
-   (* purge_type_simple_to_coq_variable_mapping *)
-   (fun () -> reset_type_variables_mapping_to_coq ())
-   (* DEBUG
-   ,
-   (* debug_variable_mapping *)
-   (fun () ->
-     List.iter
-       (fun (var, name) ->
-         Format.eprintf "(%d, %s) " var.tv_debug name)
-       !type_variable_names_mapping ;
-     Format.eprintf "@.") *)
-  )
-;;
-
-
-
 module SpeciesCarrierType = struct
   type t =  (fname * collection_name)
   let compare = compare
@@ -1720,8 +1404,8 @@ module SpeciesCarrierTypeSet = Set.Make (SpeciesCarrierType) ;;
 (* type_simple -> SpeciesCarrierTypeSet.t                               *)
 (** {b Descr} : This function searches for species carrier types inside
     a [simple_type]. This will serve to determine which extra argument
-    will have to be added in Coq to make these species carrier type
-    abstracted by a parameter of type "Set".
+    will have to be added in Coq and Dedukti to make these species carrier
+    type abstracted by a parameter of type "Set".
 
     {b Rem} : Exported outside this module.                             *)
 (* ******************************************************************** *)
@@ -1739,8 +1423,9 @@ let rec get_species_types_in_type ty =
            SpeciesCarrierTypeSet.union accu (get_species_types_in_type t))
          SpeciesCarrierTypeSet.empty
          tys
-     | ST_self_rep -> SpeciesCarrierTypeSet.empty
-     | ST_species_rep st -> SpeciesCarrierTypeSet.singleton st
+   | ST_prop
+   | ST_self_rep -> SpeciesCarrierTypeSet.empty
+   | ST_species_rep st -> SpeciesCarrierTypeSet.singleton st
 ;;
 
 
@@ -1757,7 +1442,7 @@ let (pp_type_simple_to_xml, pp_type_variable_to_xml,
       {b Rem} : Not exported. This mapping is purely local to the
               pretty-print function of type into the FoCaLize syntax. It is
               especially not shared with the type printing routine used to
-              generate the OCaml or Coq code.                              *)
+              generate the OCaml, Coq or Dedukti code.                     *)
   (* ********************************************************************* *)
   let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
 
@@ -1770,7 +1455,7 @@ let (pp_type_simple_to_xml, pp_type_variable_to_xml,
       {b Rem} : Not exported. This counter is purely local to the
       pretty-print function of type into the FoCaLize syntax. It is
       especially not shared with the type printing routine used to
-      generate the OCaml or Coq code.                                    *)
+      generate the OCaml, Coq or Dedukti code.                           *)
   (* ******************************************************************* *)
   let type_variables_counter = ref 0 in
 
@@ -1782,7 +1467,7 @@ let (pp_type_simple_to_xml, pp_type_variable_to_xml,
      {b Rem} : Not exported. This counter is purely local to the
       pretty-print function of type into the FoCaLize syntax. It is
       especially not shared with the type printing routine used to
-      generate the OCaml or Coq code.                              *)
+      generate the OCaml, Coq or Dedukti code.                     *)
   (* ************************************************************* *)
   let reset_type_variables_mapping () =
     type_variable_names_mapping := [] ;
@@ -1838,6 +1523,8 @@ let (pp_type_simple_to_xml, pp_type_variable_to_xml,
                mod_name cstr_name ;
              Format.fprintf ppf "@]</foc:prm>@\n"
         end)
+    | ST_prop -> Format.fprintf ppf
+               "<foc:atom order=\"first\" infile=\"coq_builtins\">prop__t</foc:atom>@\n"
     | ST_self_rep ->
         (* order = "first" because the atom does not represent a species. *)
         Format.fprintf ppf "<foc:self order=\"first\"/>@\n"
@@ -1870,6 +1557,7 @@ type local_type =
   | Lt_fun of local_type * local_type
   | Lt_tuple of local_type list
   | Lt_constr of (string * string) * local_type list
+  | Lt_prop
   | Lt_self
   | Lt_species of (string * string)
 ;;
@@ -1901,6 +1589,8 @@ let rec type_simple_to_local_type ty =
    | ST_construct ((f, id), l) ->
        Lt_constr ((f, id), (List.map type_simple_to_local_type l))
 
+   | ST_prop -> Lt_prop
+
    | ST_self_rep ->
        Lt_self
 
@@ -1919,6 +1609,7 @@ let extract_type_simple
         (ftuple : type_simple list -> 'a)
         (fsum : type_simple list -> 'a)
         (fconstruct : string -> string -> type_simple list -> 'a)
+        (fprop : unit -> 'a)
         (frep : unit -> 'a)
         (fspecrep : fname -> collection_name -> 'a) ts =
          let ts = repr ts in
@@ -1928,6 +1619,7 @@ let extract_type_simple
          | ST_tuple(t_l) -> ftuple t_l
          | ST_sum_arguments(t_l) -> fsum t_l
          | ST_construct((t, t_l)) -> fconstruct (fst t) (snd t) t_l
+         | ST_prop -> fprop ()
          | ST_self_rep -> frep ()
          | ST_species_rep((fn, cn)) -> fspecrep fn cn;;
 

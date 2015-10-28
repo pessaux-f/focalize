@@ -1,7 +1,22 @@
-- Experimental termination proofs by measure and by order. Triggered if
-  the option --experimental is set.
+
+# Focalize 0.9.1
+################
+
+- Termination proofs by measure and by order.
+- Termination proofs (order/measure) now typechecked correctly.
+  Before, there was no verification on the expression used as order or measure,
+  and on the argument's type used.
+- Fixed exception not handled (turned in an error message) for decreasing
+  ident not a function argument in termination proofs.
 - Order relations on orders are not anymore called <0x, <=0x etc, but simply
   <, <= etc.
+- Simplifications in the generated code for collections. Use of implicit
+  arguments in right number instead of full types/expression. Makes the
+  generated code shorter and more readable.
+- Don't require Zenon source code to be present in a zenon subfolder
+- Fixed bug in the parser causing collision between documentation comments
+  and delimited identifiers.
+- New Dedukti back-end as logical target language (in development).
 
 # Focalize 0.9.0
 ################

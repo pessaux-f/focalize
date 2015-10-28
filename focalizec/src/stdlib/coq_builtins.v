@@ -436,7 +436,16 @@ Definition __g_focalize_error_ (a : Set) (s : string) : a := __focalize_bottom__
 (* Notation made available only in Coq parser, not in Coq output / feedback. *)
 Notation focalize_error := (__g_focalize_error_ _) (only parsing).
 
-Ltac prove_term_obl term_obl := apply magic_prove.
+
+(** Tactic used in the termination proofs when generating recursive functions
+   using the Coq construct 'Function'. It repeatedly split the current goal
+   assumed to be conjunctions and use an assumption (expected to be in the
+  context) to solve it. *)
+Ltac SplitandAssumption:=
+  (repeat match goal with
+  | [ |- ?a /\ ?b ] => split;try (intros ; eauto)
+end).
+
 
 (* "bi" for "built-in". Don't search anymore... *)
 Inductive bi__unit : Set :=
@@ -481,7 +490,7 @@ Let bi__int_plus (x : Z) (y : Z) := x + y.
 Let bi__int_opposite (x : Z) := - x.
 
 (* The multiplication function on Z * Z . *)
-Let bi__int_mult (x : Z) (y : Z) := x + y.
+Let bi__int_mult (x : Z) (y : Z) := x * y.
 
 (* The division function on Z * Z . *)
 Let bi__int_div (x : Z) (y : Z) := x / y.

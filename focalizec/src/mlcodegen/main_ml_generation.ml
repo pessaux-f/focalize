@@ -52,7 +52,7 @@ let toplevel_compile env ~current_unit out_fmter = function
       (* Really nothing to do... *)
       env
   | Infer.PCM_species (species_def, species_descr, dep_graph, abstr_info) ->
-      Types.purge_type_simple_to_ml_variable_mapping () ;
+      Ml_pprint.purge_type_simple_to_ml_variable_mapping () ;
       let species_binding_info =
         Species_ml_generation.species_compile
           env ~current_unit out_fmter species_def species_descr dep_graph
@@ -64,7 +64,7 @@ let toplevel_compile env ~current_unit out_fmter = function
         species_def.Parsetree.ast_desc.Parsetree.sd_name
         species_binding_info env
   | Infer.PCM_collection (coll_def, coll_descr, dep_graph) ->
-      Types.purge_type_simple_to_ml_variable_mapping () ;
+      Ml_pprint.purge_type_simple_to_ml_variable_mapping () ;
       Species_ml_generation.collection_compile
         env ~current_unit out_fmter coll_def coll_descr dep_graph;
       (* Collections don't have parameters or any remaining abstraction.
@@ -82,7 +82,7 @@ let toplevel_compile env ~current_unit out_fmter = function
          separatly. *)
       env
   | Infer.PCM_type (type_def_name, type_descr) ->
-      Types.purge_type_simple_to_ml_variable_mapping () ;
+      Ml_pprint.purge_type_simple_to_ml_variable_mapping () ;
       (* Create the initial context for compiling the type definition. *)
       let ctx = {
         Context.rcc_current_unit = current_unit;
@@ -95,7 +95,7 @@ let toplevel_compile env ~current_unit out_fmter = function
         Context.rcc_out_fmter = out_fmter } in
       Type_ml_generation.type_def_compile ctx env type_def_name type_descr
   | Infer.PCM_let_def (let_def, def_schemes) ->
-      Types.purge_type_simple_to_ml_variable_mapping () ;
+      Ml_pprint.purge_type_simple_to_ml_variable_mapping () ;
       (* Create the initial context for compiling the let-definition. *)
       let ctx = {
         Context.rcc_current_unit = current_unit;
@@ -117,7 +117,7 @@ let toplevel_compile env ~current_unit out_fmter = function
       env
   | Infer.PCM_theorem _ -> env  (* Theorems do not lead to OCaml code. *)
   | Infer.PCM_expr expr ->
-      Types.purge_type_simple_to_ml_variable_mapping () ;
+      Ml_pprint.purge_type_simple_to_ml_variable_mapping () ;
       let ctx = {
         Context.rcc_current_unit = current_unit;
         (* Not under a species, hence no species parameter. *)

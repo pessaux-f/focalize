@@ -178,11 +178,11 @@ species Represented_by_setoid (S is Setoid) =
               <3>1 prove !correct_representation (x)
                    by property !correct_invariant
               <3>2 prove !represents_some_self (!to_rep (x))
-                   by step <3>1 property !correct_rep_spec
+                   by step <3>1 property !correct_rep_spec property represents_some_self, to_rep
               <3>f qed by step <3>2
                           definition of represents_some_self, to_rep
          <2>f qed by step <2>1 definition of to_rep
-     <1>f qed by step <1>1 definition of equal
+     <1>f qed by step <1>1 definition of equal property to_rep
   ;
 
 end
@@ -234,8 +234,10 @@ species Quotient_set (S is Setoid,
               definition of element
          <2>f qed by step <2>1
                   definition of represents_some_self, from_rep
+                  property element
     <1>2 qed by step <1>1
                 definition of to_rep, correct_representation
+                property element, represents_some_self
     ;
 end
 ;;

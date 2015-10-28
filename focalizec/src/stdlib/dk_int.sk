@@ -1,0 +1,114 @@
+#NAME dk_int.
+
+def Nat : Type := cc.eT nat.
+
+def B : Type := cc.eT dk_bool.bool.
+
+(; integers are defined by couples of naturals seen as their difference modulo the rule
+   S n - S m --> n - m
+ ;)
+int : cc.uT.
+I : Type.
+[] cc.eT int --> I.
+def Int := I.
+(; the only constructor of Int, make n m builds the integer n - m ;)
+def make : Nat -> Nat -> I.
+(;
+thanks to this rule, intergers reduce to one of the three following normal form :
+ make 0 0 which is 0
+or
+ make (S n) 0 which is n+1
+or
+ make 0 (S n) which is -n-1
+;)
+[n : Nat, m : Nat] make (S n) (S m) --> make n m.
+
+def call_by_value_int : R : cc.uT -> (Int -> cc.eT R) -> Int -> cc.eT R.
+[ R : cc.uT, f : Int -> cc.eT R, n : Nat, m : Nat ]
+    call_by_value_int R f (make n m)
+      --> f (make n m).
+
+def from_nat : Nat -> I.
+[ n : Nat ] from_nat n --> make n 0.
+
+def nat_abs : I -> Nat.
+[n : Nat] nat_abs (make n 0) --> n
+[m : Nat] nat_abs (make 0 m) --> m.
+
+(; n - m <= p - q iff n + q <= m + p ;)
+def leq : I -> I -> B.
+[n : Nat, m : Nat, p : Nat, q : Nat]
+    leq (make n m) (make p q)
+      --> dk_nat.leq (dk_nat.plus n q) (dk_nat.plus m p).
+
+(; n - m < p - q iff n + q < m + p ;)
+def lt : I -> I -> B.
+[n : Nat, m : Nat, p : Nat, q : Nat]
+    lt (make n m) (make p q)
+      --> dk_nat.lt (dk_nat.plus n q) (dk_nat.plus m p).
+
+def geq : I -> I -> B.
+[ i : I, j : I ] geq i j --> leq j i.
+
+def gt : I -> I -> B.
+[ i : I, j : I ] gt i j --> lt j i.
+
+def eq : I -> I -> B.
+[ i : I, j : I ] eq i j --> dk_bool.and (leq i j) (geq i j).
+
+(; (n - m) + (p - q) = (n + p) - (m + q) ;)
+def plus : I -> I -> I.
+[n : Nat,
+ m : Nat,
+ p : Nat,
+ q : Nat]
+    plus (make n m) (make p q)
+      --> make (dk_nat.plus n p) (dk_nat.plus m q).
+
+def opp : I -> I.
+[n : Nat, m : Nat]
+    opp (make n m) --> make m n.
+
+def sub : I -> I -> I.
+[i : I, j : I]
+    sub i j --> plus i (opp j).
+
+def mult : I -> I -> I.
+[n : Nat, m : Nat, p : Nat, q : Nat]
+    mult (make n m) (make p q)
+      --> make
+         (dk_nat.plus (dk_nat.mult n p) (dk_nat.mult m q))
+         (dk_nat.plus (dk_nat.mult n q) (dk_nat.mult m p)).
+
+def max : I -> I -> I.
+[ m : I, n : I ]
+    max m n --> dk_bool.ite int (leq m n) n m.
+
+def min : I -> I -> I.
+[ m : I, n : I ]
+    min m n --> dk_bool.ite int (leq m n) m n.
+
+def abs : I -> I.
+[ i : I ] abs i --> make (nat_abs i) 0.
+
+def mod : I -> I -> I.
+[n : Nat, m : Nat, p : Nat]
+    mod (make m n) (make p 0)
+      --> make (dk_nat.mod m p) (dk_nat.mod n p)
+[n : Nat, m : Nat, p : Nat]
+    mod (make m n) (make 0 p)
+      --> make (dk_nat.mod m p) (dk_nat.mod n p).
+
+def quo : I -> I -> I.
+[m : Nat, p : Nat]
+    quo (make m 0) (make p 0)
+      --> make (dk_nat.quo m p) 0
+[m : Nat, p : Nat]
+    quo (make 0 m) (make 0 p)
+      --> make (dk_nat.quo m p) 0
+[m : Nat, p : Nat]
+    quo (make 0 m) (make p 0)
+      --> make 0 (dk_nat.quo m p)
+[m : Nat, p : Nat]
+    quo (make m 0) (make 0 p)
+      --> make 0 (dk_nat.quo m p).

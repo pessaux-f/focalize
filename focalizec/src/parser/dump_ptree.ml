@@ -426,6 +426,7 @@ and pp_pattern ppf = pp_ast pp_pat_desc ppf
 let pp_external_language ppf = function
   | Parsetree.EL_Caml -> Format.fprintf ppf "EL_Caml"
   | Parsetree.EL_Coq -> Format.fprintf ppf "EL_Coq"
+  | Parsetree.EL_Dk -> Format.fprintf ppf "EL_Dk"
   | Parsetree.EL_external s -> Format.fprintf ppf "@[<2>EL_external@ (%s)@]" s
 ;;
 
@@ -736,6 +737,9 @@ and pp_proof_desc ppf = function
   | Parsetree.Pf_coq (enf_deps, s) ->
       Format.fprintf ppf "@[<2>Pf_coq@ (%a, %s)@]"
         pp_enforced_dependencies enf_deps s
+  | Parsetree.Pf_dk (enf_deps, s) ->
+      Format.fprintf ppf "@[<2>Pf_dk@ (%a, %s)@]"
+        pp_enforced_dependencies enf_deps s
   | Parsetree.Pf_node proof_nodes ->
       Format.fprintf ppf "@[<2>Pf_node@ ([@ %a@ ])@]" pp_proof_nodes proof_nodes
 and pp_proof ppf = pp_ast pp_proof_desc ppf
@@ -747,12 +751,15 @@ and pp_termination_proof_desc ppf = function
   | Parsetree.TP_lexicographic (orders_exprs, param_list, proof) ->
       Format.fprintf ppf "@[<2>TP_lexicographic@ ((@ %a),@ %a,@ %a@ )@]"
         pp_exprs orders_exprs pp_param_list param_list pp_proof proof
-  | Parsetree.TP_measure (expr, param_list, proof) ->
+  | Parsetree.TP_measure (expr, param, proof) ->
       Format.fprintf ppf "@[<2>TP_measure@ (@ %a,@ %a,@ %a@ )@]"
-        pp_expr expr pp_param_list param_list pp_proof proof
-  | Parsetree.TP_order (expr, param_list, proof) ->
+        pp_expr expr pp_param param pp_proof proof
+  | Parsetree.TP_order (expr, param, proof) ->
       Format.fprintf ppf "@[<2>TP_order@ (@ %a,@ %a,@ %a@ )@]"
-        pp_expr expr pp_param_list param_list pp_proof proof
+        pp_expr expr pp_param param pp_proof proof
+and pp_param ppf (vname, ty_expr_opt) =
+  Format.fprintf ppf "(%a,@ %a)" pp_vname vname
+    (Handy.pp_generic_explicit_option pp_type_expr) ty_expr_opt
 and pp_param_list =
     (Handy.pp_generic_separated_list
        ","

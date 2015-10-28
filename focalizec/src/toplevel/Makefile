@@ -62,16 +62,25 @@ BYT_OBJS =\
  ../commoncodegen/externals_generation_errs.cmo\
  ../commoncodegen/recursion.cmo\
  \
+ ../mlcodegen/ml_pprint.cmo\
  ../mlcodegen/type_ml_generation.cmo\
  ../mlcodegen/base_exprs_ml_generation.cmo\
  ../mlcodegen/species_ml_generation.cmo\
  ../mlcodegen/main_ml_generation.cmo\
  \
- ../coqcodegen/species_record_type_generation.cmo\
- ../coqcodegen/rec_let_gen.cmo\
+ ../coqcodegen/coq_pprint.cmo\
+ ../coqcodegen/species_record_type_coq_generation.cmo\
+ ../coqcodegen/rec_let_coq_gen.cmo\
  ../coqcodegen/type_coq_generation.cmo\
  ../coqcodegen/species_coq_generation.cmo\
  ../coqcodegen/main_coq_generation.cmo\
+ \
+ ../dkcodegen/dk_pprint.cmo\
+ ../dkcodegen/species_record_type_dk_generation.cmo\
+ ../dkcodegen/rec_let_dk_gen.cmo\
+ ../dkcodegen/type_dk_generation.cmo\
+ ../dkcodegen/species_dk_generation.cmo\
+ ../dkcodegen/main_dk_generation.cmo\
  \
  ../testing/testing.cmo\
 \
@@ -114,6 +123,7 @@ CAML_INCLUDES =\
  -I ../docgen\
  -I ../mlcodegen\
  -I ../coqcodegen\
+ -I ../dkcodegen\
  -I ../testing\
  -I ../relation_extraction
 CAML_FLAGS = -w A-4 -warn-error $(WARN_ERROR)

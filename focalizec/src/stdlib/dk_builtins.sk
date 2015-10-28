@@ -1,0 +1,35 @@
+#NAME dk_builtins.
+(; This file defines basic types for the translation of FoCaLize
+standard library into Dedukti ;)
+
+Object : Type.
+collection : cc.uT.
+Collection : Type.
+[] cc.eT collection --> Collection.
+collmeth__rep : Collection -> cc.uT.
+
+unknown_type : cc.uT.
+unknown_def : cc.eT unknown_type.
+unknown_proof : cc.eT unknown_type.
+
+(; String ;)
+some_string : cc.eT string.
+def prop : cc.uT := dk_logic.prop.
+
+(; Unit ;)
+unit : cc.uT.
+tt : cc.eT unit.
+
+def call_by_value_unit : R : cc.uT -> (cc.eT unit -> cc.eT R) -> cc.eT unit -> cc.eT R.
+[ R : cc.uT, f : cc.eT unit -> cc.eT R ]
+    call_by_value_unit R f tt --> f tt.
+
+(; Float ;)
+float : cc.uT.
+
+(; Equality ;)
+eq : T : cc.uT -> cc.eT T -> cc.eT T -> dk_bool.Bool.
+refl : T : cc.uT -> t : cc.eT T -> dk_logic.Istrue (eq T t t).
+
+(; Assumed proves ;)
+magic_prove : P : cc.eT prop -> dk_logic.eP P.

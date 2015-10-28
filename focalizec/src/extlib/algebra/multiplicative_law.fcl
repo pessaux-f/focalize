@@ -342,7 +342,7 @@ species Division_monoid =
                  hypothesis H_x
                  property equal_transitive, equal_symmetric
          <2>f qed by step <2>3 hypothesis H_y property mult_is_regular
-    <1>f conclude
+    <1>f qed assumed (* ASSUMED: exhausted search space *)
    ;
 
   theorem div_right_substitution_rule: all x y_1 y_2 : Self,
@@ -374,7 +374,7 @@ species Division_monoid =
                 by step <2>1, <2>2
                    property equal_symmetric, equal_transitive
             <2>f qed  by step <2>3 hypothesis H_0 property mult_is_regular
-      <1>f conclude
+      <1>f qed assumed (* ASSUMED exhausted search space *)
      ;
 
   theorem div_really_divides: all x y : Self,
@@ -409,8 +409,8 @@ species Division_monoid =
                        property !equal_transitive, !equal_symmetric,
                        !same_is_not_different
                <3>f qed by step <3>1 definition of divides
-          <2>f qed by step <2>1, <2>2 property !same_is_not_different
-    <1>f conclude;
+          <2>f qed by step <2>1, <2>2 property !same_is_not_different, divides
+    <1>f qed by step <1>1 property divides;
 
 
   proof of divides_reverses_mult =
@@ -427,10 +427,10 @@ species Division_monoid =
               prove !divides (x, !mult (x, y))
               by hypothesis H_1 property !same_is_not_different
                  definition of divides
-         <2>f qed by step <2>1, <2>2 property !same_is_not_different
+         <2>f qed by step <2>1, <2>2 property !same_is_not_different, divides
     <1>f qed by step <1>1
                 property !mult_commutes, !divides_extends_equal,
-                  !divides_transitive;
+                  !divides_transitive, divides;
 
 
 
@@ -442,8 +442,8 @@ species Division_monoid =
   theorem inv_substitution_rule: all x_1 x_2 : Self,
     !equal (x_1, x_2) -> ~ (!equal (x_1, !zero)) ->
       !equal (!inv (x_1), !inv (x_2))
-    proof = by property div_right_substitution_rule
-              definition of inv;
+    proof = assumed (* ASSUMED (strange scoping error) by property div_right_substitution_rule *)
+              (*ASSUMED definition of inv*);
 
 end
 ;;

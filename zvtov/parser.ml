@@ -17,11 +17,15 @@ let rec incr_last = function
   | h::t -> h :: (incr_last t)
 ;;
 
-let prelude () = String.concat "" [
-  "Require Import zenon.\n";
-  "Require Import zenon_induct.\n";
-  sprintf "Require Import zenon_%s.\n" !Misc.focal_ext;
-  ]
+let prelude () =
+  if !input_format = I_coq then
+    String.concat
+      ""
+      ["Require Import zenon.\n";
+       "Require Import zenon_induct.\n";
+       sprintf "Require Import zenon_%s.\n" !Misc.focal_ext ]
+  else
+    ""
 ;;
 
 let parse filename lb oc =
@@ -68,9 +72,15 @@ let parse filename lb oc =
     | STATEMENT s -> statement := s; autoproof ();
     | CHAR c -> Buffer.add_char buf c; autoproof ();
     | ENDAUTOPROOF ->
+        let (comment_start, comment_end) =
+          if !input_format = I_dk
+          then ("(;", ";)")
+          else ("(*", "*)")
+        in
         Buffer.add_string buf "\n%%end-auto-proof";
         if !syntax = "TPTP" then Invoke.set_tptp_option ();
-        Printf.fprintf oc "\n(* %s *)\n" !loc;
+        Printf.fprintf oc "\n%s %s %s\n"
+        comment_start !loc comment_end;
         let data = Buffer.contents buf in
         if !with_cime then begin
           Invoke_cime.cime filename data !loc !statement !name oc;

@@ -21,16 +21,17 @@ ROOT_DIR=../../..
 FOCALIZE_COMP_FLAGS=-no-stdlib-path
 
 FOCALIZE_SRC=\
- basics.fcl\
- sets.fcl\
- products.fcl\
- lattices.fcl\
- orders.fcl\
- strict_orders.fcl\
- orders_and_lattices.fcl\
- wellfoundation.fcl\
- sums.fcl\
- quotients.fcl\
+ basics.fcl \
+ wellfoundation.fcl \
+ sets.fcl \
+ products.fcl \
+ lattices.fcl \
+ orders.fcl \
+ strict_orders.fcl \
+ orders_and_lattices.fcl \
+ wellfoundation.fcl \
+ sums.fcl \
+ quotients.fcl \
  fix.fcl
 
 FOCALIZE_FOS=$(FOCALIZE_SRC:.fcl=.fo)
@@ -42,8 +43,11 @@ FOCALIZE_BYT_OBJS=$(FOCALIZE_MLS:.ml=.cmo)
 FOCALIZE_BIN_OBJS=$(FOCALIZE_BYT_OBJS:.cmo=.cmx)
 
 FOCALIZE_ZVS=$(FOCALIZE_SRC:.fcl=.zv)
+FOCALIZE_SKZVS=$(FOCALIZE_SRC:.fcl=.sk.zv)
 FOCALIZE_VS=$(FOCALIZE_ZVS:.zv=.v)
 FOCALIZE_VOS=$(FOCALIZE_VS:.v=.vo)
+FOCALIZE_DKS=$(FOCALIZE_SRC:.fcl=.sk)
+FOCALIZE_DKOS=$(FOCALIZE_DKS:.sk=.dko)
 
 FOCALIZE_DOCS=$(FOCALIZE_SRC:.fcl=.fcd)
 
@@ -58,20 +62,48 @@ EXTERNAL_CMIS=$(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 
 EXTERNAL_VOS=\
  coq_builtins.vo\
- sets_externals.vo\
- wellfoundation_externals.vo
+ sets_externals.vo
+
+
+EXTERNAL_DKOS=\
+ cc.dko\
+ builtins.dko\
+ dk_bool.dko\
+ dk_fail.dko\
+ dk_opt.dko\
+ dk_tuple.dko\
+ dk_sum.dko\
+ dk_logic.dko\
+ dk_list.dko\
+ dk_nat.dko\
+ dk_int.dko\
+ dk_binary_nat.dko\
+ dk_machine_int.dko\
+ dk_char.dko\
+ dk_string.dko\
+ dk_builtins.dko\
+ zen.dko\
+ focal.dko\
+ sets_externals.dko\
+ wellfoundation_externals.dko
 
 include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/focalizec/.install_var
 include $(ROOT_DIR)/focalizec/.config_var
 
 FOCALIZEC=../toplevel/focalizec
-FOCALIZE_COMP_FLAGS=-no-stdlib-path $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
+FOCALIZE_COMP_FLAGS=-no-stdlib-path $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) \
+ -stop-before-coq -stop-before-dk -no-dedukti-code
 FOCALIZEDEP=../focalizedep/focalizedep
-ZENON=../../../zenon/zenon
-ZVTOV=../../../zvtov/zvtov
+COQ_INCLUDES= -I $(shell zenon -where)
 
 lib: all
+
+cc.dko: cc.dk
+	dkcheck -e $<
+
+builtins.dko: builtins.dk cc.dko
+	dkcheck -e $<
 
 # Disable DTD validation because it's too long.
 XSLTPROC_FLAGS=-novalid
@@ -82,18 +114,18 @@ focalizedoc:\
  $(FOCALIZE_MML)
 
 byt:\
- $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
+ $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS) $(EXTERNAL_DKOS)\
  $(FOCALIZE_MLS)\
- $(FOCALIZE_ZVS)\
  $(FOCALIZE_BYT_OBJS)\
- $(FOCALIZE_VS) $(FOCALIZE_VOS)
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+# $(FOCALIZE_DKS) $(FOCALIZE_DKOS)
 
 bin:\
- $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
+ $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS) $(EXTERNAL_DKOS)\
  $(FOCALIZE_MLS)\
- $(FOCALIZE_ZVS)\
  $(FOCALIZE_BIN_OBJS)\
- $(FOCALIZE_VS) $(FOCALIZE_VOS)
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+# $(FOCALIZE_DKS) $(FOCALIZE_DKOS)
 
 install:
 	@$(MKDIR) $(INSTALL_LIB_DIR) &&\
@@ -112,6 +144,10 @@ install:
 	if [ "$(FOCALIZE_BIN_OBJS)" != "" ]; then\
 	  echo "Installing (OCaml native) compiled certified libs." &&\
 	  $(CP) $(FOCALIZE_BIN_OBJS) $(INSTALL_LIB_DIR)/;\
+	fi &&\
+	if [ "$(FOCALIZE_DKOS)" != "" && false ]; then\
+	  echo "Installing (Dedukti) compiled certified libs." &&\
+	  $(CP) $(FOCALIZE_DKOS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_VOS)" != "" ]; then\
 	  echo "Installing (Coq) compiled certified libs." &&\
@@ -133,17 +169,23 @@ install:
 	  echo "Installing (Coq) external stubs." &&\
 	  $(CP) $(EXTERNAL_VOS) $(INSTALL_LIB_DIR)/;\
 	fi
+     &&\
+	if [ "$(EXTERNAL_DKOS)" != ""  && false ]; then\
+	  echo "Installing (Dedukti) external stubs." &&\
+	  $(CP) $(EXTERNAL_DKOS) $(INSTALL_LIB_DIR)/;\
+	fi
 
 # TODO
 uninstall:
 	echo "Uninstall stdlib TODO"
 
 clean:
-	$(RM) *zvtmp* *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.fo *.vo *.pfc *.glob *~ .*~
-	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
+	$(RM) *zvtmp* *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.fo *.vo *.dko *.pfc *.glob *~ .*~
+	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_SKZVS) $(FOCALIZE_VS) $(FOCALIZE_DKS)
 
 depend:
 	$(CAMLDEP) *.mli *.ml > ./.depend
 	$(FOCALIZEDEP) *.fcl >> ./.depend
+	$(SKDEP) -v *.sk >> ./.depend
 
 include .depend

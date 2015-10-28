@@ -397,15 +397,15 @@ species Additive_monoid_with_infimum =
     <1>1 assume x : Self,
          prove !order_inf (!min, x)
          <2>1 prove !order_inf (!zero, !plus (!zero, x))
-              by property inf_absorbes_add
+              by property inf_absorbes_add, order_inf
          <2>2 prove !equal (!plus (!zero, x), x)
               by property zero_is_neutral
          <2>3 prove !order_inf (!zero, x)
               by step <2>1, <2>2
-              property order_inf_is_reflexive, order_inf_is_transitive
+              property order_inf_is_reflexive, order_inf_is_transitive, order_inf
          <2>f qed by step <2>3
                      property min_spec, order_inf_is_reflexive,
-                       order_inf_is_transitive
+                       order_inf_is_transitive, order_inf
     <1>2 assume x : Self,
          prove !equal (!inf (!min, x), !min)
       by step <1>1 property equal_symmetric
@@ -413,7 +413,7 @@ species Additive_monoid_with_infimum =
     <1>3 assume x : Self,
          prove !equal (!inf (x, !min), !min)
          by step <1>2 property equal_transitive, inf_commutes
-    <1>9 conclude
+    <1>9 qed by step <1>1, <1>2, <1>3 property order_inf
   ;
 
 end
@@ -463,14 +463,14 @@ species Additive_monoid_with_supremum =
                           equal_transitive
                  definition of min
          <2>2 prove !order_sup (!plus (!min, x), !min)
-                   by property sup_absorbes_add
+                   by property sup_absorbes_add, order_sup, min
          <2>3 prove !order_sup (x, !min)
               by step <2>1, <2>2
-                 property order_sup_is_reflexive, order_sup_is_transitive
+                 property order_sup_is_reflexive, order_sup_is_transitive, order_sup, min
          <2>f qed by step <2>3
-                     property equal_symmetric
+                     property equal_symmetric, min
                      definition of order_sup
-    <1>f conclude
+    <1>f qed by step <1>1 property min
   ;
 
 end

@@ -22,7 +22,7 @@
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
 exception No_external_value_def of (
-  string *            (** The language name ("OCaml", "Coq", "..."). *)
+  string *            (** The language name ("OCaml", "Coq", "Dedukti", "..."). *)
   Parsetree.vname *   (** The primitive that was not mapped. *)
   Location.t) ;;      (** The location where the mapping could not be done. *)
 

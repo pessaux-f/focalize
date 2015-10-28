@@ -36,7 +36,7 @@ let print_types_comma_with_same_vmapping_and_empty_carrier_mapping ctx tys =
    | [] -> ()
    | [one] ->
        Format.fprintf out_fmter " %a"
-         (Types.pp_type_simple_to_ml ~current_unit []) one
+         (Ml_pprint.pp_type_simple_to_ml ~current_unit []) one
    | several ->
        (begin
        (* Enclose by parentheses and separate by commas. *)
@@ -44,10 +44,10 @@ let print_types_comma_with_same_vmapping_and_empty_carrier_mapping ctx tys =
          | [] -> ()
          | [last] ->
              Format.fprintf out_fmter "%a"
-               (Types.pp_type_simple_to_ml ~current_unit []) last
+               (Ml_pprint.pp_type_simple_to_ml ~current_unit []) last
          | first :: rem ->
              Format.fprintf out_fmter "%a,@ "
-               (Types.pp_type_simple_to_ml ~current_unit []) first ;
+               (Ml_pprint.pp_type_simple_to_ml ~current_unit []) first ;
              rec_print_params rem in
        Format.fprintf out_fmter " (@[<1>" ;
        rec_print_params several ;
@@ -124,7 +124,7 @@ let type_def_compile ctx env type_def_name type_descr =
   let type_def_params = type_descr.Env.TypeInformation.type_params in
   let (_, tydef_body) =
     Types.scheme_split type_descr.Env.TypeInformation.type_identity in
-  Types.purge_type_simple_to_ml_variable_mapping () ;
+  Ml_pprint.purge_type_simple_to_ml_variable_mapping () ;
   (* Now, generates the type definition's body. *)
   match type_descr.Env.TypeInformation.type_kind with
   | Env.TypeInformation.TK_abstract ->
@@ -136,7 +136,7 @@ let type_def_compile ctx env type_def_name type_descr =
         Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
       (* Type abbreviation: the body is the abbreviated type. *)
       Format.fprintf out_fmter "%a@] ;;@\n "
-        (Types.pp_type_simple_to_ml
+        (Ml_pprint.pp_type_simple_to_ml
            ~current_unit: ctx.Context.rcc_current_unit [])
         tydef_body ;
       (* Not an external type definition, so nothing new in the environment. *)
@@ -157,6 +157,7 @@ let type_def_compile ctx env type_def_name type_descr =
             (function
              | (Parsetree.EL_Caml, _) -> true
              | (Parsetree.EL_Coq, _)
+             | (Parsetree.EL_Dk, _)
              | ((Parsetree.EL_external _), _) -> false)
             external_trans.Parsetree.ast_desc in
         Format.fprintf out_fmter "%s@]@ ;;@\n" ocaml_code
@@ -215,7 +216,7 @@ let type_def_compile ctx env type_def_name type_descr =
            | Some sum_cstr_args ->
                (* The argument(s) of the constructor. *)
                Format.fprintf out_fmter " of@ (@[<1>%a@])"
-                 (Types.pp_type_simple_to_ml
+                 (Ml_pprint.pp_type_simple_to_ml
                     ~current_unit: ctx.Context.rcc_current_unit [])
                  sum_cstr_args)
         sum_constructors_to_print ;
@@ -258,7 +259,7 @@ let type_def_compile ctx env type_def_name type_descr =
             Format.fprintf out_fmter "mutable " ;
           Format.fprintf out_fmter "%a :@ %a ;"
             Parsetree_utils.pp_vname_with_operators_expanded field_name
-            (Types.pp_type_simple_to_ml
+            (Ml_pprint.pp_type_simple_to_ml
                ~current_unit: ctx.Context.rcc_current_unit [])
             field_ty)
         record_fields_to_print ;

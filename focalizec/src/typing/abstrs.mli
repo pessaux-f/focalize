@@ -9,6 +9,7 @@ type field_type_kind =
 type environment_kind =
   | EK_ml of Env.MlGenEnv.t
   | EK_coq of Env.CoqGenEnv.t
+  | EK_dk of Env.DkGenEnv.t
 
 type abstractions_comput_context = {
   acc_current_unit : Types.fname;

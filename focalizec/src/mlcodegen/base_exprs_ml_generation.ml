@@ -270,6 +270,7 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
           (function
             | (Parsetree.EL_Caml, _) -> true
             | (Parsetree.EL_Coq, _)
+            | (Parsetree.EL_Dk, _)
             | ((Parsetree.EL_external _), _) -> false)
           mapping_info
       with Not_found ->
@@ -352,6 +353,7 @@ let generate_record_field_name env ctx label =
           (function
             | (Parsetree.EL_Caml, _) -> true
             | (Parsetree.EL_Coq, _)
+            | (Parsetree.EL_Dk, _)
             | ((Parsetree.EL_external _), _) -> false)
           mapping_info
       with Not_found ->
@@ -458,7 +460,7 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
        | Some param_ty ->
            Format.fprintf out_fmter "@ (%a : %a)"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
-             (Types.pp_type_simple_to_ml
+             (Ml_pprint.pp_type_simple_to_ml
                 ~current_unit: ctx.Context.rcc_current_unit
                 ctx.Context.rcc_collections_carrier_mapping)
              param_ty
@@ -698,6 +700,7 @@ and generate_expr ctx ~local_idents env initial_expression =
                 (function
                  | (Parsetree.EL_Caml, _) -> true
                  | (Parsetree.EL_Coq, _)
+                 | (Parsetree.EL_Dk, _)
                  | ((Parsetree.EL_external _), _) -> false)
                 e_translation.Parsetree.ast_desc in
             Format.fprintf out_fmter "%s" caml_code

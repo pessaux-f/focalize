@@ -14,16 +14,37 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.57 2012-10-26 14:55:19 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
 type collection_name = string
-type type_name
+type type_name = fname * string
 
 (** The type algebra for focalize. *)
 type type_variable
 type type_simple
+type type_simple_view = private
+  | ST_var of type_variable                             (** Type variable. *)
+  | ST_arrow of (type_simple_view * type_simple_view)   (** Functional type. *)
+  | ST_tuple of type_simple_view list                   (** Tuple type. *)
+  | ST_sum_arguments of type_simple_view list
+      (** Type of sum type value constructor's arguments. To prevent them from
+          being confused with tuples. *)
+  | ST_prop                                             (** The type of logical
+                                                            formulae *)
+  | ST_construct of
+      (** Type constructor, possibly with arguments. Encompass the types
+          related to records and sums. Any value of these types are typed as
+          a [ST_construct] whose name is the name of the record (or sum)
+          type. *)
+      (type_name * type_simple_view list)
+  | ST_self_rep     (** Carrier type of the currently analysed species. *)
+  | ST_species_rep of
+      (** Carrier type of a collection hosted in the specified module. *)
+      (fname * collection_name)
+
+val view_type_simple : type_simple -> type_simple_view
+
 type type_scheme
 
 
@@ -63,6 +84,7 @@ val type_list : type_simple -> type_simple
 val type_prop : unit -> type_simple
 val type_rep_species :
   species_module: fname -> species_name: collection_name -> type_simple
+val is_generalized_type_variable : type_variable -> bool
 (** Generate the carrier type of the currently analysed species. *)
 val type_self : unit -> type_simple
 val is_bool_or_self_type : type_simple -> bool
@@ -103,6 +125,11 @@ val unify :
   loc: Location.t -> self_manifest: (type_simple option) -> type_simple ->
   type_simple -> type_simple
 
+val unify_with_instance :
+  type_scheme ->
+  type_simple ->
+  type_simple list
+
 val reset_deps_on_rep : unit -> unit
 val check_for_decl_dep_on_self : type_simple -> unit
 val get_def_dep_on_rep : unit -> bool
@@ -113,6 +140,9 @@ val extract_fun_ty_result :
   self_manifest: type_simple option -> type_simple -> type_simple
 val extract_fun_ty_arg :
   self_manifest: type_simple option -> type_simple -> type_simple
+
+val extract_prod_ty :
+  self_manifest: type_simple option -> type_simple -> type_simple list
 
 (** Pretty_printing for types and type schemes for FoCaLize. *)
 val pp_type_name : Format.formatter -> type_name -> unit
@@ -133,33 +163,6 @@ type collection_carrier_mapping =
   (type_collection * (string * collection_carrier_mapping_info)) list
 
 val debug_collection_carrier_mapping : collection_carrier_mapping -> unit
-
-
-(** Pretty_printing for types for the OCaml translation. *)
-val pp_type_simple_to_ml :
-  current_unit: fname -> collection_carrier_mapping -> Format.formatter ->
-  type_simple ->
-    unit
-
-val purge_type_simple_to_ml_variable_mapping : unit -> unit
-
-(** Pretty_printing for types for the Coq translation. *)
-type coq_print_context = {
-  cpc_current_unit : fname ;
-  cpc_current_species : type_collection option ;
-  cpc_collections_carrier_mapping : collection_carrier_mapping
-}
-
-
-val pp_type_simple_to_coq :
-  coq_print_context -> Format.formatter -> type_simple -> unit
-val pp_type_variable_to_coq : Format.formatter -> type_variable -> unit
-val pp_type_simple_args_to_coq :
-  coq_print_context -> Format.formatter -> type_simple -> int -> unit
-
-val purge_type_simple_to_coq_variable_mapping : unit -> unit
-(* DEBUG
-val debug_variable_mapping : unit -> unit *)
 
 module SpeciesCarrierTypeSet :
   sig
@@ -202,6 +205,7 @@ type local_type =
   | Lt_fun of local_type * local_type
   | Lt_tuple of local_type list
   | Lt_constr of (string * string) * local_type list
+  | Lt_prop
   | Lt_self
   | Lt_species of (string * string)
 
@@ -218,6 +222,7 @@ val extract_type_simple :
         (type_simple list -> 'a) ->
         (type_simple list -> 'a) ->
         (string -> string -> type_simple list -> 'a) ->
+        (unit -> 'a) ->
         (unit -> 'a) ->
         (fname -> collection_name -> 'a) -> type_simple ->  'a
 

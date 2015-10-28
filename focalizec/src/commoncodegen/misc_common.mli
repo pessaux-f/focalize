@@ -1,33 +1,33 @@
-(***********************************************************************)
-(*                                                                     *)
-(*                        FoCaLize compiler                            *)
-(*                                                                     *)
-(*            François Pessaux                                         *)
-(*            Pierre Weis                                              *)
-(*            Damien Doligez                                           *)
-(*                                                                     *)
-(*                               LIP6  --  INRIA Rocquencourt          *)
-(*                                                                     *)
-(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
-(*  Distributed only by permission.                                    *)
-(*                                                                     *)
-(***********************************************************************)
+(* ************************************************************************** *)
+(*                                                                            *)
+(*                        FoCaLiZe compiler                                   *)
+(*                                                                            *)
+(*            François Pessaux                                                *)
+(*            Pierre Weis                                                     *)
+(*            Damien Doligez                                                  *)
+(*                                                                            *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
+(*                                                                            *)
+(*  Copyright 2007 - ...  LIP6 and INRIA                                      *)
+(*            2012 - ... ENSTA ParisTech                                      *)
+(*  Distributed only by permission.                                           *)
+(*                                                                            *)
+(* ************************************************************************** *)
 
-(* $Id: misc_common.mli,v 1.13 2009-05-28 08:43:26 pessaux Exp $ *)
 
 type compiled_field_memory = {
   cfm_is_logical : bool ;
-  cfm_from_species : Env.from_history;
-  cfm_method_name : Parsetree.vname;
-  cfm_method_scheme : Env.method_type_kind;
-  cfm_used_species_parameter_tys : Parsetree.vname list;
+  cfm_from_species : Env.from_history ;
+  cfm_method_name : Parsetree.vname ;
+  cfm_method_scheme : Env.method_type_kind ;
+  cfm_used_species_parameter_tys : Parsetree.vname list ;
   cfm_raw_dependencies_from_parameters :
-    (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list;
+    (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
   cfm_dependencies_from_parameters :
-    (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list;
+    (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
   cfm_dependencies_from_parameters_in_type :
     (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
-  cfm_coq_min_typ_env_names : Parsetree.vname list;
+  cfm_coq_min_typ_env_names : Parsetree.vname list
 }
 
 type compiled_species_fields =

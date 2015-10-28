@@ -1,0 +1,38 @@
+#NAME dk_string.
+(; lists of ascii characters ;)
+
+String : Type.
+[] cc.eT string --> String.
+
+def call_by_value_string : R : cc.uT -> (String -> cc.eT R) -> String -> cc.eT R.
+[f] call_by_value_string _ f "" --> f ""
+[f,c,s] call_by_value_string _ f (string_cons c s) --> f (string_cons c s).
+
+def equal : String -> String -> dk_bool.Bool.
+
+[] equal "" "" --> dk_bool.true
+[] equal "" (string_cons _ _) --> dk_bool.false
+[] equal (string_cons _ _) "" --> dk_bool.false
+[c1,s1,c2,s2]
+    equal (string_cons c1 s1) (string_cons c2 s2)
+      -->
+    dk_bool.and (dk_char.equal c1 c2) (equal s1 s2).
+
+def append : String -> String -> String.
+[s] append "" s --> s
+[c,s1,s2] append (string_cons c s1) s2 --> string_cons c (append s1 s2).
+
+def lt : String -> String -> dk_bool.Bool.
+[ ] lt "" "" --> dk_bool.false
+[c,s] lt "" (string_cons c s) --> dk_bool.true
+[c,s] lt (string_cons c s) "" --> dk_bool.false
+[c1,c2,s1,s2]
+    lt (string_cons c1 s1) (string_cons c2 s2)
+      -->
+    dk_bool.or (dk_char.lt c1 c2)
+               (dk_bool.and
+                 (dk_char.equal c1 c2)
+                 (lt s1 s2)).
+
+def of_int (n : cc.eT dk_int.int) : String := "".
+def to_int (s : String) : cc.eT dk_int.int := dk_int.make 0 0.

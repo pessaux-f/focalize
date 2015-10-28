@@ -118,6 +118,13 @@ let print_focalize_exception ppf = function
         Location.pp_location at header
         Handy.pp_set_underlined Sourcify.pp_expr_ident ident
         Handy.pp_reset_effects
+  | Scoping.Termination_only_on_fun_arg (at, vname) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tTermination@ proof@ considers@ '%t%a%t'@ as@ decreasing@ \
+         but@ it@ is@ not@ an@ argument@ of@ the@ function.@]@."
+        Location.pp_location at header
+        Handy.pp_set_underlined Sourcify.pp_vname vname
+        Handy.pp_reset_effects
   (* *************************** *)
   (* Generic environments stuff. *)
   | Env.Unbound_constructor (vname, at) ->
@@ -547,7 +554,9 @@ let print_focalize_exception ppf = function
         Location.pp_location at header
         Handy.pp_set_underlined node_num node_name
         Handy.pp_reset_effects
-  | Species_record_type_generation.Wrong_decreasing_argument
+  | Species_record_type_coq_generation.Wrong_decreasing_argument
+      (at, species_name, def_name, decr_arg)
+  | Species_record_type_dk_generation.Wrong_decreasing_argument
       (at, species_name, def_name, decr_arg) ->
       Format.fprintf ppf
         "%a:@\n@[%tIn@ species@ '%t%a%t'@ structural@ termination@ proof@ \
@@ -559,6 +568,68 @@ let print_focalize_exception ppf = function
         Handy.pp_set_underlined Sourcify.pp_vname def_name
         Handy.pp_reset_effects
         Handy.pp_set_underlined Sourcify.pp_vname decr_arg
+        Handy.pp_reset_effects
+  (* *************************** *)
+  (* Dk code generation errors. *)
+  | Type_dk_generation.Mutable_record_fields_not_in_dk (at, field) ->
+       Format.fprintf ppf
+        "%a:@\n@[%tRecord@ type@ definition@ contains@ a@ mutable@ field@ \
+        '%t%a%t'@ that@ cannot@ be@ compiled@ to@ Dk.@]@."
+        Location.pp_location at header
+        Handy.pp_set_underlined Sourcify.pp_vname field
+        Handy.pp_reset_effects
+  | Env.No_available_Dk_code_generation_envt file ->
+      Format.fprintf ppf
+        "@[%tUnable@ to@ find@ Dk@ generation@ information@ for@ \
+        compiled@ file@ '%t%s.fcl%t'.@ Source@ file@ may@ have@ been@ \
+        compiled@ without@ Dk@ code@ generation@ enabled.@]@."
+        header
+        Handy.pp_set_underlined file Handy.pp_reset_effects
+  | Species_dk_generation.Attempt_proof_by_def_of_species_param (at, id) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tUsing@ a@ collection@ parameter's@ method@ \
+        (%t%a%t)@ in@ a@ Zenon@ proof@ with@ \
+        \"by definition\"@ is@ not@ allowed.@]@."
+        Location.pp_location at header
+        Handy.pp_set_underlined Sourcify.pp_expr_ident id
+        Handy.pp_reset_effects
+  | Species_dk_generation.Attempt_proof_by_def_of_declared_method_of_self
+        (at, id) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tUsing@ an@ only@ declared@ method@ of@ Self@ \
+        (%t%a%t)@ in@ a@ Zenon@ proof@ with@ \"by definition\"@ \
+        is@ not@ allowed.@]@."
+        Location.pp_location at header
+        Handy.pp_set_underlined Sourcify.pp_expr_ident id
+        Handy.pp_reset_effects
+  | Species_dk_generation.Attempt_proof_by_def_of_local_ident (at, id) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tUsing@ a@ local@ identifier@ (%t%a%t)@ in@ a@ \
+        Zenon@ proof@ with@ \"by definition\"@ is@ not@ allowed.@]@."
+        Location.pp_location at header
+        Handy.pp_set_underlined Sourcify.pp_expr_ident id
+        Handy.pp_reset_effects
+  | Species_dk_generation.Attempt_proof_by_prop_of_local_ident (at, id) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tUsing@ a@ local@ identifier@ (%t%a%t)@ in@ a@ \
+        Zenon@ proof@ with@ \"by property\"@ is@ not@ allowed.@]@."
+        Location.pp_location at header
+        Handy.pp_set_underlined Sourcify.pp_expr_ident id
+        Handy.pp_reset_effects
+  | Species_dk_generation.Attempt_proof_by_unknown_hypothesis (at, name) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tAssumed@ hypothesis@ '%t%a%t'@ in@ a@ Zenon@ \
+        proof@ was@ not@ found.@]@."
+        Location.pp_location at header
+        Handy.pp_set_underlined Sourcify.pp_vname name
+        Handy.pp_reset_effects
+  | Species_dk_generation.Attempt_proof_by_unknown_step
+     (at, (node_num, node_name)) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tStep@ '%t<%d>%s%t'@ in@ a@ Zenon@ proof@ was@ not@ \
+         found.@]@."
+        Location.pp_location at header
+        Handy.pp_set_underlined node_num node_name
         Handy.pp_reset_effects
   (* ************************** *)
   (* Recursion analysis errors. *)

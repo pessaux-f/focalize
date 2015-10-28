@@ -221,13 +221,14 @@ and type_expr_desc =
 
 (** {6 External languages name definitions} *)
 
-(** The external languages known to the compiler are [Caml] and [Coq].
+(** The external languages known to the compiler are [Caml], [Coq] and [Dedukti].
     Any other language can be mentioned as external using its name
     which is uninterpreted. *)
 
 type external_language =
   | EL_Caml
   | EL_Coq
+  | EL_Dk
   | EL_external of string
 
 (** {6 External expressions} *)
@@ -371,7 +372,8 @@ and let_def_desc = {
   ld_termination_proof : termination_proof option;
 }
 
-and param_list = (vname * type_expr option) list
+and param = (vname * type_expr option)
+and param_list = param list
 
 and binding = binding_desc ast
 and binding_body =
@@ -437,6 +439,7 @@ and proof_desc =
   | Pf_assumed of enforced_dependency list
   | Pf_auto of fact list
   | Pf_coq of enforced_dependency list * external_code
+  | Pf_dk of enforced_dependency list * external_code
   | Pf_node of proof_node list
 
 and proof_node = proof_node_desc ast
@@ -455,17 +458,17 @@ and termination_proof_desc =
        A hint can be given as a list of facts. *)
   | TP_lexicographic of (expr list * param_list * proof)
     (** Gives a measure [expr] that proves the termination of the recursive
-        function because the [proof] proves that all recursive calls'
-        arguments decrease w.r.t. this measure. *)
-  | TP_measure of expr * param_list * proof
-    (** Gives an order [expr], a list of arguments to compare,
+        function because the [proof] proves that at all recursive calls
+        the argument decrease w.r.t. this measure. *)
+  | TP_measure of expr * param * proof
+    (** Gives an order [expr], an argument to compare,
        a proof that:
        - the order is well founded,
        - each recursive call decreases for the order applied to the arguments
          listed.
        Those two proofs (or more) are collected into a single proof as a
        conjunction. *)
-  | TP_order of expr * param_list * proof
+  | TP_order of expr * param * proof
 
 (** {3 Species definitions} *)
 

@@ -1,0 +1,89 @@
+coq_require "Import Relations" ;;
+coq_require "Import Zwf" ;;
+open "basics" ;;
+
+
+(** Interface required to create a well-founded relation from a measure. *)
+species MeasureInterf =
+  (** The user measure function. *)
+  signature meas_fct : Self -> int ;
+end ;;
+
+
+(** Species embedding a well-founded relation along with its well-foundness
+    proof, built from a measure. *)
+species FromMesureToWF (MI is MeasureInterf) =
+  representation = unit ;
+
+  (** Order (or more precisely, relation to be well-founded) operating on
+     MIs. *)
+  let order_fct (mi1, mi2) =
+    (* Uses 'measure' which is a method of the collection parameter. *)
+    (0 <= MI!meas_fct (mi2)) &&   (* Required for Coq subtilities stating
+        that one can transform a measure into a well-founded relation iff
+        the measure IS DEFINED on Nat. *)
+    (MI!meas_fct (mi1) < MI!meas_fct (mi2)) ;
+
+
+  (** Exported theorem: the relation is equivalent to the measure as long as
+      the second argument is >= 0. *)
+  theorem order_fct_spec:
+    all mi1 mi2: MI,
+    order_fct (mi1, mi2) <->
+    (0 <= MI!meas_fct (mi2)) && (MI!meas_fct (mi1) < MI!meas_fct (mi2))
+  proof = assumed (* ASSUMED: Zenon does not know how to type "0" (by definition of order_fct) *);
+
+
+  (* Theorem stating the the relation BUILT from the measure is well-founded.
+     is_well_founded (order_fct) == well_founded (order_fct).
+     There will be a need to have shown, when used in a termination proof, that
+     the measure is always >= 0. *)
+  theorem wf_order_fct : is_well_founded (order_fct)
+  proof =
+    coq proof
+    definition of order_fct
+    {*
+    unfold order_fct.
+    intros.
+    set (R := fun x y : basics.int__t =>
+         Is_true
+           (basics._amper__amper_ (basics._lt__equal_ 0 y)
+                                  (basics._lt_ x y))).
+    change
+      (well_founded
+      (fun x y : _p_MI_T  => R (_p_MI_meas_fct x) (_p_MI_meas_fct y))).
+    apply wf_inverse_image.
+    apply wf_incl with (R2 := (fun x y : Z => 0 <= y /\ x < y)).
+    unfold inclusion, R.
+    unfold basics.int__t, basics._amper__amper_, basics._lt__equal_,
+      basics._lt_, bi__and_b, bi__int_leq, bi__int_lt.
+    intros x y.
+    elim (Z_le_dec 0 y);intro; elim (Z_lt_dec x y); simpl; intros ; intuition.
+    apply (Zwf_well_founded 0).
+    Qed.
+    *} ;
+end ;;
+
+
+
+(** Well-founded relation on integers. *)
+let pos_int_order (i1, i2) = (0 <= i2) && (i1 < i2) ;;
+
+
+(** Theorem stating that the above-provided relation on integers is
+    well-founded. *)
+theorem pos_int_order_wf: is_well_founded (pos_int_order)
+proof =
+  coq proof
+    {*
+    unfold pos_int_order, basics.int__t, basics._amper__amper_,
+      basics._lt__equal_, basics._lt_, bi__and_b, bi__int_leq, bi__int_lt,
+      basics.is_well_founded.
+    apply wf_incl with (R2 := fun x y : Z => 0 <= y /\ x < y).
+    unfold inclusion.
+    intros x y.
+    elim (Z_le_dec 0 y); intro; elim (Z_lt_dec x y); simpl; intros; intuition.
+    apply (Zwf_well_founded 0).
+    Qed.
+    *}
+;;

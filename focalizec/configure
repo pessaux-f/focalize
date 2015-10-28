@@ -7,29 +7,30 @@
 #            François Pessaux                                                #
 #            Pierre Weis                                                     #
 #            Damien Doligez                                                  #
+#            Raphaël Cauderlier                                              #
 #                                                                            #
 #                               LIP6  --  INRIA Rocquencourt                 #
 #                                                                            #
-#  Copyright 2007 - 2012 LIP6 and INRIA                                      #
-#            2012 ENSTA ParisTech                                            #
+#  Copyright 2007 - ... LIP6 and INRIA                                       #
+#            2012 - ... ENSTA ParisTech                                      #
+#            2013 - ... CNAM CEDRIC-CPR                                      #
 #  Distributed only by permission.                                           #
 #                                                                            #
 # ************************************************************************** #
 
-# $Id: configure,v 1.52 2012-10-30 13:56:05 pessaux Exp $
 
 BOLDTAG="\033[1m"
 UNDERLINETAG="\033[4m"
 NORMALTAG="\033[0m"
 
 SUB_DIRS="src/basement src/parser src/typing \
-  src/docgen src/commoncodegen src/mlcodegen src/coqcodegen \
+  src/docgen src/commoncodegen src/mlcodegen src/coqcodegen src/dkcodegen \
   src/testing src/relation_extraction src/focalizedep src/toplevel \
   src/focalizetest src/focalizeig \
   doc_src/tex/refman \
   doc_src/tex/tutorial \
   src/stdlib \
-  src/extlib src/extlib/algebra src/extlib/access_control \
+  src/extlib src/extlib/algebra src/extlib/airport_security \
   src/contribs"
 
 touch .depend
@@ -38,7 +39,7 @@ for i in $SUB_DIRS ; do
   (cd $i; touch .depend; mkdir -p odoc)
 done
 
-# First recover the configuration file providing the name of ocaml and coq commands.
+# First recover the configuration file providing the name of ocaml, coq and dedukti commands.
 if [ -f "../.config_var" ] ;
     then
     . ../.config_var
@@ -68,7 +69,7 @@ usage () {
     echo "  [-]-tools_prefix <directory>"
     echo "    set <directory> as the directory prefix where tools required to"
     echo "    build FoCaLiZe are installed. The currently required tools (other"
-    echo "    than OCaml and Coq already configured) are zenon, zvtov."
+    echo "    than OCaml, Coq and Dedukti already configured) are zenon, zvtov."
     echo "  [-]-interactive"
     echo "    run interactively, asking questions."
 }
@@ -117,7 +118,6 @@ INSTALL_DOC_DIR=${INSTALL_PREFIX}/share/focalize
 
 # #############################################################################
 # Commands stuff.
-
 # Look for Zenon
 if [ $TOOLS_PREFIX_GIVEN != true ]
 then
@@ -156,6 +156,46 @@ then
 else
     # Explicit tools prefix given, keep it blindly.
     ZENON=$TOOLS_PREFIX/bin/zenon
+fi
+
+# Look for Zenon Modulo
+if [ $TOOLS_PREFIX_GIVEN != true ]
+then
+    ZENONM=`which zenon_modulo`
+    if [ "$ZENONM" != "" ] ;
+    then
+        if [ $INTERACTIVE = true ]
+        then
+            echo $BOLDTAG"Zenon Modulo found in $ZENONM."$NORMALTAG
+            echo "Press enter to use default or specify another location."
+            read USER_INPUT
+            if [ "$USER_INPUT" != "" ] ;
+            then
+                ZENONM=$USER_INPUT
+            else
+                # Default path kept: trim it to just let the PATH acting.
+                ZENONM=zenon_modulo
+            fi
+        else
+            # Default path: trim it
+            ZENONM=zenon_modulo
+        fi
+    else
+        # No zenon_modulo command found and no explicit prefix given.
+        echo $BOLDTAG"Zenon Modulo not found."$NORMALTAG
+        echo "Specify where to find Zenon Modulo."
+        read USER_INPUT
+        ZENONM=$USER_INPUT
+        # Finally check that a director was entered by the user.
+        if [ "$ZENONM" == "" ] ;
+        then
+            echo "Error. Zenon Modulo not available. Install it first."
+            exit 1
+        fi
+    fi
+else
+    # Explicit tools prefix given, keep it blindly.
+    ZENONM=$TOOLS_PREFIX/bin/zenon_modulo
 fi
 
 # Find zenon's libraries directly using the -where option of zenon.
@@ -315,6 +355,8 @@ echo "let install_lib_dir = \"$INSTALL_LIB_DIR\" ;;" >> $CONFIG_SUMMARY_DOT_ML
 echo "let caml_byt_compiler = \"$CAMLBYT\" ;;" >> $CONFIG_SUMMARY_DOT_ML
 echo "let caml_bin_compiler = \"$CAMLBIN\" ;;" >> $CONFIG_SUMMARY_DOT_ML
 echo "let coq_compiler = \"$COQC\" ;;" >> $CONFIG_SUMMARY_DOT_ML
+echo "let dedukti_compiler = \"$DKCHECK\" ;;" >> $CONFIG_SUMMARY_DOT_ML
+echo "let sukerujo_compiler = \"$SKCHECK\" ;;" >> $CONFIG_SUMMARY_DOT_ML
 echo "let zvtov_compiler = \"$ZVTOV\" ;;" >> $CONFIG_SUMMARY_DOT_ML
 echo "let zenon_compiler = \"$ZENON\" ;;" >> $CONFIG_SUMMARY_DOT_ML
 echo "let zenon_libdir = \"$ZENON_LIB_DIR\" ;;" >> $CONFIG_SUMMARY_DOT_ML
@@ -344,6 +386,7 @@ fi
 # Check if installation directories are writable, if so do not use sudo
 # otherwise, use it.
 SUDO=
+mkdir $INSTALL_BIN_DIR || true
 touch $INSTALL_BIN_DIR/writable_p
 if [ "$?" = 0 ] ;
 then
@@ -354,6 +397,7 @@ fi
 
 if [ "$SUDO" = "" ] ;
 then
+    mkdir $INSTALL_LIB_DIR || true
     touch $INSTALL_LIB_DIR/writable_p
     if [ "$?" = 0 ]
     then
@@ -365,6 +409,7 @@ fi
 
 if [ "$SUDO" = "" ] ;
 then
+    mkdir $INSTALL_MAN_DIR || true
     touch $INSTALL_MAN_DIR/writable_p
     if [ "$?" = 0 ]
     then
@@ -376,6 +421,7 @@ fi
 
 if [ "$SUDO" = "" ] ;
 then
+    mkdir $INSTALL_DOC_DIR || true
     touch $INSTALL_DOC_DIR/writable_p
     if [ "$?" = 0 ]
     then
@@ -417,6 +463,9 @@ echo "  other documentation -> $INSTALL_DOC_DIR"
 echo "  ocaml bytecode compiler = $CAMLBYT"
 echo "  ocaml binary compiler = $CAMLBIN"
 echo "  coq = $COQC"
+echo "  dkcheck = $DKCHECK"
+echo "  skcheck = $SKCHECK"
+echo "  skdep = $SKDEP"
 echo "  zvtov = $ZVTOV"
 echo "  zenon = $ZENON"
 echo "  git = $GIT  (not important if not available)"

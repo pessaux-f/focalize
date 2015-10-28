@@ -129,6 +129,12 @@ let make_targets deps =
     (fun (n, k) -> if k <> DK_coq_require then Printf.printf " %s.cmx" n)
     deps.fd_dependencies ;
   Printf.printf "\n" ;
+  (* Handle dependencies for .dko files. *)
+  Printf.printf "%s.dko: %s.sk" basename basename ;
+  CompUnitSet.iter
+    (fun (n, k) -> if k <> DK_coq_require then Printf.printf " %s.dko" n)
+    deps.fd_dependencies ;
+  Printf.printf "\n" ;
   (* Handle dependencies for .vo files. Dependencies from directives
      "coq_require" must be printed. *)
   Printf.printf "%s.cmx:" basename ;

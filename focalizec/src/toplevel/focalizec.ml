@@ -81,21 +81,31 @@ let compile_fcl input_file_name =
       input_file_name scoped_ast stuff_to_compile;
   (* Now go to the OCaml code generation if requested. *)
   let mlgen_toplevel_env =
-    if Configuration.get_generate_ocaml () then
-      (begin
+    if Configuration.get_generate_ocaml () then (
       let out_file_name = (Filename.chop_extension input_file_name) ^ ".ml" in
       Some
         (Main_ml_generation.root_compile
            ~current_unit ~out_file_name stuff_to_compile)
-      end)
+     )
     else None in
-  (* Finally, go to the Coq code generation if requested and generate the
+  (* Go to the Coq code generation if requested and generate the
      .zv file . *)
   let coqgen_toplevel_env =
     if Configuration.get_generate_coq () then (
       let out_file_name = (Filename.chop_extension input_file_name) ^ ".zv" in
       Some
         (Main_coq_generation.root_compile
+           ~current_unit ~out_file_name stuff_to_compile)
+     )
+    else None in
+  (* Finally, go to the Dedukti code generation if requested and generate the
+     .sk file . *)
+  let dkgen_toplevel_env =
+    if Configuration.get_generate_dk () then (
+      let out_file_name =
+        (Filename.chop_extension input_file_name) ^ ".sk.zv" in
+      Some
+        (Main_dk_generation.root_compile
            ~current_unit ~out_file_name stuff_to_compile)
      )
     else None in
@@ -116,7 +126,7 @@ let compile_fcl input_file_name =
   Env.make_fo_file
     ~source_filename: input_file_name
     scoping_toplevel_env typing_toplevel_env mlgen_toplevel_env
-    coqgen_toplevel_env
+    coqgen_toplevel_env dkgen_toplevel_env
 ;;
 
 
@@ -156,8 +166,8 @@ let compile_ml input_file_name =
 
 let compile_zv input_file_name =
   let cmd =
-    Printf.sprintf "%s -zenon %s -new %s %s"
-      Installation.zvtov_compiler Installation.zenon_compiler
+    Printf.sprintf "%s -new %s -z '-x induct' %s"
+      Installation.zvtov_compiler (* Installation.zenon_compiler *)
       (Configuration.get_zvtov_extra_opts ())
       input_file_name in
   Format.eprintf "Invoking zvtov...@\n" ;
@@ -188,6 +198,37 @@ let compile_coq input_file_name =
 ;;
 
 
+let compile_zdk input_file_name =
+  let cmd =
+    Printf.sprintf "%s -idedukti -new %s %s.zv && mv %s.v %s"
+      Installation.zvtov_compiler (* Installation.zenon_compiler *)
+      (Configuration.get_zvtov_extra_opts ())
+      input_file_name
+      input_file_name (Filename.basename input_file_name)
+  in
+  Format.eprintf "Invoking zvtov...@\n" ;
+  Format.eprintf ">> %s@." cmd ;
+  let ret_code = Sys.command cmd in
+  if ret_code <> 0 then exit ret_code
+;;
+
+
+
+let compile_dk input_file_name =
+  let for_zenon = " -I " ^ Installation.zenon_libdir in
+  let includes =
+    String.concat " -I " ("" :: (Files.get_lib_paths ())) in
+  let cmd =
+    Printf.sprintf "%s -e %s %s %s"
+      Installation.sukerujo_compiler
+      for_zenon includes input_file_name
+  in
+  Format.eprintf "Invoking dkcheck...@\n";
+  Format.eprintf ">> %s@." cmd;
+  let ret_code = Sys.command cmd in
+  if ret_code <> 0 then exit ret_code
+;;
+
 
 let dispatch_compilation files =
   List.iter
@@ -212,6 +253,15 @@ let dispatch_compilation files =
                 compile_coq (input_file_no_suffix ^ ".v")
              )
            );
+          if Configuration.get_generate_dk () then (
+            if not (Configuration.get_stop_before_zenon ()) then (
+              (* If a .zdk file was generated, let's compile it. *)
+              compile_zdk (input_file_no_suffix ^ ".sk") ;
+              (* Finally, pass it to Dedukti. *)
+              if not (Configuration.get_stop_before_dk ()) then
+                compile_dk (input_file_no_suffix ^ ".sk")
+             )
+           );
           (* let tests_file_no_suffix = *)
           (*   Testing.add_tests_suffix input_file_no_suffix in *)
           (* let tests_file_fcl = tests_file_no_suffix ^ ".fcl" in *)
@@ -226,10 +276,16 @@ let dispatch_compilation files =
       | "ml" | "mli" -> compile_ml input_file_name
       | "zv" ->
           compile_zv input_file_name;
-          (* Finally, pass it to Coq. *)
+          (* Finally, pass it to Coq or Dedukti. *)
           let input_file_no_suffix = Filename.chop_extension input_file_name in
-          compile_coq (input_file_no_suffix ^ ".v")
+          let suffix2 = String.lowercase
+            (Files.get_file_name_suffix input_file_no_suffix) in
+          if suffix2 = ".dk" then
+            compile_dk (input_file_no_suffix)
+          else
+            compile_coq (input_file_no_suffix ^ ".v") ;
       | "v" -> compile_coq input_file_name
+      | "sk" -> compile_dk input_file_name
       | _ -> raise (Bad_file_suffix input_file_name)
     )
     files
@@ -237,8 +293,7 @@ let dispatch_compilation files =
 
 
 
-
-(* The main procedure *)
+(* The main procedure. *)
 let main () =
   Arg.parse
     [ ("-coq_older",
@@ -250,7 +305,8 @@ let main () =
      \    files into the argument directory.");
       ("--experimental",
        Arg.Unit Configuration.set_experimental,
-       "  Do not use. Fear it! For the development team only!");
+       "  Do not use. Fear it! Does nothing, or does some things.\n\
+          For the development team only!");
       ("-focalize-doc",
        Arg.Unit Configuration.set_focalize_doc,
        "  Generate documentation.");
@@ -279,6 +335,9 @@ let main () =
       ("-no-coq-code",
        Arg.Unit Configuration.unset_generate_coq,
        "  Disable the Coq code generation.");
+      ("-no-dedukti-code",
+       Arg.Unit Configuration.unset_generate_dk,
+       "  Disable the Dedukti code generation.");
       ("-no-ocaml-code",
        Arg.Unit Configuration.unset_generate_ocaml,
        "  Disable the OCaml code generation.");
@@ -317,17 +376,30 @@ let main () =
        Arg.String Configuration.set_pretty_scoped,
        "  (Undocumented) Pretty-print the parse tree of the FoCaLize\n\
      \    file once scoped as a FoCaLize source into the argument file.");
+      ("-show-term-obls",
+          Arg.Unit Configuration.set_show_term_obls,
+       "  Print the termination proofs obligations to prove for\n\
+     \    recursive functions.");
+      ("-sto",
+          Arg.Unit Configuration.set_show_term_obls,
+       "  Shortcut for '-show-term-obls'.");
       ("-stop-before-coq",
        Arg.Unit Configuration.set_stop_before_coq,
        "  When Coq code generation is activated, stop the compilation\n\
      \    process before passing the generated file to Coq. The produced file\
           is ended\n\
      \    by the suffix \".v\".");
+      ("-stop-before-dk",
+       Arg.Unit Configuration.set_stop_before_dk,
+       "  When Dedukti code generation is activated, stop the compilation\n\
+     \    process before passing the generated file to Dedukti. The produced file\
+          is ended\n\
+     \    by the suffix \".dk\".");
       ("-stop-before-zenon",
        Arg.Unit Configuration.set_stop_before_zenon,
-       "  When Coq code generation is activated, stop the \n\
+       "  When Coq/Dedukti code generation is activated, stop the \n\
      \    compilation process before passing the generated file to Zenon.\n\
-     \    The produced file is ended by the suffix \".zv\".");
+     \    The produced file is ended by the suffix \".zv\" or \".sk.zv\".");
       ("-verbose",
        Arg.Unit Configuration.set_verbose,
        "  Be verbose. Make the compiler jaberring about its real-time life.");
