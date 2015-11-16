@@ -990,7 +990,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
               fun_ty
               vnames) ;
          Format.fprintf out_fmter "=>@ " ;
-         rec_generate_expr loc_idents env body ;
+         rec_generate_expr (vnames @ loc_idents) env body ;
          Format.fprintf out_fmter ")@]" ;
      | Parsetree.E_var ident -> (
          (* Get the number of extra args "_" that will be needed because of
