@@ -26,7 +26,7 @@ type order_kind =
 
 val generate_termination_lemmas :
   Context.species_compil_context -> Coq_pprint.coq_print_context ->
-  Env.CoqGenEnv.t -> explicit_order: order_kind ->
+  Env.CoqGenEnv.t -> Types.type_variable list -> explicit_order: order_kind ->
   Recursion.recursive_calls_description ->
     unit
 

@@ -402,9 +402,20 @@ let find_method_type_kind_by_name vname coll_meths =
     temporary theorem for Zenon purpose. In this case, instead of abstracting
     dependencies by adding extra arguments to the current definition, we
     generate Variable, Let and Hypothesis.*)
-let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
-    used_species_parameter_tys dependencies_from_params generated_fields =
+let generate_field_definition_prelude ~in_section ctx print_ctx env
+    generalized_vars min_coq_env used_species_parameter_tys
+    dependencies_from_params generated_fields =
   let out_fmter = ctx.Context.scc_out_fmter in
+  (* Generate the polymorphic type variables. *)
+  List.iter
+    (fun var ->
+      if in_section then
+        Format.fprintf out_fmter "@[<2>Variable %a :@ Set.@]@\n"
+          Coq_pprint.pp_type_variable_to_coq var
+      else
+        Format.fprintf out_fmter "@ (%a : Set)"
+          Coq_pprint.pp_type_variable_to_coq var)
+    generalized_vars ;
   (* Generate the parameters from the species parameters' types we use.
      By the way, we get the stuff to add to the current collection carrier
      mapping to make so the type expressions representing some species
@@ -735,13 +746,14 @@ let generate_defined_non_recursive_method ctx print_ctx env min_coq_env
   (* Start the Coq function definition. *)
   Format.fprintf out_fmter "@[<2>Definition %a"
     Parsetree_utils.pp_vname_with_operators_expanded name ;
+  let (generalized_vars, _) = Types.scheme_split scheme in
   (* Generate the prelude of the method, i.e the sequence of parameters induced
      by the various lamda-liftings and their types .
      By the way, we get updated in the [new_print_ctx] the way "Self" must be
      printed. *)
   let (abstracted_methods, new_ctx, new_print_ctx) =
     generate_field_definition_prelude
-      ~in_section: false ctx print_ctx env min_coq_env
+      ~in_section: false ctx print_ctx env generalized_vars min_coq_env
       used_species_parameter_tys dependencies_from_params generated_fields in
   (* We now generate the postlude of the method, i.e the sequence of real
      parameters of the method, not those induced by abstraction and finally
@@ -769,15 +781,17 @@ let generate_defined_non_recursive_method ctx print_ctx env min_coq_env
     {b Exported} : No.                                                    *)
 (* ********************************************************************** *)
 let generate_non_recursive_field_binding ctx print_ctx env min_coq_env
-    ~self_manifest used_species_parameter_tys dependencies_from_params
-    generated_fields (from, name, params, scheme, body) =
+    ~self_manifest used_species_parameter_tys
+    dependencies_from_params generated_fields
+    (from, name, params, scheme, body) =
   (* First of all, only methods defined in the current species must be
      generated. Inherited methods ARE NOT generated again ! *)
   let abstracted_methods =
     if from.Env.fh_initial_apparition = ctx.Context.scc_current_species then
       generate_defined_non_recursive_method
-        ctx print_ctx env min_coq_env ~self_manifest used_species_parameter_tys
-        dependencies_from_params generated_fields name body params scheme
+        ctx print_ctx env min_coq_env ~self_manifest
+        used_species_parameter_tys dependencies_from_params
+        generated_fields name body params scheme
     else (
       (* Just a bit of debug/information if requested. *)
       if Configuration.get_verbose () then
@@ -862,7 +876,7 @@ let rec find_only_PN_subs_in_proof_nodes = function
    {b Rem} : For Function.    *)
 let generate_final_recursive_definifion_body_With_Function out_fmter
     ~in_zenon_by_def species_name name used_species_parameter_tys
-    dependencies_from_params abstracted_methods =
+    dependencies_from_params abstracted_methods generalized_vars =
   if in_zenon_by_def then
     Format.fprintf out_fmter "Termination_%a_namespace.%a_equation@ "
       Parsetree_utils.pp_vname_with_operators_expanded name
@@ -872,6 +886,11 @@ let generate_final_recursive_definifion_body_With_Function out_fmter
       Parsetree_utils.pp_vname_with_operators_expanded name
       Parsetree_utils.pp_vname_with_operators_expanded species_name
       Parsetree_utils.pp_vname_with_operators_expanded name;
+  (* Apply to the generalized type variables. *)
+   List.iter
+     (fun var ->
+       Format.fprintf out_fmter "@ %a" Coq_pprint.pp_type_variable_to_coq var)
+     generalized_vars ; 
   (* We directly apply the abstracted arguments. That's a kind of
      eta-expansion. *)
   List.iter
@@ -953,7 +972,8 @@ let zenonify_by_recursive_meth_definition ctx print_ctx env
        generate_final_recursive_definifion_body_With_Function
          out_fmter ~in_zenon_by_def: true species_name vname
          used_species_parameter_tys dependencies_from_params
-         abstracted_methods ;
+         abstracted_methods
+         [(*empty generalized vars*)] (* [Unsure] ... and wrong! *) ;
        Format.fprintf out_fmter " }@\n:=@\n"
    | Env.RPK_struct decr_arg_name ->
        (* Case where the recursive function was generated with "Fixpoint". In
@@ -1984,6 +2004,7 @@ and emit_zenon_theorem_for_proof ~in_nested_proof ctx print_ctx env min_coq_env
          Need to factorize ? *)
       Rec_let_coq_gen.generate_termination_lemmas
         ctx print_ctx env
+        [(* empty generalized vars *)] (* [Unsure] *)
         ~explicit_order: (Rec_let_coq_gen.OK_expr (expr, used_param_index))
         rec_calls ;
       (match expr with
@@ -2314,8 +2335,9 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
        or Hypothesis. *)
     ignore
       (generate_field_definition_prelude
-         ~in_section: true ctx print_ctx env min_coq_env
-         used_species_parameter_tys dependencies_from_params
+         ~in_section: true ctx print_ctx env
+         [(* Empty list of generalized vars *)] (* [Unsure] *)
+         min_coq_env used_species_parameter_tys dependencies_from_params
          generated_fields) in
   (* *********************** *)
   (* Start really the job... *)
@@ -2397,10 +2419,11 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
               (* [Unsure] Same code than in [emit_zenon_theorem_for_proof].
                  Need to factorize ? *)
               Rec_let_coq_gen.generate_termination_lemmas
-              ctx print_ctx env
-              ~explicit_order:
-                (Rec_let_coq_gen.OK_expr (expr, used_param_index))
-                rec_calls ;
+                ctx print_ctx env
+                [(* empty generalized vars *)] (* [Unsure] *)
+                ~explicit_order:
+                  (Rec_let_coq_gen.OK_expr (expr, used_param_index))
+                  rec_calls ;
             (match expr with
              | Rec_let_coq_gen.TEK_order e ->
                  (* Always end by the obligation of well-formation of the
@@ -2508,7 +2531,9 @@ let generate_defined_theorem ctx print_ctx env min_coq_env ~self_manifest
      their types induced by the various lamda-liftings. *)
   let (abstracted_methods, new_ctx, _) =
     generate_field_definition_prelude
-      ~in_section: false ctx print_ctx env min_coq_env
+      ~in_section: false ctx print_ctx env
+      [(* Empty list of generalized vars *)] (* [Unsure] *)
+      min_coq_env
       used_species_parameter_tys dependencies_from_params generated_fields in
   Format.fprintf out_fmter ":@ " ;
   (* Finally, the theorem itself. Inside, any method of "Self" is abstracted
@@ -2662,7 +2687,7 @@ let print_order_args_as_tuple out_fmter ~fun_arity arg_name indices =
     {b Exported}: No.                                                       *)
 (* ************************************************************************ *)
 let generate_termination_order_for_Function ctx print_ctx env name
-    fun_params_n_tys ai sorted_deps_from_params
+    fun_params_n_tys generalized_vars ai sorted_deps_from_params
     generated_fields (* Only needed for "prelude". *)
     opt_term_pr =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -2672,7 +2697,8 @@ let generate_termination_order_for_Function ctx print_ctx env name
   (* Generate the lambda-lifts for our dependencies. *)
   let (_, ctx, print_ctx) =
     generate_field_definition_prelude
-      ~in_section: false ctx print_ctx env ai.Env.TypeInformation.ad_min_coq_env
+      ~in_section: false ctx print_ctx env generalized_vars
+      ai.Env.TypeInformation.ad_min_coq_env
       ai.Env.TypeInformation.ad_used_species_parameter_tys
       sorted_deps_from_params generated_fields in
   (* The 2 arguments of any decent order (i.e. the compared values). *)
@@ -3038,7 +3064,7 @@ let generate_order_term_proof_for_Function
     this former application, the tuple of all variables / recursive args
     of the function: not only those on which the user-order operates. *)
 let generate_termination_proof_for_Function ctx print_ctx env ~self_manifest
-    name fun_params_n_tys ai
+    name fun_params_n_tys generalized_vars ai
     sorted_deps_from_params generated_fields (* Only needed for "prelude". *)
     recursive_calls opt_term_pr =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -3084,7 +3110,8 @@ let generate_termination_proof_for_Function ctx print_ctx env ~self_manifest
       are under a Section, do not lambda-lift. *)
   let (abstracted_methods, new_ctx, new_print_ctx) =
     generate_field_definition_prelude
-      ~in_section: true ctx print_ctx env ai.Env.TypeInformation.ad_min_coq_env
+      ~in_section: true ctx print_ctx env generalized_vars
+      ai.Env.TypeInformation.ad_min_coq_env
       ai.Env.TypeInformation.ad_used_species_parameter_tys
       sorted_deps_from_params generated_fields in
   (* The termination theorem... *)
@@ -3100,11 +3127,16 @@ let generate_termination_proof_for_Function ctx print_ctx env ~self_manifest
       (name, ai.Env.TypeInformation.ad_used_species_parameter_tys,
        sorted_deps_from_params, abstracted_methods) in
   Rec_let_coq_gen.generate_termination_lemmas
-    new_ctx new_print_ctx env ~explicit_order recursive_calls ;
+    new_ctx new_print_ctx env generalized_vars ~explicit_order recursive_calls ;
   (* Always end by the obligation of well-formation of the order as Function
      expects (not the user-order). *)
   Format.fprintf out_fmter "@ (well_founded (%a_wforder"
     Parsetree_utils.pp_vname_with_operators_expanded name ;
+  (* Apply to generalized vars. *)
+   List.iter
+     (fun var ->
+       Format.fprintf out_fmter "@ %a" Coq_pprint.pp_type_variable_to_coq var)
+    generalized_vars ;
   (* Apply the order to its arguments due to lambda-lifts. *)
   Species_record_type_coq_generation.generate_method_lambda_lifted_arguments
      ~only_for_Self_meths: false out_fmter
@@ -3171,11 +3203,10 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        Format.fprintf out_fmter "@\n@[<2>Module Termination_%a_namespace.@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name;
        (* We get the function's parameters and their types. This will serve
-          at various stage, each time we will need to speak about a
-          parameter. *)
-       (* For [bind_parameters_to_types_from_type_scheme], not that we do not
+          at various stage, each time we will need to speak about a parameter.
+          For [bind_parameters_to_types_from_type_scheme], not that we do not
           have anymore information about "Self"'s structure... *)
-       let (params_with_type, return_ty_opt, _) =
+       let (params_with_type, return_ty_opt, generalized_vars) =
          MiscHelpers.bind_parameters_to_types_from_type_scheme
            ~self_manifest: None (Some scheme) params in
        (* Just remove the option that must always be Some since we provided
@@ -3195,7 +3226,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
            [] body_expr in
        (* ---> Generate the order depending on the kind of proof. *)
        generate_termination_order_for_Function
-         ctx' print_ctx env name params_with_type ai
+         ctx' print_ctx env name params_with_type generalized_vars ai
          ai.Env.TypeInformation.ad_dependencies_from_parameters
          generated_fields opt_term_pr ;
        (* ---> Start the Coq "Section" containing the termination theorem as
@@ -3205,7 +3236,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        (* ---> Generate the termination proof. *)
        let (abstracted_methods, new_ctx, new_print_ctx) =
          generate_termination_proof_for_Function ctx' print_ctx env
-           ~self_manifest name params_with_type ai
+           ~self_manifest name params_with_type generalized_vars ai
            ai.Env.TypeInformation.ad_dependencies_from_parameters
            generated_fields recursive_calls opt_term_pr in
        (* Generate the recursive uncurryed function. *)
@@ -3215,6 +3246,12 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          (print_types_as_tuple_if_several new_print_ctx) params_with_type ;
        Format.fprintf out_fmter "(%a_wforder@ "
          Parsetree_utils.pp_vname_with_operators_expanded name ;
+       (* Apply the order to the polymorphic type variables. *)
+       List.iter
+         (fun var ->
+           Format.fprintf out_fmter "@ %a"
+             Coq_pprint.pp_type_variable_to_coq var)
+         generalized_vars ;
        (* Apply the order to its arguments due to lambda-lifts. *)
        Species_record_type_coq_generation.generate_method_lambda_lifted_arguments
          ~only_for_Self_meths: false out_fmter
@@ -3308,7 +3345,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          (* No termination proof given. Hence, generate a fake proof. *)
          Format.fprintf out_fmter "apply coq_builtins.magic_prove.@\n"
         );
-       (* Close the pretty print of of the "Function". *)
+       (* Close the pretty print box of the "Function". *)
        Format.fprintf out_fmter "Qed.@]@\n";
        (* ---> Generate the curryed version. *)
        Format.fprintf out_fmter
@@ -3331,7 +3368,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          Parsetree_utils.pp_vname_with_operators_expanded name ;
        ignore
          (generate_field_definition_prelude
-            ~in_section: false new_ctx new_print_ctx env
+            ~in_section: false new_ctx new_print_ctx env generalized_vars
             ai.Env.TypeInformation.ad_min_coq_env
             ai.Env.TypeInformation.ad_used_species_parameter_tys
             ai.Env.TypeInformation.ad_dependencies_from_parameters
@@ -3346,7 +3383,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          out_fmter ~in_zenon_by_def: false species_name name
          ai.Env.TypeInformation.ad_used_species_parameter_tys
          ai.Env.TypeInformation.ad_dependencies_from_parameters
-         abstracted_methods ;
+         abstracted_methods generalized_vars ;
        (* Close the pretty print box. *)
        Format.fprintf out_fmter ".@]@\n" ;
        let compiled = {
@@ -3391,9 +3428,10 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
   (* Now, generate the prelude of the only method introduced by "let rec". *)
   Format.fprintf out_fmter "@[<2>Fixpoint %a@ "
     Parsetree_utils.pp_vname_with_operators_expanded name ;
+  let (generalized_vars, _) = Types.scheme_split scheme in
   let (abstracted_methods, new_ctx, new_print_ctx) =
     generate_field_definition_prelude
-      ~in_section: false ctx' print_ctx env
+      ~in_section: false ctx' print_ctx env generalized_vars
       ai.Env.TypeInformation.ad_min_coq_env
       ai.Env.TypeInformation.ad_used_species_parameter_tys
       ai.Env.TypeInformation.ad_dependencies_from_parameters generated_fields in

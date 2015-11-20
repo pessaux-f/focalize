@@ -493,8 +493,8 @@ type order_kind =
     This order expression is then eta-expanded and wrapped into a Is_true.
     In the second case, the order is a generated one and is called by
     function's name + "_wforder". It deals with all the function's arguments! *)
-let generate_termination_lemmas ctx print_ctx env ~explicit_order
-    recursive_calls =
+let generate_termination_lemmas ctx print_ctx env generalized_vars
+    ~explicit_order recursive_calls =
   let out_fmter = ctx.Context.scc_out_fmter in
   List.iter
     (fun (n_exprs, bindings) ->
@@ -620,6 +620,12 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
            Species_record_type_coq_generation.generate_method_lambda_lifted_arguments
              ~only_for_Self_meths: false out_fmter ai sorted_deps_from_params
              abstracted_methods ;
+           (* Apply to the generalized type variables. *)
+           List.iter
+             (fun var ->
+               Format.fprintf out_fmter "@ %a"
+                 Coq_pprint.pp_type_variable_to_coq var)
+             generalized_vars ;
            Format.fprintf out_fmter ")@ " ;
            (* Now, generate the tuples of all the arguments to provide to the
               order as Function expects it. *)

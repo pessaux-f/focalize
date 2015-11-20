@@ -144,6 +144,10 @@ type recursive_methods_status =
 
 
 
+(* Return a boolean telling if the identifier is one of the recursive ones
+   in the present definition. If so, then we won't have to emit the extra
+   _'s since the generated code is forcibly inside a Section (for Zenon),
+   hence with Variables. *)
 let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
     ~self_methods_status ~recursive_methods_status ident =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -180,7 +184,8 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
             itself, not on any method since there is none !). *)
          Format.fprintf out_fmter "_p_%a_%a"
            Parsetree_utils.pp_vname_with_operators_expanded vname
-           Parsetree_utils.pp_vname_with_operators_expanded vname
+           Parsetree_utils.pp_vname_with_operators_expanded vname ;
+         false    (* Is not a recursive ident of the current function. *)
          )
        else (
          (* Really a local identifier or a call to a recursive method. *)
@@ -217,7 +222,8 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                List.assoc vname ctx.Context.scc_lambda_lift_params_mapping in
              List.iter (fun s -> Format.fprintf out_fmter "@ %s" s) extra_args
               with Not_found -> ()
-            )
+           ) ;
+         is_a_rec_fun
          )
       )
    | Parsetree.EI_global (Parsetree.Vname _) ->
@@ -232,7 +238,11 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
            mod_name Parsetree_utils.pp_vname_with_operators_expanded vname
        else
          Format.fprintf out_fmter "%a"
-           Parsetree_utils.pp_vname_with_operators_expanded vname
+           Parsetree_utils.pp_vname_with_operators_expanded vname ;
+       (* Check if it is the ident of the current recursive function if we are
+          in one. *)
+       let is_a_rec_fun = List.mem vname in_recursive_let_section_of in
+       is_a_rec_fun
    | Parsetree.EI_method (coll_specifier_opt, vname) -> (
        match coll_specifier_opt with
        | None
@@ -347,7 +357,8 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                 )
               )
           )
-      )
+      ) ;
+      false    (* Is not a recursive ident of the current function. *)
 ;;
 
 
@@ -1010,16 +1021,21 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
              (* If the identifier was not found, then it was may be a local
                 identifier bound by a pattern. Then we can safely ignore it. *)
              Env.Unbound_identifier (_, _) -> 0) in
+
          (* If some extra "_" are needed, then enclose the whole expression
             between parens (was bug #50). *)
          if nb_polymorphic_args > 0 then Format.fprintf out_fmter "@[<2>(" ;
-         generate_expr_ident_for_E_var
-           ctx ~in_recursive_let_section_of ~local_idents: loc_idents
-           ~self_methods_status ~recursive_methods_status ident ;
-         (* Now, add the extra "_"'s if the identifier is polymorphic. *)
-         for _i = 0 to nb_polymorphic_args - 1 do
-           Format.fprintf out_fmter "@ _"
-         done ;
+         let is_rec_ident =
+           generate_expr_ident_for_E_var
+             ctx ~in_recursive_let_section_of ~local_idents: loc_idents
+             ~self_methods_status ~recursive_methods_status ident in
+         (* Now, add the extra "_"'s if the identifier is polymorphic.
+            only if the ident is not the one of the current recursive
+            function (if we are in this situation). *)
+         if not is_rec_ident then (
+           for _i = 0 to nb_polymorphic_args - 1 do
+             Format.fprintf out_fmter "@ _"
+           done) ;
          (* Close the opened parenthesis if one was opened. *)
          if nb_polymorphic_args > 0 then Format.fprintf out_fmter ")@]"
          )
