@@ -828,7 +828,7 @@ let pre_compute_let_binding_info_for_rec env bd ~rec_status ~toplevel =
          bd.Parsetree.ast_desc.Parsetree.b_body) in
   let env' =
     (match rec_status with
-    | Env.DkGenInformation.RC_rec _ ->
+    | Env.DkGenInformation.RC_rec ->
         let toplevel_loc =
           if toplevel then Some bd.Parsetree.ast_loc else None in
         Env.DkGenEnv.add_value

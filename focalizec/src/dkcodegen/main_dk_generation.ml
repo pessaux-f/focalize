@@ -42,16 +42,7 @@ let toplevel_let_def_compile ctx env let_def =
   let rec_status =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
      | Parsetree.RF_no_rec -> Env.DkGenInformation.RC_non_rec
-     | Parsetree.RF_rec -> (
-         match let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof with
-         | None -> Env.DkGenInformation.RC_rec Env.DkGenInformation.RPK_other
-         | Some term_pr -> (
-             match term_pr.Parsetree.ast_desc with
-             | Parsetree.TP_structural decr_arg ->
-                 Env.DkGenInformation.RC_rec
-                   (Env.DkGenInformation.RPK_struct decr_arg)
-             | _ ->
-                 Env.DkGenInformation.RC_rec Env.DkGenInformation.RPK_other))
+     | Parsetree.RF_rec -> Env.DkGenInformation.RC_rec
     ) in
   let in_recursive_let_section_of =
     if rec_status <> Env.DkGenInformation.RC_non_rec then  (* Is rec. *)

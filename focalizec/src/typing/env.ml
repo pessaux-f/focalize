@@ -1430,7 +1430,7 @@ module DkGenInformation = struct
   (* ************************************************************************ *)
   type rec_status =
     | RC_non_rec
-    | RC_rec of rec_proof_kind
+    | RC_rec
 
 
   type value_body =
