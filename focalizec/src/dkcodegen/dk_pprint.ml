@@ -84,16 +84,22 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
           (ty_var, name) :: !type_variable_names_mapping ;
         name in
 
+  let type_module ~current_unit (hosting_module, _) =
+    if current_unit = hosting_module then None else Some hosting_module in
 
-  let pp_type_name_to_dk ~current_unit ppf (hosting_module, constructor_name) =
+  let pp_type_name_to_dk_no_module ppf (_, constructor_name) =
     let constructor_name' =
       Anti_keyword_conflict.string_to_no_keyword_string constructor_name in
-    if current_unit = hosting_module then
-      Format.fprintf ppf "%s__t" constructor_name'
-    else
-      (* In Dedukti, no file name capitalization ! *)
-      Format.fprintf ppf "%s.%s__t" hosting_module constructor_name' in
+    Format.fprintf ppf "%s__t" constructor_name'
+  in
 
+  let pp_type_name_to_dk ~current_unit ppf ty_name =
+    match type_module ~current_unit ty_name with
+    | None -> pp_type_name_to_dk_no_module ppf ty_name
+    | Some m ->
+      (* In Dedukti, no file name capitalization ! *)
+       Format.fprintf ppf "%s.%a" m
+         pp_type_name_to_dk_no_module ty_name in
 
   let internal_pp_var_to_dk ppf ty_var =
     let ty_variable_name = get_or_make_type_variable_name_to_dk ty_var in
@@ -102,8 +108,22 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
     ; Format.fprintf ppf "(*%d,l:%d*)" ty_var.tv_debug ty_var.tv_level *)
     in
 
+  let to_dk_module ctx ty =
+    match ty with
+    | Types.ST_var _ -> None
+    | Types.ST_arrow (Types.ST_sum_arguments _, _) -> None
+    | Types.ST_arrow _ -> None (* We don't put "cc" here because parens get in the way *)
+    | Types.ST_sum_arguments _ -> None
+    | Types.ST_tuple _ -> None (* Same as arrow *)
+    | Types.ST_construct (ty_name, _) ->
+       type_module ~current_unit: ctx.dpc_current_unit ty_name
+    | Types.ST_prop -> Some "dk_builtins"
+    | Types.ST_self_rep -> None
+    | Types.ST_species_rep (module_name, _) ->
+       if module_name = ctx.dpc_current_unit then None else Some module_name
+  in
 
-  let rec rec_pp_to_dk ctx prio ppf ty =
+  let rec rec_pp_to_dk_no_module ctx prio ppf ty =
     match ty with
     | Types.ST_var ty_var -> internal_pp_var_to_dk ppf ty_var
     | Types.ST_arrow (Types.ST_sum_arguments tys, ty2) ->
@@ -128,9 +148,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
         (* Priority of arguments of a sum type constructor : like an regular
            application : 0. *)
         match arg_tys with
-         | [] -> Format.fprintf ppf "%a"
-               (pp_type_name_to_dk ~current_unit: ctx.dpc_current_unit)
-               type_name
+         | [] -> pp_type_name_to_dk_no_module ppf type_name
          | _ ->
              Format.fprintf ppf "@[<1>(%a@ %a)@]"
                (pp_type_name_to_dk ~current_unit: ctx.dpc_current_unit)
@@ -138,7 +156,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
                (Handy.pp_generic_separated_list " "
                   (rec_pp_to_dk ctx 0)) arg_tys
         end)
-    | Types.ST_prop -> Format.fprintf ppf "dk_builtins.prop"
+    | Types.ST_prop -> Format.fprintf ppf "prop"
     | Types.ST_self_rep ->
         (begin
         match ctx.dpc_current_species with
@@ -194,11 +212,14 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
              is the species's name + "me_as_carrier" with a possible module
              prefix qualification if the species belongs to a file that is not
              the currently compiled one. *)
-          if ctx.dpc_current_unit = module_name then
             Format.fprintf ppf "%s__me_as_carrier" collection_name
-          else
-            Format.fprintf ppf "%s.%s__me_as_carrier" module_name collection_name
-        end)
+          end)
+
+  and rec_pp_to_dk ctx prio ppf ty =
+    match to_dk_module ctx ty with
+    | None -> rec_pp_to_dk_no_module ctx prio ppf ty
+    | Some m -> Format.fprintf ppf "%s.%a" m
+                 (rec_pp_to_dk_no_module ctx prio) ty
 
   (* ********************************************************************* *)
   (** {b Descr} : Encodes FoCaLize tuples into nested pairs because Dk
@@ -268,7 +289,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
           (ty2 :: rem)
   in
 
-  let rec_pp_cbv_to_dk ctx prio ppf ty =
+  let rec_pp_cbv_to_dk_no_module ctx prio ppf ty =
     match ty with
     | Types.ST_tuple tys ->
         (* Tuple priority: 3. *)
@@ -282,17 +303,22 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
            application : 0. *)
         match arg_tys with
          | [] -> Format.fprintf ppf "call_by_value_%a"
-               (pp_type_name_to_dk ~current_unit: ctx.dpc_current_unit)
-               type_name
+               pp_type_name_to_dk_no_module type_name
          | _ ->
              Format.fprintf ppf "@[<1>(call_by_value_%a@ %a)@]"
-               (pp_type_name_to_dk ~current_unit: ctx.dpc_current_unit)
-               type_name
+               pp_type_name_to_dk_no_module type_name
                (Handy.pp_generic_separated_list " "
                   (rec_pp_to_dk ctx 0)) arg_tys
         end)
     | _ -> assert false
                  (* rec_pp_cbv_to_dk should only be called when has_cbv returns true *)
+  in
+
+  let rec_pp_cbv_to_dk ctx prio ppf ty =
+    match to_dk_module ctx ty with
+    | None -> rec_pp_cbv_to_dk_no_module ctx prio ppf ty
+    | Some m -> Format.fprintf ppf "%s.%a" m
+                 (rec_pp_cbv_to_dk_no_module ctx prio) ty
   in
 
   (* ************************************************** *)
