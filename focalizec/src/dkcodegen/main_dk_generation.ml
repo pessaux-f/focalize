@@ -51,8 +51,6 @@ let toplevel_let_def_compile ctx env let_def =
         let_def.Parsetree.ast_desc.Parsetree.ld_bindings
     else [] in
   Format.fprintf out_fmter "@[<2>" ;
-  let opt_term_proof =
-    let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof in
   (* Recover pre-compilation info and extended environment in case of
      recursivity for all the bindings. *)
   let (env, pre_comp_infos) =
@@ -71,7 +69,7 @@ let toplevel_let_def_compile ctx env let_def =
          assert false
      | ([one_bnd], [one_pre_comp_info]) ->
          Species_record_type_dk_generation.let_binding_compile
-           ctx ~opt_term_proof ~local_idents: []
+           ctx ~local_idents: []
            ~in_recursive_let_section_of
            (* Or whatever since "Self" does not exist anymore. *)
            ~self_methods_status: Species_record_type_dk_generation.SMS_from_record
@@ -82,7 +80,7 @@ let toplevel_let_def_compile ctx env let_def =
          let accu_env =
            ref
              (Species_record_type_dk_generation.let_binding_compile
-                ctx ~opt_term_proof ~local_idents: []
+                ctx ~local_idents: []
                 ~in_recursive_let_section_of
                 (* Or whatever since "Self" does not exist anymore. *)
                 ~self_methods_status:
@@ -96,7 +94,7 @@ let toplevel_let_def_compile ctx env let_def =
              Format.fprintf out_fmter "@]@\n@[<2>" ;
              accu_env :=
                Species_record_type_dk_generation.let_binding_compile
-                 ctx ~opt_term_proof ~local_idents: []
+                 ctx ~local_idents: []
                  ~in_recursive_let_section_of
                  (* Or whatever since "Self" does not exist anymore. *)
                  ~self_methods_status:
