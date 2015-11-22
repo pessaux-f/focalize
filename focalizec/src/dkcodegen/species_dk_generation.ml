@@ -2404,14 +2404,14 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
 
           becomes
 
-          rec_m : T1 -> T2 -> T.
-          m : T1 -> T2 -> T.
+          def rec_m : T1 -> T2 -> T.
+          def m : T1 -> T2 -> T.
           [arg1 : T1, arg2 : T2] rec_m arg1 arg2 --> F(m, arg1, arg2).
           [arg1 : T1, arg2 : T2] m arg1 arg2 --> call_by_value_T2 T (call_by_value_T1 (T2 -> T) rec_m arg1) arg2.
 
           call_by_value_Ti has been defined with Ti such that if v is a value of type Ti and f a function of type
           Ti -> T then
-          (call_by_value_Ti T f c) rewrites to (f c).
+          (call_by_value_Ti T f v) rewrites to (f v).
         *)
 
        (* Declare both symbols *)
