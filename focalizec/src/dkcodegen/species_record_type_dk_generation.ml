@@ -900,7 +900,7 @@ let print_constr_ident out i =
     non-"structural" proof, it considers invariably that the recursion decreases
     on the fisrt argument of the function and dumps a {struct fst arg}.
 
-    {b Visibility}: Not exported outside this module.                         *)
+    {b Visibility}: Exported outside this module.                             *)
 (* ************************************************************************** *)
 let rec let_binding_compile ctx ~opt_term_proof
     ~in_recursive_let_section_of ~local_idents ~self_methods_status

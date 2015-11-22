@@ -699,7 +699,7 @@ let pre_compute_let_bindings_infos_for_rec ~rec_status ~toplevel env bindings =
      - [binder]: What Coq construct to use to introduce the definition, i.e.
        "Let", "let", "let fix", "Fixpoint" or "with".
 
-    {b Visibility}: Not exported outside this module.                         *)
+    {b Visibility}: Exported outside this module.                             *)
 (* ************************************************************************** *)
 let rec let_binding_compile ctx ~binder ~opt_term_proof
     ~in_recursive_let_section_of ~local_idents ~self_methods_status
