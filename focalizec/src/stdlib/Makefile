@@ -168,8 +168,7 @@ install:
 	if [ "$(EXTERNAL_VOS)" != "" ]; then\
 	  echo "Installing (Coq) external stubs." &&\
 	  $(CP) $(EXTERNAL_VOS) $(INSTALL_LIB_DIR)/;\
-	fi
-     &&\
+	fi &&\
 	if [ "$(EXTERNAL_DKOS)" != ""  && false ]; then\
 	  echo "Installing (Dedukti) external stubs." &&\
 	  $(CP) $(EXTERNAL_DKOS) $(INSTALL_LIB_DIR)/;\
