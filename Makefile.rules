@@ -66,6 +66,9 @@ bin: $(BIN_OBJS)
 .v.vo:
 	$(COQC) $(COQ_INCLUDES) $<
 
+.fcl.sk:
+	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) $<
+
 %.dko:
 	skcheck -e -nl $(DK_INCLUDES) $<
 
