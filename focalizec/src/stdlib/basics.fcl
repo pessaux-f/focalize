@@ -935,7 +935,7 @@ let __tpl_lastprj1 =
   external
   | caml -> {* () *}
   | coq -> {* (coq_builtins.__tpl_lastprj1 __var_a __var_b) *}
-  | dedukti -> {* Basics.fcl: __tpl_lastprj1 not handled yet. *}
+  | dedukti -> {* (dk_tuple.snd __var_a __var_b) *}
 ;;
 
 
@@ -945,7 +945,7 @@ let __tpl_firstprj2 =
   external
   | caml -> {* () *}
   | coq -> {* (coq_builtins.__tpl_firstprj2 __var_a __var_b) *}
-  | dedukti -> {* Basics.fcl: __tpl_firstprj2 not handled yet. *}
+  | dedukti -> {* (dk_tuple.fst __var_a __var_b) *}
 ;;
 
 (** Rightmost level-2 projection of any tuple (...,(x, _)) *)
@@ -954,7 +954,9 @@ let __tpl_lastprj2 =
   external
   | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
   | coq -> {* (coq_builtins.__tpl_lastprj2 __var_a __var_b __var_c) *}
-  | dedukti -> {* Basics.fcl: __tpl_lastprj2 not handled yet. *}
+  | dedukti -> {* (t : dk_tuple.Prod __var_a (dk_tuple.prod __var_b __var_c) =>
+                   dk_tuple.fst __var_b __var_c
+                      (dk_tuple.snd __var_a (dk_tuple.prod __var_b __var_c) t)) *}
 ;;
 
 (** First projection of a 3-uple (x, (_, _)) *)
@@ -963,7 +965,7 @@ let __tpl_firstprj3 =
   external
   | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
   | coq -> {* (coq_builtins.__tpl_firstprj3 __var_a __var_b __var_c) *}
-  | dedukti -> {* Basics.fcl: __tpl_firstprj3 not handled yet. *}
+  | dedukti -> {* __tpl_firstprj2 __var_a (dk_tuple.prod __var_b __var_c) *}
 ;;
 
 (** Rightmost level-3 projection of any tuple (...,(x, (_, _))) *)
@@ -972,7 +974,7 @@ let __tpl_lastprj3 =
   external
   | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
   | coq -> {* (coq_builtins.__tpl_lastprj3 __var_a __var_b __var_c __var_d) *}
-  | dedukti -> {* Basics.fcl: __tpl_lastprj3 not handled yet. *}
+  | dedukti -> {* __tpl_lastprj2 __var_a __var_b (dk_tuple.prod __var_c __var_d) *}
 ;;
 
 (** First projection of a 4-uple (x, (_, (_, _))) *)
@@ -981,7 +983,7 @@ let __tpl_firstprj4 =
   external
   | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
   | coq -> {* (coq_builtins.__tpl_firstprj4 __var_a __var_b __var_c __var_d) *}
-  | dedukti -> {* Basics.fcl: __tpl_firstprj4 not handled yet. *}
+  | dedukti -> {* __tpl_firstprj3 __var_a __var_b (dk_tuple.prod __var_c __var_d) *}
 ;;
 
 (** Rightmost level-4 projection of any tuple (...,(x, (_, (_, _)))) *)
@@ -990,7 +992,7 @@ let __tpl_lastprj4 =
   external
   | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
   | coq -> {* (coq_builtins.__tpl_lastprj4 __var_a __var_b __var_c __var_d __var_e) *}
-  | dedukti -> {* Basics.fcl: __tpl_lastprj4 not handled yet. *}
+  | dedukti -> {* __tpl_lastprj3 __var_a __var_b __var_c (dk_tuple.prod __var_d __var_e) *}
 ;;
 
 (** First projection of a 5-uple (x, (_, (_, (_, _)))) *)
@@ -999,7 +1001,7 @@ let __tpl_firstprj5 =
   external
   | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
   | coq -> {* (coq_builtins.__tpl_firstprj5 __var_a __var_b __var_c __var_d __var_e) *}
-  | dedukti -> {* Basics.fcl: __tpl_firstprj5 not handled yet. *}
+  | dedukti -> {* __tpl_firstprj4 __var_a __var_b __var_c (dk_tuple.prod __var_d __var_e) *}
 ;;
 
 (** Rightmost level-5 projection of any tuple (...,(x, (_, (_, (_, _))))) *)
@@ -1008,7 +1010,7 @@ let __tpl_lastprj5 =
   external
   | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
   | coq -> {* (coq_builtins.__tpl_lastprj5 __var_a __var_b __var_c __var_d __var_e __var_f) *}
-  | dedukti -> {* Basics.fcl: __tpl_lastprj5 not handled yet. *}
+  | dedukti -> {* __tpl_lastprj4 __var_a __var_b __var_c __var_d (dk_tuple.prod __var_e __var_f) *}
 ;;
 
 
