@@ -234,9 +234,9 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
     | [last] ->
         Format.fprintf ppf "%a" (rec_pp_to_dk ctx prio) last
     | ty1 :: ty2 :: rem ->
-        Format.fprintf ppf "dk_tuple.prod@ %a@ %a"
+        Format.fprintf ppf "dk_tuple.prod@ %a@ (%a)"
           (rec_pp_to_dk ctx prio) ty1
-          (rec_pp_to_dk_tuple ctx prio)
+          (rec_pp_to_dk_tuple ctx 0)
           (ty2 :: rem)
 
 
@@ -285,7 +285,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
     | ty1 :: ty2 :: rem ->
         Format.fprintf ppf "dk_tuple.call_by_value_prod@ %a@ %a"
           (rec_pp_to_dk ctx prio) ty1
-          (rec_pp_to_dk_tuple ctx prio)
+          (rec_pp_to_dk_tuple ctx 0)
           (ty2 :: rem)
   in
 
