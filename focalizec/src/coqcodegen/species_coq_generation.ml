@@ -642,14 +642,6 @@ let generate_defined_method_proto_postlude ctx print_ctx env
      in the arguments of the let-bound ident.
      Note by the whay that we do not have anymore information about "Self"'s
      structure... *)
-  (* However, print the generalised variable usign the same trick than in
-     [let_binding_compile]. Consult comment over there... This was bug #55. *)
-  let (generalized_vars, _) = Types.scheme_split scheme in
-  List.iter
-    (fun var ->
-      Format.fprintf out_fmter "@ (%a : Set)"
-        Coq_pprint.pp_type_variable_to_coq var)
-    generalized_vars ;
   let (params_with_type, ending_ty_opt, _) =
     MiscHelpers.bind_parameters_to_types_from_type_scheme
       ~self_manifest (Some scheme) params in
