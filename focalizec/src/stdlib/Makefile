@@ -93,7 +93,7 @@ include $(ROOT_DIR)/focalizec/.config_var
 
 FOCALIZEC=../toplevel/focalizec
 FOCALIZE_COMP_FLAGS=-no-stdlib-path $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) \
- -stop-before-coq -stop-before-dk -no-dedukti-code
+ -stop-before-coq -stop-before-dk
 FOCALIZEDEP=../focalizedep/focalizedep
 COQ_INCLUDES= -I $(shell zenon -where)
 
@@ -118,14 +118,14 @@ byt:\
  $(FOCALIZE_MLS)\
  $(FOCALIZE_BYT_OBJS)\
  $(FOCALIZE_VS) $(FOCALIZE_VOS)\
-# $(FOCALIZE_DKS) $(FOCALIZE_DKOS)
+ $(FOCALIZE_DKS) $(FOCALIZE_DKOS)
 
 bin:\
  $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS) $(EXTERNAL_DKOS)\
  $(FOCALIZE_MLS)\
  $(FOCALIZE_BIN_OBJS)\
  $(FOCALIZE_VS) $(FOCALIZE_VOS)\
-# $(FOCALIZE_DKS) $(FOCALIZE_DKOS)
+ $(FOCALIZE_DKS) $(FOCALIZE_DKOS)
 
 install:
 	@$(MKDIR) $(INSTALL_LIB_DIR) &&\
