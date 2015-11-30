@@ -37,9 +37,8 @@ this access being public, it doesn't allow pushing (i.e. submitting)
 modifications done in the sources tree.
 
 <p>
-Since Zenon is now in a separate GIT repository, it must be cloned apart in
-the $(focal) directory. Hence, once $(focal) is cloned, go inside its base
-directory (<code>cd focalize</code>) and clone Zenon by invoking:
+Since Zenon is now in a separate GIT repository, it must be cloned apart
+by invoking:
 <br />
 <code>   git clone http://focalize.inria.fr/zenon.git</code>
 <br />
@@ -47,8 +46,8 @@ or from the alternate (and experimental) mirror:
 <br />
 <code>   git clone https://focalize.ensta-paristech.fr/download/zenon.git</code>
 <p>
-This will create a <code>zenon</code> repository in your
-<code>focalize</code> directory.
+  This will create a <code>zenon</code> repository. Zenon must be built and
+  installed prior to $(focal).
 </div>
 
 <div class="spacer"></div>
