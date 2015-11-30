@@ -70,14 +70,14 @@ FOCALIZE_VS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.v)
 FOCALIZE_VOS=$(FOCALIZE_VS:.v=.vo)
 FOCALIZE_VOS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.vo)
 
-FOCALIZE_ZSKS=$(FOCALIZE_SRC:.fcl=.sk.zv)
-FOCALIZE_ZSKS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.sk.zv)
+#FOCALIZE_ZSKS=$(FOCALIZE_SRC:.fcl=.sk.zv)
+#FOCALIZE_ZSKS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.sk.zv)
 
-FOCALIZE_SKS=$(FOCALIZE_SRC:.fcl=.sk)
-FOCALIZE_SKS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.sk)
+#FOCALIZE_SKS=$(FOCALIZE_SRC:.fcl=.sk)
+#FOCALIZE_SKS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.sk)
 
-FOCALIZE_DKOS=$(FOCALIZE_SKS:.sk=.dko)
-FOCALIZE_DKOS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.dko)
+#FOCALIZE_DKOS=$(FOCALIZE_SKS:.sk=.dko)
+#FOCALIZE_DKOS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.dko)
 
 FOCALIZE_DOCS=$(FOCALIZE_SRC:.fcl=.fcd)
 FOCALIZE_DOCS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.fcd)
@@ -96,8 +96,8 @@ EXTERNAL_VOS=\
  weak_structures_externals.vo\
  randoms_externals.vo arrays_externals.vo
 
-EXTERNAL_DKOS=\
- weak_structures_externals.dko
+# EXTERNAL_DKOS=\
+#  weak_structures_externals.dko
 # randoms_externals.dko arrays_externals.dko
 
 include $(ROOT_DIR)/Makefile.common
@@ -114,7 +114,7 @@ ZVTOV_COMP_FLAGS=-script -zenon $(ZENON_COMPILER) -new
 
 ZENON_LIB_DIR=$(shell zenon -where)
 COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
-DK_INCLUDES=-I $(shell zenon_modulo -where) -I $(STDLIB_DIR)
+#DK_INCLUDES=-I $(shell zenon_modulo -where) -I $(STDLIB_DIR)
 
 lib: all
 
@@ -123,21 +123,19 @@ focalizedoc:\
 
 byt:\
  $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
- $(EXTERNAL_DKOS)\
  $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
  $(FOCALIZE_ZVS)\
  $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BYT_OBJS_UNSAFE)\
  $(FOCALIZE_VS) $(FOCALIZE_VOS)
-# $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
+# $(FOCALIZE_SKS) $(FOCALIZE_DKOS) $(EXTERNAL_DKOS)
 
 bin:\
  $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
- $(EXTERNAL_DKOS)\
  $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
  $(FOCALIZE_ZVS)\
  $(FOCALIZE_BIN_OBJS) $(FOCALIZE_BIN_OBJS_UNSAFE)\
  $(FOCALIZE_VS) $(FOCALIZE_VOS)
-# $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
+# $(FOCALIZE_SKS) $(FOCALIZE_DKOS) $(EXTERNAL_DKOS)
 
 install:
 	@$(MKDIR) $(INSTALL_LIB_DIR) &&\
@@ -206,7 +204,8 @@ arrays_externals.vo: $(STDLIB_DIR)/basics.vo
 
 depend:
 	../../focalizedep/focalizedep $(FOCALIZE_SRC) iterators.fcl > .depend
-	skdep $(EXTERNAL_DKOS:.dko=.sk) >> .depend
+#	skdep $(EXTERNAL_DKOS:.dko=.sk) >> .depend
+
 .depend: depend
 
 -include .depend

@@ -190,6 +190,8 @@ else
 fi
 
 
+if [ false ]
+then                 # Temporary de-activation of Dedukti.
 if [ $TOOLS_PREFIX_GIVEN != true ]
 then
     DKWITNESS=`which dkcheck`
@@ -229,7 +231,11 @@ else
     # Explicit tools prefix given, keep it blindly.
     DKDIR=$TOOLS_PREFIX
 fi
+fi                 # End of temporary de-activation of Dedukti.
 
+
+if [ false ]
+then                 # Temporary de-activation of Dedukti.
 if [ $TOOLS_PREFIX_GIVEN != true ]
 then
     SKWITNESS=`which skcheck`
@@ -269,7 +275,11 @@ else
     # Explicit tools prefix given, keep it blindly.
     SKDIR=$TOOLS_PREFIX
 fi
+fi                 # End of temporary de-activation of Dedukti.
 
+
+if [ false ]
+then                 # Temporary de-activation of Dedukti.
 # If path to Dedukti is empty here, then ocaml was found but using the PATH.
 # So do not prefix it explicitly, letting PATH finding the commands.
 if [ "$DKDIR" != "" ] ;
@@ -278,7 +288,11 @@ then
 else
     DKCHECK=dkcheck
 fi
+fi                 # End of temporary de-activation of Dedukti.
 
+
+if [ false ]
+then                 # Temporary de-activation of Dedukti.
 # If path to Sukerujo is empty here, then ocaml was found but using the PATH.
 # So do not prefix it explicitly, letting PATH finding the commands.
 if [ "$SKDIR" != "" ] ;
@@ -289,6 +303,8 @@ else
     SKCHECK=skcheck
     SKDEP=skdep
 fi
+fi                 # End of temporary de-activation of Dedukti.
+
 
 # #############################################################################
 # Generate the installation and configuration file containing tools vars.
