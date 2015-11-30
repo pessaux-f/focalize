@@ -190,7 +190,7 @@ else
 fi
 
 
-if [ false ]
+if false
 then                 # Temporary de-activation of Dedukti.
 if [ $TOOLS_PREFIX_GIVEN != true ]
 then
@@ -234,7 +234,7 @@ fi
 fi                 # End of temporary de-activation of Dedukti.
 
 
-if [ false ]
+if false
 then                 # Temporary de-activation of Dedukti.
 if [ $TOOLS_PREFIX_GIVEN != true ]
 then
@@ -278,7 +278,7 @@ fi
 fi                 # End of temporary de-activation of Dedukti.
 
 
-if [ false ]
+if false
 then                 # Temporary de-activation of Dedukti.
 # If path to Dedukti is empty here, then ocaml was found but using the PATH.
 # So do not prefix it explicitly, letting PATH finding the commands.
@@ -291,7 +291,7 @@ fi
 fi                 # End of temporary de-activation of Dedukti.
 
 
-if [ false ]
+if false
 then                 # Temporary de-activation of Dedukti.
 # If path to Sukerujo is empty here, then ocaml was found but using the PATH.
 # So do not prefix it explicitly, letting PATH finding the commands.
