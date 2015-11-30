@@ -46,8 +46,8 @@ FOCALIZE_ZVS=$(FOCALIZE_SRC:.fcl=.zv)
 FOCALIZE_SKZVS=$(FOCALIZE_SRC:.fcl=.sk.zv)
 FOCALIZE_VS=$(FOCALIZE_ZVS:.zv=.v)
 FOCALIZE_VOS=$(FOCALIZE_VS:.v=.vo)
-FOCALIZE_DKS=$(FOCALIZE_SRC:.fcl=.sk)
-FOCALIZE_DKOS=$(FOCALIZE_DKS:.sk=.dko)
+#FOCALIZE_DKS=$(FOCALIZE_SRC:.fcl=.sk)
+#FOCALIZE_DKOS=$(FOCALIZE_DKS:.sk=.dko)
 
 FOCALIZE_DOCS=$(FOCALIZE_SRC:.fcl=.fcd)
 
@@ -65,7 +65,7 @@ EXTERNAL_VOS=\
  sets_externals.vo
 
 
-EXTERNAL_DKOS=\
+#EXTERNAL_DKOS=\
  cc.dko\
  builtins.dko\
  dk_bool.dko\
@@ -185,6 +185,6 @@ clean:
 depend:
 	$(CAMLDEP) *.mli *.ml > ./.depend
 	$(FOCALIZEDEP) *.fcl >> ./.depend
-	$(SKDEP) -v *.sk >> ./.depend
+	#$(SKDEP) -v *.sk >> ./.depend
 
 include .depend
