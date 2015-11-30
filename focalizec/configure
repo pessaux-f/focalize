@@ -158,6 +158,9 @@ else
     ZENON=$TOOLS_PREFIX/bin/zenon
 fi
 
+
+if false
+then                 # Temporary de-activation of Dedukti.
 # Look for Zenon Modulo
 if [ $TOOLS_PREFIX_GIVEN != true ]
 then
@@ -197,6 +200,8 @@ else
     # Explicit tools prefix given, keep it blindly.
     ZENONM=$TOOLS_PREFIX/bin/zenon_modulo
 fi
+fi                 # End of temporary de-activation of Dedukti.
+
 
 # Find zenon's libraries directly using the -where option of zenon.
 ZENON_LIB_DIR=`${ZENON} -where`
