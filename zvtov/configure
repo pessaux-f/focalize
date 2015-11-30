@@ -15,8 +15,6 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.59 2012-10-16 11:17:57 pessaux Exp $
-
 BOLDTAG="\033[1m"
 UNDERLINETAG="\033[4m"
 NORMALTAG="\033[0m"
@@ -37,9 +35,19 @@ fi
 # to parse them properly.
 argc="$#"
 
-INTERACTIVE=false;
-INSTALL_PREFIX_GIVEN=false;
-INSTALL_PREFIX=/usr/local
+# Default values. Keep existing ones if some were already set.
+if [ "$INTERACTIVE" == "" ]
+then
+    INTERACTIVE=false;
+fi
+if [ "$INSTALL_PREFIX_GIVEN" == "" ]
+then
+    INSTALL_PREFIX_GIVEN=false;
+fi
+if [ "$INSTALL_PREFIX" == "" ]
+then
+    INSTALL_PREFIX=/usr/local;
+fi
 
 usage () {
     echo "usage: ./configure [options] [<directory>]"

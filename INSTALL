@@ -49,6 +49,12 @@ the toplevel 'focalize' directory run:
 When prompt, enter your password to allow installer to write in installation
 directories (usage of the 'sudo' command).
 
+If you want to customize the installation knowing in advance the options you
+want to pass to the configure files (see section (4) for options), you may
+directly invoke 'make' providing the configuration flags via the
+'CONFIGURE_FLAGS' Makefile variable. For instance:
+  make CONFIGURE_FLAGS="--install_prefix /tmp" all
+
 
 (2) After installation:
 ========================

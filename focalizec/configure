@@ -39,7 +39,8 @@ for i in $SUB_DIRS ; do
   (cd $i; touch .depend; mkdir -p odoc)
 done
 
-# First recover the configuration file providing the name of ocaml, coq and dedukti commands.
+# First recover the configuration file providing the name of ocaml, coq and
+# dedukti commands and the installation prefix if some.
 if [ -f "../.config_var" ] ;
     then
     . ../.config_var
@@ -53,11 +54,26 @@ fi
 # to parse them properly.
 argc="$#"
 
-INTERACTIVE=false;
-INSTALL_PREFIX_GIVEN=false;
-INSTALL_PREFIX=/usr/local
-TOOLS_PREFIX_GIVEN=false;
-TOOLS_PREFIX="";
+# Default values. Keep existing ones if some were already set.
+if [ "$INTERACTIVE" == "" ]
+then
+    INTERACTIVE=false;
+fi
+if [ "$INSTALL_PREFIX_GIVEN" == "" ]
+then
+    INSTALL_PREFIX_GIVEN=false;
+fi
+if [ "$INSTALL_PREFIX" == "" ]
+then
+    INSTALL_PREFIX=/usr/local;
+fi
+if [ "$TOOLS_PREFIX_GIVEN" == "" ]
+then
+    TOOLS_PREFIX_GIVEN=false;
+fi
+# If TOOLS_PREFIX != "" then it will keep its value, otherwise, the shell will
+# automatically set it to "". So, do nothing.
+
 
 usage () {
     echo "usage: ./configure [options] [<directory>]"
@@ -278,7 +294,7 @@ chmod +x gitlastsha.sh
 
 
 # #############################################################################
-# Installation stuff.
+# Installation stuff for binaries and libraries.
 if [ $INSTALL_PREFIX_GIVEN != true ]
 then
     if [ $INTERACTIVE = true ]
