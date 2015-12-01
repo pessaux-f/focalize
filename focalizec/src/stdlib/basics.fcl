@@ -920,7 +920,7 @@ end
 let is_well_founded =
   internal ('a -> 'a -> bool) -> prop
   external
-  | caml -> {* () *}
+  | caml -> {* (fun _ -> assert false) *}  (* Never used for Ocaml code generation. *)
   | coq -> {* (fun f => well_founded (fun x y => Is_true (f x y))) *}
   | dedukti -> {* (f : (cc.eT __var_a -> cc.eT __var_a -> cc.eT bool__t) => dk_logic.True) *}
 ;;
@@ -933,7 +933,7 @@ let is_well_founded =
 let __tpl_lastprj1 =
   internal ('a * 'b) -> 'b
   external
-  | caml -> {* () *}
+  | caml -> {* (fun _ -> assert false) *}  (* Never used for Ocaml code generation. *)
   | coq -> {* (coq_builtins.__tpl_lastprj1 __var_a __var_b) *}
   | dedukti -> {* (dk_tuple.snd __var_a __var_b) *}
 ;;
@@ -943,7 +943,7 @@ let __tpl_lastprj1 =
 let __tpl_firstprj2 =
   internal ('a * 'b) -> 'a
   external
-  | caml -> {* () *}
+  | caml -> {* (fun _ -> assert false) *}  (* Never used for Ocaml code generation. *)
   | coq -> {* (coq_builtins.__tpl_firstprj2 __var_a __var_b) *}
   | dedukti -> {* (dk_tuple.fst __var_a __var_b) *}
 ;;
@@ -952,7 +952,7 @@ let __tpl_firstprj2 =
 let __tpl_lastprj2 =
   internal ('a * 'b * 'c) -> 'b
   external
-  | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
+  | caml -> {* (fun _ -> assert false) *}  (* Never used for Ocaml code generation. *)
   | coq -> {* (coq_builtins.__tpl_lastprj2 __var_a __var_b __var_c) *}
   | dedukti -> {* (t : dk_tuple.Prod __var_a (dk_tuple.prod __var_b __var_c) =>
                    dk_tuple.fst __var_b __var_c
@@ -963,7 +963,7 @@ let __tpl_lastprj2 =
 let __tpl_firstprj3 =
   internal ('a * 'b * 'c) -> 'a
   external
-  | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
+  | caml -> {* (fun _ -> assert false) *}  (* Never used for Ocaml code generation. *)
   | coq -> {* (coq_builtins.__tpl_firstprj3 __var_a __var_b __var_c) *}
   | dedukti -> {* __tpl_firstprj2 __var_a (dk_tuple.prod __var_b __var_c) *}
 ;;
@@ -972,7 +972,7 @@ let __tpl_firstprj3 =
 let __tpl_lastprj3 =
   internal ('a * 'b * 'c * 'd) -> 'b
   external
-  | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
+  | caml -> {* (fun _ -> assert false) *}  (* Never used for Ocaml code generation. *)
   | coq -> {* (coq_builtins.__tpl_lastprj3 __var_a __var_b __var_c __var_d) *}
   | dedukti -> {* __tpl_lastprj2 __var_a __var_b (dk_tuple.prod __var_c __var_d) *}
 ;;
@@ -981,7 +981,7 @@ let __tpl_lastprj3 =
 let __tpl_firstprj4 =
   internal ('a * 'b * 'c * 'd) -> 'a
   external
-  | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
+  | caml -> {* (fun _ -> assert false) *}  (* Never used for Ocaml code generation. *)
   | coq -> {* (coq_builtins.__tpl_firstprj4 __var_a __var_b __var_c __var_d) *}
   | dedukti -> {* __tpl_firstprj3 __var_a __var_b (dk_tuple.prod __var_c __var_d) *}
 ;;
@@ -990,7 +990,7 @@ let __tpl_firstprj4 =
 let __tpl_lastprj4 =
   internal ('a * 'b * 'c * 'd * 'e) -> 'b
   external
-  | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
+  | caml -> {* (fun _ -> assert false) *}  (* Never used for Ocaml code generation. *)
   | coq -> {* (coq_builtins.__tpl_lastprj4 __var_a __var_b __var_c __var_d __var_e) *}
   | dedukti -> {* __tpl_lastprj3 __var_a __var_b __var_c (dk_tuple.prod __var_d __var_e) *}
 ;;
@@ -999,7 +999,7 @@ let __tpl_lastprj4 =
 let __tpl_firstprj5 =
   internal ('a * 'b * 'c * 'd * 'e) -> 'a
   external
-  | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
+  | caml -> {* (fun _ -> assert false) *}  (* Never used for Ocaml code generation. *)
   | coq -> {* (coq_builtins.__tpl_firstprj5 __var_a __var_b __var_c __var_d __var_e) *}
   | dedukti -> {* __tpl_firstprj4 __var_a __var_b __var_c (dk_tuple.prod __var_d __var_e) *}
 ;;
@@ -1008,7 +1008,7 @@ let __tpl_firstprj5 =
 let __tpl_lastprj5 =
   internal ('a * 'b * 'c * 'd * 'e * 'f) -> 'b
   external
-  | caml -> {* (assert false) *}  (* Never used for Ocaml code generation. *)
+  | caml -> {* (fun _ -> assert false) *}  (* Never used for Ocaml code generation. *)
   | coq -> {* (coq_builtins.__tpl_lastprj5 __var_a __var_b __var_c __var_d __var_e __var_f) *}
   | dedukti -> {* __tpl_lastprj4 __var_a __var_b __var_c __var_d (dk_tuple.prod __var_e __var_f) *}
 ;;
