@@ -41,8 +41,6 @@ COQ_INCLUDES=\
  -I $(UTILSLIB_DIR)
 
 include $(ROOT_DIR)/Makefile.common
-include $(ROOT_DIR)/focalizec/.install_var
-include $(ROOT_DIR)/focalizec/.config_var
 
 FOCALIZE_SRC=\
  etat_vote.fcl\

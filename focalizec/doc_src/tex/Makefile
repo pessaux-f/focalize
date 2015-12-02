@@ -22,11 +22,17 @@ SUB_DIRS=refman tutorial tuto_proofs
 
 include $(ROOT_DIR)/Makefile.common
 
+# Only enter these directories if doc was requested.
 all clean depend install doc:
-	@for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..." >&2 && \
-	  ($(CD) $$i && $(MAKE) $@); \
-	  err=$$?; \
-	  echo "<-- $$i [$$err]" >&2 && \
-	  case $$err in 0);; *) exit $$err;; esac; \
-	done
+	@ if [ "$(MAKE_DOC)" == "true" ] ; \
+		then \
+			for i in $(SUB_DIRS); do \
+				echo "--> $$i ..." >&2 && \
+				($(CD) $$i && $(MAKE) $@); \
+				err=$$?; \
+				echo "<-- $$i [$$err]" >&2 && \
+				case $$err in 0);; *) exit $$err;; esac; \
+			done ;\
+	else \
+		echo "PDF documentation skipped on user demand or because of missing tools." ;\
+	fi

@@ -28,12 +28,14 @@ usage () {
     echo "usage: ./configure [options] [<directory>]"
     echo
     echo "Options are:"
-    echo "  [-]-interactive"
-    echo "    run interactively, asking questions."
     echo "  [-]-install_prefix <directory>"
     echo "    set <directory> as the directory prefix for installation of"
     echo "    the FoCaLize commands."
     echo "    (Default value for <directory> is $BOLDTAG$INSTALL_PREFIX$NORMALTAG.)"
+    echo "  [-]-interactive"
+    echo "    run interactively, asking questions."
+    echo "  [-]-no-doc"
+    echo "    do not generate the PDF documentation files."
     echo "  [-]-tools_prefix <directory>"
     echo "    set <directory> as the directory prefix where tools required to"
     echo "    build FoCaLiZe are installed. The currently required non-common"
@@ -46,6 +48,7 @@ INSTALL_PREFIX_GIVEN=false;
 INSTALL_PREFIX=/usr/local
 TOOLS_PREFIX_GIVEN=false;
 TOOLS_PREFIX="";
+MAKE_DOC=true;
 
 
 # Remembering the number of arguments to this script, in order
@@ -72,6 +75,9 @@ case ${argc} in
        TOOLS_PREFIX_GIVEN=true;
        TOOLS_PREFIX="$2";
        shift 2;;
+      -no-doc | --no-doc)
+       MAKE_DOC=false;
+       shift;;
       -help | --help)
        usage;
        shift;
@@ -86,6 +92,7 @@ case ${argc} in
   done
   ;;
 esac
+
 
 # #############################################################################
 # Pre-requisite tools stuff.
@@ -198,6 +205,101 @@ else
     COQC=coqc
     COQDEP=coqdep
 fi
+
+
+# Look for Zenon
+if [ $TOOLS_PREFIX_GIVEN != true ]
+then
+    ZENON=`which zenon`
+    if [ "$ZENON" != "" ] ;
+    then
+        if [ $INTERACTIVE = true ]
+        then
+            echo $BOLDTAG"zenon found in $ZENON."$NORMALTAG
+            echo "Press enter to use default or specify another location."
+            read USER_INPUT
+            if [ "$USER_INPUT" != "" ] ;
+            then
+                ZENON=$USER_INPUT
+            else
+                # Default path kept: trim it to just let the PATH acting.
+                ZENON=zenon
+            fi
+        else
+            # Default path: trim it
+            ZENON=zenon
+        fi
+    else
+        # No zenon command found and no explicit prefix given.
+        echo $BOLDTAG"zenon not found."$NORMALTAG
+        echo "Specify where to find zenon."
+        read USER_INPUT
+        ZENON=$USER_INPUT
+        # Finally check that a director was entered by the user.
+        if [ "$ZENON" == "" ] ;
+        then
+            echo "Error. zenon not available. Install it first."
+            exit 1
+        fi
+    fi
+else
+    # Explicit tools prefix given, keep it blindly.
+    ZENON=$TOOLS_PREFIX/bin/zenon
+fi
+
+
+# Find zenon's libraries directly using the -where option of zenon.
+ZENON_LIB_DIR=`${ZENON} -where`
+if [ "$ZENON_LIB_DIR" = "" ] ;
+then
+    echo "Error. zenon libraries not available."
+    echo "May be zenon is not installed. Install it first."
+    exit 1
+fi
+
+
+if false
+then                 # Temporary de-activation of Dedukti.
+# Look for Zenon Modulo
+if [ $TOOLS_PREFIX_GIVEN != true ]
+then
+    ZENONM=`which zenon_modulo`
+    if [ "$ZENONM" != "" ] ;
+    then
+        if [ $INTERACTIVE = true ]
+        then
+            echo $BOLDTAG"Zenon Modulo found in $ZENONM."$NORMALTAG
+            echo "Press enter to use default or specify another location."
+            read USER_INPUT
+            if [ "$USER_INPUT" != "" ] ;
+            then
+                ZENONM=$USER_INPUT
+            else
+                # Default path kept: trim it to just let the PATH acting.
+                ZENONM=zenon_modulo
+            fi
+        else
+            # Default path: trim it
+            ZENONM=zenon_modulo
+        fi
+    else
+        # No zenon_modulo command found and no explicit prefix given.
+        echo $BOLDTAG"Zenon Modulo not found."$NORMALTAG
+        echo "Specify where to find Zenon Modulo."
+        read USER_INPUT
+        ZENONM=$USER_INPUT
+        # Finally check that a director was entered by the user.
+        if [ "$ZENONM" == "" ] ;
+        then
+            echo "Error. Zenon Modulo not available. Install it first."
+            exit 1
+        fi
+    fi
+else
+    # Explicit tools prefix given, keep it blindly.
+    ZENONM=$TOOLS_PREFIX/bin/zenon_modulo
+fi
+fi                 # End of temporary de-activation of Dedukti.
 
 
 if false
@@ -316,6 +418,105 @@ fi
 fi                 # End of temporary de-activation of Dedukti.
 
 
+
+# #############################################################################
+# Installation administrativia
+
+# At this point, if INSTALL_PREFIX has been overriden while parsing options,
+# both the 4 following variables will take benefit of this overriding.
+INSTALL_BIN_DIR=${INSTALL_PREFIX}/bin
+INSTALL_LIB_DIR=${INSTALL_PREFIX}/lib/focalize
+INSTALL_MAN_DIR=${INSTALL_PREFIX}/man
+INSTALL_DOC_DIR=${INSTALL_PREFIX}/share/focalize
+
+
+
+# Check if installation directories are writable, if so do not use sudo
+# otherwise, use it.
+SUDO=
+mkdir $INSTALL_BIN_DIR || true
+touch $INSTALL_BIN_DIR/writable_p
+if [ "$?" = 0 ] ;
+then
+    rm -f $INSTALL_BIN_DIR/writable_p
+else
+    SUDO=sudo
+fi
+
+if [ "$SUDO" = "" ] ;
+then
+    mkdir $INSTALL_LIB_DIR || true
+    touch $INSTALL_LIB_DIR/writable_p
+    if [ "$?" = 0 ]
+    then
+        rm -f $INSTALL_LIB_DIR/writable_p
+    else
+        SUDO=sudo
+    fi
+fi
+
+if [ "$SUDO" = "" ] ;
+then
+    mkdir $INSTALL_MAN_DIR || true
+    touch $INSTALL_MAN_DIR/writable_p
+    if [ "$?" = 0 ]
+    then
+        rm -f $INSTALL_MAN_DIR/writable_p
+    else
+        SUDO=sudo
+    fi
+fi
+
+if [ "$SUDO" = "" ] ;
+then
+    mkdir $INSTALL_DOC_DIR || true
+    touch $INSTALL_DOC_DIR/writable_p
+    if [ "$?" = 0 ]
+    then
+        rm -f $INSTALL_DOC_DIR/writable_p
+    else
+        SUDO=sudo
+    fi
+fi
+
+
+
+# #############################################################################
+# Misc administrativia
+
+# If Coq version is < 8.3pl2, then we must call focalizec with the
+# -coq_older option to ensure code generation is Coq-compatible.
+COQ_VERSION=`$COQC -v | grep version | cut -d ' ' -f 6`
+if [ "$COQ_VERSION" \< "8.3pl2"  ] ;
+then FOCALIZEC_COQ_COMPATIBILITY_OPTION=-coq_older
+else FOCALIZEC_COQ_COMPATIBILITY_OPTION=""
+fi
+
+
+
+
+# #############################################################################
+# Generate the installation related source file.
+CONFIG_SUMMARY_DOT_ML=focalizec/src/basement/installation.ml
+
+rm -f $CONFIG_SUMMARY_DOT_ML
+echo "(* This file is automatically generated by configure. Do not manually edit. *)" \
+     > $CONFIG_SUMMARY_DOT_ML
+echo "let install_bin_dir = \"$INSTALL_BIN_DIR\" ;;" >> $CONFIG_SUMMARY_DOT_ML
+echo "let install_lib_dir = \"$INSTALL_LIB_DIR\" ;;" >> $CONFIG_SUMMARY_DOT_ML
+echo "let caml_byt_compiler = \"$CAMLBYT\" ;;" >> $CONFIG_SUMMARY_DOT_ML
+echo "let caml_bin_compiler = \"$CAMLBIN\" ;;" >> $CONFIG_SUMMARY_DOT_ML
+echo "let coq_compiler = \"$COQC\" ;;" >> $CONFIG_SUMMARY_DOT_ML
+echo "let dedukti_compiler = \"$DKCHECK\" ;;" >> $CONFIG_SUMMARY_DOT_ML
+echo "let sukerujo_compiler = \"$SKCHECK\" ;;" >> $CONFIG_SUMMARY_DOT_ML
+echo "let zvtov_compiler = \"$INSTALL_BIN_DIR/zvtov\" ;;" >> $CONFIG_SUMMARY_DOT_ML
+echo "let zenon_compiler = \"$ZENON\" ;;" >> $CONFIG_SUMMARY_DOT_ML
+echo "let zenon_libdir = \"$ZENON_LIB_DIR\" ;;" >> $CONFIG_SUMMARY_DOT_ML
+echo "(* End of generated source file. *)" >> $CONFIG_SUMMARY_DOT_ML
+chmod a-w $CONFIG_SUMMARY_DOT_ML
+
+
+
 # #############################################################################
 # Generate the installation and configuration file containing tools vars.
 CONFIGURATION_VARS_FILE=.config_var
@@ -336,7 +537,40 @@ echo "DKCHECK=$DKCHECK" >> $CONFIGURATION_VARS_FILE
 echo "SKDEP=$SKDEP" >> $CONFIGURATION_VARS_FILE
 echo "SKCHECK=$SKCHECK" >> $CONFIGURATION_VARS_FILE
 echo "WARN_ERROR=a" >> $CONFIGURATION_VARS_FILE
+echo "ZVTOV=$INSTALL_BIN_DIR/zvtov" >> $CONFIGURATION_VARS_FILE
+echo "ZENON=$ZENON" >> $CONFIGURATION_VARS_FILE
+echo "MAKE_DOC=$MAKE_DOC" >> $CONFIGURATION_VARS_FILE
+echo "INSTALL_BIN_DIR=$INSTALL_BIN_DIR" >> $CONFIGURATION_VARS_FILE
+echo "INSTALL_LIB_DIR=$INSTALL_LIB_DIR" >> $CONFIGURATION_VARS_FILE
+echo "INSTALL_MAN_DIR=$INSTALL_MAN_DIR" >> $CONFIGURATION_VARS_FILE
+echo "INSTALL_DOC_DIR=$INSTALL_DOC_DIR" >> $CONFIGURATION_VARS_FILE
+echo "FOCALIZEC_COQ_COMPATIBILITY_OPTION=$FOCALIZEC_COQ_COMPATIBILITY_OPTION" >> $CONFIGURATION_VARS_FILE
+echo "SUDO=$SUDO" >> $CONFIGURATION_VARS_FILE
+echo "HEVEAFOUND=$HEVEAFOUND" >> $CONFIGURATION_VARS_FILE
 chmod a-w $CONFIGURATION_VARS_FILE
+
+
+
+# #############################################################################
+# Create .depend files.
+SUB_DIRS="focalizec/src/basement focalizec/src/parser focalizec/src/typing \
+  focalizec/src/docgen focalizec/src/commoncodegen focalizec/src/mlcodegen \
+  focalizec/src/coqcodegen focalizec/src/dkcodegen focalizec/src/testing \
+  focalizec/src/relation_extraction focalizec/src/focalizedep \
+  focalizec/src/toplevel focalizec/src/focalizetest src/focalizeig \
+  focalizec/doc_src/tex/refman \
+  focalizec/doc_src/tex/tutorial \
+  focalizec/src/stdlib \
+  focalizec/src/extlib focalizec/src/extlib/algebra \
+  focalizec/src/extlib/airport_security focalizec/src/contribs"
+
+touch .depend
+
+for i in $SUB_DIRS ; do
+  (cd $i; touch .depend; mkdir -p odoc)
+done
+
+
 
 # #############################################################################
 # Summary feedback.
@@ -349,8 +583,30 @@ echo "  ocamlyacc = $CAMLYACC"
 echo "  ocamldoc = $CAMLDOC"
 echo "  ocamldep = $CAMLDEP"
 echo "  coqc = $COQC"
+echo "  zenon = $ZENON"
+echo "  zvtov = $INSTALL_BIN_DIR/zvtov"
 echo "  coqdep = $COQDEP"
 echo "  dkcheck = $DKCHECK"
 echo "  skdep = $SKDEP"
 echo "  skcheck = $SKCHECK"
-echo "Done"
+echo "  Must generate PDF documentation files: $MAKE_DOC"
+echo "  binaries -> $INSTALL_BIN_DIR"
+echo "  libraries -> $INSTALL_LIB_DIR"
+echo "  man pages -> $INSTALL_MAN_DIR"
+echo "  other documentation -> $INSTALL_DOC_DIR"
+echo "  git = $GIT  (not important if not available)"
+echo "  zenon libraries directory = $ZENON_LIB_DIR"
+echo "  Use sudo to install -> $SUDO"
+if [ "$HEVEAFOUND" != "" ] ;
+then
+    echo "  Hevea DVI to HTML utility found, HTML docs will be generated."
+else
+    echo "  Hevea DVI to HTML utility NOT found, HTML docs won't be generated."
+fi
+if [ ! "$FOCALIZEC_COQ_COMPATIBILITY_OPTION" = "" ]
+then
+    echo $BOLDTAG"ATTENTION:$NORMALTAG you are using a version of Coq < 8.4. FoCaliZeC must be called with"
+    echo "the $BOLDTAG$FOCALIZEC_COQ_COMPATIBILITY_OPTION$NORMALTAG option."
+fi
+
+echo "Done. Now, please invoke: 'make all'"

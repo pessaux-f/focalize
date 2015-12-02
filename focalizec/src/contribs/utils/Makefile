@@ -36,8 +36,6 @@ ZENON_LIB_DIR= $(shell zenon -where)
 COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
 
 include $(ROOT_DIR)/Makefile.common
-include $(ROOT_DIR)/focalizec/.install_var
-include $(ROOT_DIR)/focalizec/.config_var
 
 FOCALIZE_SRC=\
  pair.fcl\

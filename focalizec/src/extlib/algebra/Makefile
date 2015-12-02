@@ -101,8 +101,6 @@ EXTERNAL_VOS=\
 # randoms_externals.dko arrays_externals.dko
 
 include $(ROOT_DIR)/Makefile.common
-include $(ROOT_DIR)/focalizec/.install_var
-include $(ROOT_DIR)/focalizec/.config_var
 
 FOCALIZEC=../../toplevel/focalizec
 FOCALIZE_COMP_FLAGS= -no-stdlib-path -I $(STDLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) -no-dedukti-code

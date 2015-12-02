@@ -113,7 +113,6 @@ FODUMP_OBJS=\
  fodump.cmo
 
 include $(ROOT_DIR)/Makefile.common
-include $(ROOT_DIR)/focalizec/.install_var
 
 CAML_INCLUDES =\
  -I ../basement\

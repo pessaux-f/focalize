@@ -17,8 +17,8 @@
 # General utilities and commands. Excludes OCaml and Coq.
 include $(ROOT_DIR)/Makefile.utils
 
-# Implicit rules.
-include $(ROOT_DIR)/Makefile.rules
-
 # Compilers: OCaml and Coq
 include $(ROOT_DIR)/.config_var
+
+# Implicit rules.
+include $(ROOT_DIR)/Makefile.rules

@@ -23,7 +23,8 @@ TEX_FILES= syntaxdef.sty\
 
 HVA_FILES=macros.hva syntaxdef.hva refman.hva
 
-include $(ROOT_DIR)/focalizec/.config_var
+include $(ROOT_DIR)/Makefile.common
+
 ifeq ($(HEVEAFOUND),true)
 DOC_OBJS=refman.dvi refman.ps refman.pdf refman.html
 else
@@ -35,15 +36,14 @@ LATEX=TEXINPUTS=$(TEXINPUT); latex
 HEVEA=TEXINPUTS=$(TEXINPUT); hevea
 IMAGEN=imagen -extra "ppmquant 255"
 
-include $(ROOT_DIR)/Makefile.common
-include $(ROOT_DIR)/focalizec/.install_var
-
 
 all: doc
 
-# Only try to build doc if source files are present.
+# Only try to build doc if source files are present and if LaTeX and related
+# tools are available.
 doc:
-	@if test -f refman.tex; then make $(DOC_OBJS); fi
+	@if [ -f refman.tex ] ; \
+     then make $(DOC_OBJS); fi
 
 refman.pdf: refman.dvi
 	$(DVIPDF) refman.dvi refman.pdf

@@ -18,8 +18,6 @@ DOC_OBJS=faq.dvi faq.ps faq.pdf faq.html
 
 # Defining defaults from Makefile.common
 include $(ROOT_DIR)/Makefile.common
-include $(ROOT_DIR)/focalizec/.install_var
-include $(ROOT_DIR)/focalizec/.config_var
 
 # Now overwriting defaults for this directory purposes.
 TEXINPUT=/usr/share/texmf/tex/latex//:$(TEXINPUTS)

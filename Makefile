@@ -30,7 +30,6 @@ all:
 	@./configure $(CONFIGURE_FLAGS)
 	@echo "Building Zvtov..."
 	@($(CD) zvtov &&\
-		./configure $(CONFIGURE_FLAGS) &&\
 		$(MAKE) depend &&\
 		$(MAKE) all &&\
 		$(MAKE) doc &&\
@@ -40,7 +39,6 @@ all:
 	  case $$err in 0);; *) exit $$err;; esac;
 	@echo "Building FoCaLiZeC and stuff..."
 	@($(CD) focalizec &&\
-		./configure $(CONFIGURE_FLAGS) &&\
 		$(MAKE) depend &&\
 		$(MAKE) world &&\
 		$(MAKE) doc &&\

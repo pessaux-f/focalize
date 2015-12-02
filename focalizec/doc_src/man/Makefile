@@ -18,7 +18,6 @@
 ROOT_DIR=../../..
 
 include $(ROOT_DIR)/Makefile.common
-include $(ROOT_DIR)/focalizec/.install_var
 
 # The list of man files
 MAN_FILES= focalizec.1 focalizedep.1 focalizetest.1

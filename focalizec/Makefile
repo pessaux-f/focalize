@@ -18,7 +18,6 @@
 ROOT_DIR=..
 
 include $(ROOT_DIR)/Makefile.common
-include $(ROOT_DIR)/focalizec/.config_var
 
 COMPILER_DIRS=\
  src/basement src/parser src/typing\

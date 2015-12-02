@@ -30,7 +30,6 @@ BYT_OBJS=\
  $(LOCAL_BYT_OBJS)
 
 include $(ROOT_DIR)/Makefile.common
-include $(ROOT_DIR)/focalizec/.install_var
 
 CAML_INCLUDES =\
  -I ../basement

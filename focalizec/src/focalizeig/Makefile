@@ -43,7 +43,6 @@ CAML_FLAGS = -w A-4-9 -warn-error $(WARN_ERROR)
 EXE_NAME=focalizeig
 
 include $(ROOT_DIR)/Makefile.common
-include $(ROOT_DIR)/focalizec/.install_var
 
 byt: $(EXE_NAME).byt
 

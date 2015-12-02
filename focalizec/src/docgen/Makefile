@@ -23,7 +23,6 @@ XSL_OBJS = focdoc2html.xsl mmlctop2_0.xsl proposition2tex.xsl focdoc2tex.xsl \
 	proposition.xsl focdoc.dtd focdoc.css
 
 include $(ROOT_DIR)/Makefile.common
-include $(ROOT_DIR)/focalizec/.install_var
 
 CAML_INCLUDES = -I ../basement -I ../parser -I ../typing
 CAML_FLAGS = -w A-4-9 -warn-error $(WARN_ERROR)
@@ -33,7 +32,7 @@ byt: $(BYT_OBJS) fcd2html.sh
 
 bin: $(BIN_OBJS) fcd2html.sh
 
-fcd2html.sh: $(ROOT_DIR)/focalizec/.install_var
+fcd2html.sh: $(ROOT_DIR)/.config_var
 	@echo '#!/bin/sh\nxsltproc '$(INSTALL_LIB_DIR)'/focdoc2html.xsl $$1 | xsltproc '$(INSTALL_LIB_DIR)'/mmlctop2_0.xsl - > $$1.xml' > fcd2html.sh
 
 
