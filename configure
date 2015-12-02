@@ -553,11 +553,12 @@ chmod a-w $CONFIGURATION_VARS_FILE
 
 # #############################################################################
 # Create .depend files.
-SUB_DIRS="focalizec/src/basement focalizec/src/parser focalizec/src/typing \
+SUB_DIRS="zvtov focalizec/src/basement focalizec/src/parser \
+  focalizec/src/typing \
   focalizec/src/docgen focalizec/src/commoncodegen focalizec/src/mlcodegen \
   focalizec/src/coqcodegen focalizec/src/dkcodegen focalizec/src/testing \
   focalizec/src/relation_extraction focalizec/src/focalizedep \
-  focalizec/src/toplevel focalizec/src/focalizetest src/focalizeig \
+  focalizec/src/toplevel focalizec/src/focalizetest focalizec/src/focalizeig \
   focalizec/doc_src/tex/refman \
   focalizec/doc_src/tex/tutorial \
   focalizec/src/stdlib \
