@@ -22,9 +22,9 @@ SUB_DIRS=refman tutorial tuto_proofs
 
 include $(ROOT_DIR)/Makefile.common
 
-# Only enter these directories if doc was requested.
+# Only enter these directories if doc was requested and if LaTeX was found.
 all clean depend install doc:
-	@ if [ "$(MAKE_DOC)" == "true" ] ; \
+	@ if [ "$(MAKE_DOC)" == "true" ] && [ "$(LATEX)" != "" ] ; \
 		then \
 			for i in $(SUB_DIRS); do \
 				echo "--> $$i ..." >&2 && \

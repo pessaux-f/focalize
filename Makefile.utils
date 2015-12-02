@@ -29,9 +29,8 @@ TOUCH=touch
 CHMODGRW=chmod ug+rw
 CHMOD=chmod
 
-# Tex related processors
+# Tex related processors. Assumes that LaTeX was found.
 GS=gs
-LATEX=latex
 MAKEINDEX=makeindex
 DVIPS=dvips
 DVIPDF=dvipdf
