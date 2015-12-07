@@ -296,17 +296,14 @@ let dispatch_compilation files =
 (* The main procedure. *)
 let main () =
   Arg.parse
-    [ ("-coq_older",
-       Arg.Unit Configuration.set_use_coq_older,
-       "  Enable Coq code generation for versions of Coq < 8.3pl2.");
-      ("-dot-non-rec-dependencies",
+    [ ("-dot-non-rec-dependencies",
        Arg.String Configuration.set_dotty_dependencies,
        "  Dump species non-let-rec dependencies as dotty\n\
      \    files into the argument directory.");
       ("--experimental",
        Arg.Unit Configuration.set_experimental,
-       "  Do not use. Fear it! Does nothing, or does some things.\n\
-          For the development team only!");
+       "  ** Do not use. Fear it! ** Does nothing, or does some things.\n\
+     \    For the development team only!");
       ("-focalize-doc",
        Arg.Unit Configuration.set_focalize_doc,
        "  Generate documentation.");
@@ -391,9 +388,9 @@ let main () =
      \    by the suffix \".v\".");
       ("-stop-before-dk",
        Arg.Unit Configuration.set_stop_before_dk,
-       "  When Dedukti code generation is activated, stop the compilation\n\
-     \    process before passing the generated file to Dedukti. The produced file\
-          is ended\n\
+       "  When Dedukti code generation is activated, stop the \n\
+     \    compilation process before passing the generated file to Dedukti. \n\
+     \    The produced file is ended\n\
      \    by the suffix \".dk\".");
       ("-stop-before-zenon",
        Arg.Unit Configuration.set_stop_before_zenon,
