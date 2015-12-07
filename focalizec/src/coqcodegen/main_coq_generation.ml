@@ -388,8 +388,15 @@ let root_compile ~current_unit ~out_file_name stuff =
      force Coq getting back to previous proof goals, unsetting the "Automatic
      Introduction" globally. Otherwise, if using Coq version < 8.3pl2, we do not
      unset. *)
- if not (Configuration.get_use_coq_older ()) then
-     Format.fprintf out_fmter "Global Unset Automatic Introduction.@\n" ;
+  Format.fprintf out_fmter
+    "(* Coq >= 8.3pl2: disable automatic introduction of hypotheses. *)\n\
+    Global Unset Automatic Introduction.@\n" ;
+  (* Since Coq 8.5, polymorphic sum constructors in patterns must explicitely
+     carry their arguments corresponding to types. To return to the previous
+     syntax, we must unset the right option. *)
+  Format.fprintf out_fmter
+    "(* Coq >= 8.6: allow sum constructors without explicit types in patterns. *)\n\
+    Global Set Asymmetric Patterns.@\n" ;
   (* Always import Coq booleans and integers and floats. Alias int notation to
      Z. *)
   Format.fprintf out_fmter

@@ -90,7 +90,7 @@ EXTERNAL_VOS=\
 include $(ROOT_DIR)/Makefile.common
 
 FOCALIZEC=../toplevel/focalizec
-FOCALIZE_COMP_FLAGS=-no-stdlib-path $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) \
+FOCALIZE_COMP_FLAGS=-no-stdlib-path \
  -stop-before-coq -stop-before-dk -no-dedukti-code
 FOCALIZEDEP=../focalizedep/focalizedep
 COQ_INCLUDES= -I $(shell zenon -where)

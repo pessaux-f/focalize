@@ -108,9 +108,6 @@ val get_stop_before_dk : unit -> bool
 val require_plugin : string -> unit
 val get_plugins : unit -> string list
 
-val set_use_coq_older : unit -> unit
-val get_use_coq_older : unit -> bool
-
 val get_pmatch_err_as_warn : unit -> bool
 val set_pmatch_err_as_warn : unit -> unit
 

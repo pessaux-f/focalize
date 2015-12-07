@@ -27,7 +27,7 @@ STDLIB_DIR=../../stdlib
 
 FOCALIZEC=../../toplevel/focalizec
 
-FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) -no-dedukti-code
+FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR) -no-dedukti-code
 
 CAML_FLAGS=-w A -warn-error $(WARN_ERROR) -dtypes
 CAML_INCLUDES=-I $(STDLIB_DIR)

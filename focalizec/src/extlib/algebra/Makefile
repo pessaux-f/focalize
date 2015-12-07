@@ -103,7 +103,7 @@ EXTERNAL_VOS=\
 include $(ROOT_DIR)/Makefile.common
 
 FOCALIZEC=../../toplevel/focalizec
-FOCALIZE_COMP_FLAGS= -no-stdlib-path -I $(STDLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) -no-dedukti-code
+FOCALIZE_COMP_FLAGS= -no-stdlib-path -I $(STDLIB_DIR) -no-dedukti-code
 
 CAML_FLAGS=-w A -warn-error  $(WARN_ERROR) -dtypes -I $(STDLIB_DIR)
 CAML_INCLUDES=-I $(STDLIB_DIR)

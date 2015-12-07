@@ -192,12 +192,6 @@ let require_plugin, get_plugins =
   (fun () -> !plugin_list)
 ;;
 
-let (get_use_coq_older, set_use_coq_older) =
-  let use_coq_older = ref false in
-  (fun () -> !use_coq_older),
-  (fun () -> use_coq_older := true)
-;;
-
 let (set_pmatch_err_as_warn, get_pmatch_err_as_warn) =
   let pmatch_err_as_warn = ref false in
   (fun () -> pmatch_err_as_warn := true),

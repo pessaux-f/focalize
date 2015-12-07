@@ -32,7 +32,7 @@ FOCALIZEC=$(ROOT_DIR)/focalizec/src/toplevel/focalizec
 
 FOCALIZE_COMP_FLAGS=\
   -no-stdlib-path -no-dedukti-code \
-  -I $(STDLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) \
+  -I $(STDLIB_DIR) \
   -I $(ROOT_DIR)/focalizec/src/extlib/algebra -zvtovopt -script
 
 CAML_FLAGS= -w A -warn-error $(WARN_ERROR) -dtypes

@@ -517,20 +517,6 @@ chmod +x gitlastsha.sh
 
 
 # #############################################################################
-# Misc administrativia
-
-# If Coq version is < 8.3pl2, then we must call focalizec with the
-# -coq_older option to ensure code generation is Coq-compatible.
-COQ_VERSION=`$COQC -v | grep version | cut -d ' ' -f 6`
-if [ "$COQ_VERSION" \< "8.3pl2"  ] ;
-then FOCALIZEC_COQ_COMPATIBILITY_OPTION=-coq_older
-else FOCALIZEC_COQ_COMPATIBILITY_OPTION=""
-fi
-
-
-
-
-# #############################################################################
 # Generate the installation related source file.
 CONFIG_SUMMARY_DOT_ML=focalizec/src/basement/installation.ml
 
@@ -579,7 +565,6 @@ echo "INSTALL_BIN_DIR=$INSTALL_BIN_DIR" >> $CONFIGURATION_VARS_FILE
 echo "INSTALL_LIB_DIR=$INSTALL_LIB_DIR" >> $CONFIGURATION_VARS_FILE
 echo "INSTALL_MAN_DIR=$INSTALL_MAN_DIR" >> $CONFIGURATION_VARS_FILE
 echo "INSTALL_DOC_DIR=$INSTALL_DOC_DIR" >> $CONFIGURATION_VARS_FILE
-echo "FOCALIZEC_COQ_COMPATIBILITY_OPTION=$FOCALIZEC_COQ_COMPATIBILITY_OPTION" >> $CONFIGURATION_VARS_FILE
 echo "SUDO=$SUDO" >> $CONFIGURATION_VARS_FILE
 echo "HEVEA=$HEVEA" >> $CONFIGURATION_VARS_FILE
 echo "LATEX=$LATEX" >> $CONFIGURATION_VARS_FILE
@@ -645,11 +630,6 @@ then
     echo "  Hevea DVI to HTML utility found, HTML docs will be generated."
 else
     echo "  Hevea DVI to HTML utility NOT found, HTML docs won't be generated."
-fi
-if [ ! "$FOCALIZEC_COQ_COMPATIBILITY_OPTION" = "" ]
-then
-    echo $BOLDTAG"ATTENTION:$NORMALTAG you are using a version of Coq < 8.4. FoCaliZeC must be called with"
-    echo "the $BOLDTAG$FOCALIZEC_COQ_COMPATIBILITY_OPTION$NORMALTAG option."
 fi
 
 echo "Done. Now, please invoke: 'make all'"
