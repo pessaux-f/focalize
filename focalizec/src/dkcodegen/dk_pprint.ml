@@ -115,8 +115,9 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
     | Types.ST_arrow _ -> None (* We don't put "cc" here because parens get in the way *)
     | Types.ST_sum_arguments _ -> None
     | Types.ST_tuple _ -> None (* Same as arrow *)
-    | Types.ST_construct (ty_name, _) ->
+    | Types.ST_construct (ty_name, []) ->
        type_module ~current_unit: ctx.dpc_current_unit ty_name
+    | Types.ST_construct (_, _) -> None (* parens again *)
     | Types.ST_prop -> Some "dk_builtins"
     | Types.ST_self_rep -> None
     | Types.ST_species_rep (module_name, _) ->
