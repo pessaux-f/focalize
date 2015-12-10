@@ -536,7 +536,7 @@ species Additive_group =
   property opposite_is_opposite: all x : Self,
    !equal (!plus (x, !opposite (x)), !zero);
 
-  proof of plus_is_left_regular =
+  proof of plus_is_left_regular = assumed (*
     <1>1 assume x  : Self, y  : Self, z : Self,
          hypothesis H: !equal (!plus (x, y), !plus (x, z)),
          prove !equal (y, z)
@@ -566,13 +566,13 @@ species Additive_group =
               assumed (* Because todo *)
          <2>f qed by step <2>1, <2>7, <2>8
                    property equal_transitive, equal_symmetric
-    <1>2 conclude
+    <1>2 conclude *)
   ;
 
 
   theorem opposite_is_unique: all z : Self, all x : Self,
      !equal (!plus (x, z), !zero) -> !equal (z, !opposite (x))
-    proof =
+    proof = assumed (*
       <1>1 assume x : Self, z : Self,
            hypothesis H: !equal (!plus(x, z), !zero),
            prove !equal (z, !opposite (x))
@@ -587,7 +587,7 @@ species Additive_group =
                                  property equal_symmetric, equal_transitive
                 <3>2 qed by step <3>1 property plus_is_regular
            <2>2 qed by step <2>1 property equal_symmetric
-     <1>2 conclude
+     <1>2 conclude *)
   ;
 
   theorem opposite_fixes_zero: !equal (!opposite (!zero), !zero)

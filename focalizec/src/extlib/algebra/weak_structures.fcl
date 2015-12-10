@@ -487,7 +487,7 @@ species Euclidean_semi_ring =
 
    theorem zero_remainder_divides: all x y : Self,
      ~ (!is_zero (y)) -> !is_zero (!remainder (x, y)) -> !divides (y, x)
-     proof =
+     proof = assumed (*
        <1>1 assume x : Self, y : Self,
             hypothesis H_0: ~ (!is_zero (y)),
             hypothesis H_r: !is_zero (!remainder (x, y)),
@@ -513,7 +513,7 @@ species Euclidean_semi_ring =
             <2>f qed by step <2>1, <2>2
                         property !equal_symmetric,
                                  !divides_transitive, !divides_extends_equal
-       <1>f qed assumed (* ASSUMED exhausted search space *)
+       <1>f qed assumed (* ASSUMED exhausted search space *) *)
     ;
 
    (** Units are extremal *)

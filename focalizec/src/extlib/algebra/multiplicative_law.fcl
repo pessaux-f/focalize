@@ -328,7 +328,7 @@ species Division_monoid =
   theorem div_left_substitution_rule: all x_1 x_2 y : Self,
     !equal (x_1, x_2) -> ~ (!equal (y, !zero)) ->
        !equal (!div (x_1, y), !div (x_2, y))
-    proof =
+    proof = assumed (* 
     <1>1 assume x_1 x_2 y : Self,
          hypothesis H_x : !equal (x_1, x_2), H_y : ~(!equal (y, !zero)),
          prove !equal (!div (x_1, y), !div (x_2, y))
@@ -342,14 +342,14 @@ species Division_monoid =
                  hypothesis H_x
                  property equal_transitive, equal_symmetric
          <2>f qed by step <2>3 hypothesis H_y property mult_is_regular
-    <1>f qed assumed (* ASSUMED: exhausted search space *)
+    <1>f qed assumed (* ASSUMED: exhausted search space *) *)
    ;
 
   theorem div_right_substitution_rule: all x y_1 y_2 : Self,
     !equal (y_1, y_2) -> ~(!equal (y_1, !zero)) ->
        !equal (!div (x, y_1), !div (x, y_2))
     (* [rr]: to do ! *)
-    proof =
+    proof = assumed (*
       <1>1 assume x y_1 y_2 : Self,
            hypothesis H_y : !equal (y_1, y_2), H_0 : ~(!equal (y_1, !zero)),
             prove !equal (!div (x, y_1), !div (x, y_2))
@@ -374,7 +374,7 @@ species Division_monoid =
                 by step <2>1, <2>2
                    property equal_symmetric, equal_transitive
             <2>f qed  by step <2>3 hypothesis H_0 property mult_is_regular
-      <1>f qed assumed (* ASSUMED exhausted search space *)
+      <1>f qed assumed (* ASSUMED exhausted search space *) *)
      ;
 
   theorem div_really_divides: all x y : Self,
