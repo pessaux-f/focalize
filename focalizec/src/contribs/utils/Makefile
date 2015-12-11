@@ -27,7 +27,7 @@ STDLIB_DIR=../../stdlib
 
 FOCALIZEC=../../toplevel/focalizec
 
-FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) -no-dedukti-code
+FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
 
 CAML_FLAGS=-w A -warn-error $(WARN_ERROR) -dtypes
 CAML_INCLUDES=-I $(STDLIB_DIR)
@@ -55,6 +55,10 @@ FOCALIZE_ZVS=$(FOCALIZE_SRC:.fcl=.zv)
 FOCALIZE_VS=$(FOCALIZE_ZVS:.zv=.v)
 FOCALIZE_VOS=$(FOCALIZE_VS:.v=.vo)
 
+FOCALIZE_ZSKS=$(FOCALIZE_SRC:.fcl=.sk.zv)
+FOCALIZE_SKS=$(FOCALIZE_SRC:.fcl=.sk)
+FOCALIZE_DKOS=$(FOCALIZE_SKS:.sk=.dko)
+
 
 lib: all
 
@@ -62,14 +66,17 @@ byt:\
  $(FOCALIZE_MLS)\
  $(FOCALIZE_ZVS)\
  $(FOCALIZE_BYT_OBJS)\
- $(FOCALIZE_VS) $(FOCALIZE_VOS)
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+ $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
 
 bin:\
  $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
  $(FOCALIZE_MLS)\
  $(FOCALIZE_ZVS)\
  $(FOCALIZE_BIN_OBJS)\
- $(FOCALIZE_VS) $(FOCALIZE_VOS)
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+ $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
+
 
 install:
 	@$(MKDIR) $(INSTALL_LIB_DIR) &&\
@@ -92,11 +99,15 @@ install:
 	if [ "$(FOCALIZE_VOS)" != "" ] ; then\
 	  echo "Installing (Coq) compiled certified libs." &&\
 	  $(CP) $(FOCALIZE_VOS) $(INSTALL_LIB_DIR)/;\
+	fi &&\
+	if [ "$(FOCALIZE_DKOS)" != "" ] ; then\
+	  echo "Installing (Dedukti) compiled certified libs." &&\
+	  $(CP) $(FOCALIZE_DKOS) $(INSTALL_LIB_DIR)/;\
 	fi
 
 clean:
 	$(RM) $(FOCALIZE_FOS) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
-	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS)
+	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS) $(FOCALIZE_DKOS)
 	$(RM) $(FOCALIZE_CMIS) *.annot *.glob *.fcd *.pfc
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.vo *.zv
 

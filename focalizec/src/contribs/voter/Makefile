@@ -30,7 +30,7 @@ FOCALIZEC=../../toplevel/focalizec
 
 FOCALIZE_COMP_FLAGS=\
  -no-stdlib-path -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR)\
- -I $(UTILSLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) -no-dedukti-code
+ -I $(UTILSLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
 
 CAML_FLAGS= -w A -warn-error $(WARN_ERROR) -dtypes
 CAML_INCLUDES=-I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR)
@@ -72,6 +72,12 @@ FOCALIZE_VS=$(FOCALIZE_ZVS:.zv=.v)
 
 FOCALIZE_VOS=$(FOCALIZE_VS:.v=.vo)
 
+FOCALIZE_ZSKS=$(FOCALIZE_SRC:.fcl=.sk.zv)
+
+FOCALIZE_SKS=$(FOCALIZE_SRC:.fcl=.sk)
+
+FOCALIZE_DKOS=$(FOCALIZE_SKS:.sk=.dko)
+
 EXTERNAL_BYT_OBJS=\
  ../utils/pair.cmo\
  ../utils/peano.cmo
@@ -102,12 +108,14 @@ lib: all
 byt:\
  $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
  $(FOCALIZE_MLS) $(FOCALIZE_ZVS)\
- $(FOCALIZE_BYT_OBJS) $(FOCALIZE_VS) $(FOCALIZE_VOS)
+ $(FOCALIZE_BYT_OBJS) $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+ $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
 
 bin:\
  $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
  $(FOCALIZE_MLS) $(FOCALIZE_ZVS)\
- $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VS) $(FOCALIZE_VOS)
+ $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+ $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
 
 $(BIN_EXE): byt bin
 	$(CAMLBIN) -o $@\
@@ -147,10 +155,14 @@ install:
 	fi &&\
 	if [ "$(EXTERNAL_VOS)" != "" ] ; then\
 	  $(CP) $(EXTERNAL_VOS) $(INSTALL_LIB_DIR)/;\
+	fi &&\
+	if [ "$(EXTERNAL_DKOS)" != "" ] ; then\
+	  $(CP) $(EXTERNAL_DKOS) $(INSTALL_LIB_DIR)/;\
 	fi
 
 clean:
-	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
+	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) \
+	$(FOCALIZE_ZDKS) $(FOCALIZE_DKS)
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.zv *.vo
 	$(RM) *.glob *.fcd *.pfc *.fo
 

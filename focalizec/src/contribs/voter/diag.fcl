@@ -67,7 +67,7 @@ species Imp_diag_2oo3( E is Sp_etat_vote, C is Sp_capteur) =
      E!equal (prj_b (x), E!perfect_match)
   ;
 
-  proof of no_match_is_invalid =
+  proof of no_match_is_invalid = assumed (*
   <1>1
   assume
     x : Self,
@@ -79,7 +79,7 @@ species Imp_diag_2oo3( E is Sp_etat_vote, C is Sp_capteur) =
        E!all_field_different_0_1, E!all_field_different_0_2,
        E!all_field_different_0_3
        definition of valid
-  <1>f conclude  ;
+  <1>f qed assumed (* by property valid *) *) ;
 
   proof of range_match_is_valid =
   by definition of valid;
