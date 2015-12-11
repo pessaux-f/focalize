@@ -1982,7 +1982,8 @@ and admit_zenon_theorem_for_proof ctx env min_dk_env
         ~local_idents: [] ~in_recursive_let_section_of: []
         ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
         ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
-        ctx env aim
+        ctx env aim;
+      Format.fprintf out_fmter ")@]@\n"
 
 and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
     ~self_manifest dependencies_from_params generated_fields available_hyps
