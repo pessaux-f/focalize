@@ -40,8 +40,8 @@ FOCALIZE_SRC=\
 
 # FOCALIZE_SRC_UNSAFE are compiled not using the implicit rules. They have
 # their own rules at the end of this Makefile.
-FOCALIZE_SRC_UNSAFE=
- #iterators.fcl\
+FOCALIZE_SRC_UNSAFE=\
+ iterators.fcl\
  small_integers.fcl\
  big_integers.fcl
 # parse_poly.fcl polys_abstract.fcl polys_concrete finite_fields fractions finite_factorize
