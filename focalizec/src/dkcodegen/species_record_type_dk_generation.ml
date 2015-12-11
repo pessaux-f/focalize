@@ -434,25 +434,14 @@ let generate_constant ctx cst =
         then butfst str
         else str
       in
-      let rec print_abs fmter s =
-        if s = "" then (
-          Format.fprintf fmter "dk_nat.dnil"
-        ) else (
-          Format.fprintf fmter
-                         "@[<2>(dk_nat.dcons@ %a@ dk_nat._%c)@]"
-                         print_abs (butlast s)
-                         (last s)
-        )
-      in
+      let print_abs fmter s = Format.fprintf fmter "%s" s in
       if sign
       then Format.fprintf ctx.Context.scc_out_fmter
                           "@[<2>(dk_int.opp@ ";
       Format.fprintf ctx.Context.scc_out_fmter
-                     "@[<2>(dk_int.from_nat@ @[<2>(dk_nat.list_to_nat %a)@])@]"
+                     "@[<2>(dk_int.from_nat@ %a)@]"
                      print_abs abs_str;
-      if sign
-      then Format.fprintf ctx.Context.scc_out_fmter
-                          ")@]";
+      if sign then Format.fprintf ctx.Context.scc_out_fmter ")@]";
    | Parsetree.C_float _str ->
        (* [Unsure] *)
        Format.fprintf ctx.Context.scc_out_fmter "C_float"
