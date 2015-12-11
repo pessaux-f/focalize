@@ -17,29 +17,30 @@
 
 # Makefile for algebra structures implementations
 
-ROOT_DIR=../../..
+ROOT_DIR=../../../..
+SRC_DIR=$(ROOT_DIR)/focalizec/src
 
-include $(ROOT_DIR)/Makefile.config
-
+include $(ROOT_DIR)/Makefile.common
 LIB_INSTALL_DIR=$(LIB_DIR)/automata
 
-STDLIB_DIR=$(ROOT_DIR)/src/stdlib
+STDLIB_DIR=$(SRC_DIR)/stdlib
 
-ALGEBRALIB_DIR=$(ROOT_DIR)/src/extlib/algebra
+ALGEBRALIB_DIR=$(SRC_DIR)/extlib/algebra
 
 UTILSLIB_DIR=../utils
 
-FOCALIZE_COMPILER=$(ROOT_DIR)/src/toplevel/focalizec
+FOCALIZE_COMPILER=$(SRC_DIR)/toplevel/focalizec
 
 FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR)
 
-#From Makefile.config FOCALIZEC=$(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
+FOCALIZEC=$(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 
-#CAML_COMP_FLAGS=-w A -warn-error $(WARN_ERROR) -dtypes -I $(STDLIB_DIR)
-CAML_COMP_FLAGS=-dtypes -I $(STDLIB_DIR)
+#CAML_FLAGS=-w A -warn-error $(WARN_ERROR) -dtypes -I $(STDLIB_DIR)
+CAML_FLAGS=-dtypes -I $(STDLIB_DIR)
 
 # From Makefile.config ZENON_LIB_DIR
 # Was ZENON_LIB_DIR=$(ROOT_DIR)/../zenon/
+ZENON_LIB_DIR=$(shell zenon -where)
 COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
 
 FOCALIZE_SRC=\
@@ -48,7 +49,7 @@ FOCALIZE_SRC=\
  switch_recovery_normal_automata.fcl\
  switch_recovery_reverse_automata.fcl\
  switch_recovery_automata.fcl\
- switch_automata.fcl\
+ #switch_automata.fcl ## Still buggy \
  main.fcl
 
 FOCALIZE_FOS=$(FOCALIZE_SRC:.fcl=.fo)
@@ -65,6 +66,12 @@ FOCALIZE_VS=$(FOCALIZE_ZVS:.zv=.v)
 
 FOCALIZE_VOS=$(FOCALIZE_VS:.v=.vo)
 
+FOCALIZE_ZSKS=$(FOCALIZE_SRC:.fcl=.sk.zv)
+
+FOCALIZE_SKS=$(FOCALIZE_SRC:.fcl=.sk)
+
+FOCALIZE_DKOS=$(FOCALIZE_SKS:.sk=.dko)
+
 EXTERNAL_BYT_OBJS=
 
 EXTERNAL_BIN_OBJS=$(EXTERNAL_BYT_OBJS:.cmo=.cmx)
@@ -72,6 +79,10 @@ EXTERNAL_BIN_OBJS=$(EXTERNAL_BYT_OBJS:.cmo=.cmx)
 EXTERNAL_VOS=\
  ../utils/pair.vo\
  ../utils/peano.vo
+
+EXTERNAL_DKOS=\
+ ../utils/pair.dko\
+ ../utils/peano.dko
 
 STD_BIN_OBJS=\
  ml_builtins.cmx basics.cmx\
@@ -86,19 +97,19 @@ STD_BIN_OBJS=\
 
 BINARY=build.x
 
-include $(ROOT_DIR)/Makefile.common
-
 lib: all
 
 byt:\
   $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
   $(FOCALIZE_MLS) $(FOCALIZE_ZVS)\
-  $(FOCALIZE_BYT_OBJS) $(FOCALIZE_VS) $(FOCALIZE_VOS)
+  $(FOCALIZE_BYT_OBJS) $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+  $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
 
 bin:\
   $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
   $(FOCALIZE_MLS) $(FOCALIZE_ZVS)\
-  $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VS) $(FOCALIZE_VOS)
+  $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+  $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
 
 install:
 	@$(MKDIR) $(INSTALL_LIB_DIR) &&\
@@ -123,34 +134,41 @@ install:
 	fi &&\
 	if [ "$(EXTERNAL_VOS)" != "" ] ; then\
 	  $(CP) $(EXTERNAL_VOS) $(INSTALL_LIB_DIR)/\
+	fi &&\
+	if [ "$(EXTERNAL_DKOS)" != "" ] ; then\
+	  $(CP) $(EXTERNAL_DKOS) $(INSTALL_LIB_DIR)/\
 	fi
 
 clean:
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
-	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS)
-	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)
+	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS) $(FOCALIZE_DKOS)
+	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS) $(EXTERNAL_DKOS)
 	$(RM) big_integers.ml parse_poly.ml polys_abstract.ml
 	$(RM) big_integers.cm* parse_poly.cm* polys_abstract.cm*
 	$(RM) big_integers.o parse_poly.o polys_abstract.o
-	$(RM) *.annot *.glob
+	$(RM) *.annot *.glob *.zv *.pfc
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
 
 
 # Were not compiled to Coq in the previous FoCaL compiler...
 big_integers.ml: big_integers.fcl
-	$(FOCALIZEC) --no-coq-code $<
+	$(FOCALIZEC) --no-coq-code --no-dedukti-code $<
 parse_poly.ml: parse_poly.fcl
-	$(FOCALIZEC) --no-coq-code $<
+	$(FOCALIZEC) --no-coq-code --no-dedukti-code $<
 polys_abstract.ml: polys_abstract.fcl
-	$(FOCALIZEC) --no-coq-code $<
+	$(FOCALIZEC) --no-coq-code --no-dedukti-code $<
 #End temporary
 
 # Should be generated ?
 randoms_externals.vo: $(STDLIB_DIR)/basics.vo
 arrays_externals.vo: $(STDLIB_DIR)/basics.vo
+randoms_externals.dko: $(STDLIB_DIR)/basics.dko
+arrays_externals.dko: $(STDLIB_DIR)/basics.dko
 # End Should be generated ?
 
 build.x: bin
 	$(CAML_BIN_COMPILER) -o $@\
            -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR)\
             $(STD_BIN_OBJS) $(EXTERNAL_BIN_OBJS) $(FOCALIZE_BIN_OBJS)
+
+depend:

@@ -96,7 +96,7 @@ species Imp_state_aut1 =
   let reverse = 12;
   let uncontroled = 13;
 
-  let equal (x in Self, y in Self) in bool = x =0x y;
+  let equal (x, y) = x =0x y;
 
   let element = 1;
 
@@ -107,7 +107,7 @@ species Imp_state_aut1 =
   proof of equal_reflexive = assumed (* type polymorphe *);
   (* by property basics#beq_refl definition of equal; *)
 
-  let get (s in Self) in int = s
+  let get (s) = s
   ;
 
   let parse (x) = basics#int_of_string (x);
@@ -166,31 +166,32 @@ species
 
   inherit Switch_automata (St1, Req, Po, St2, St3, Aut3, St4, Aut4, Aut2);
 
-  let st_aut1 (i in Self) in St1 = basics#fst (i);
-  let st_aut2 (i in Self) in Aut2 = basics#snd (i);
-  let constr_self (s1 in St1, a2 in Aut2) in Self = basics#pair (s1, a2);
+  let st_aut1 (i) = basics#fst (i);
+  let st_aut2 (i) = basics#snd (i);
+  let constr_self (s1, a2) = basics#pair (s1, a2);
 
   theorem st_is_fst_self:
-    all st in St1, all a2 in Aut2,
+    all st : St1, all a2 : Aut2,
     st_aut1 (constr_self (st, a2)) = st
 
   proof = assumed (* To do *)
   ;
   theorem aut2_is_snd_self:
-    all st in St1, all a2 in Aut2,
+    all st : St1, all a2 : Aut2,
     st_aut2 (constr_self (st, a2)) = a2
 
   proof = assumed (* To do *)
   ;
 
+  (*
   theorem st_is_fst_fst_tau:
-    all st in St1, all a2 in Aut2, all p in Po,
+    all st : St1, all a2 : Aut2, all p : Po,
     st_aut1 (!tau_p1 (constr_tau (constr_self (st, a2), p))) = st
 
   proof =
-  <1>1 assume st in St1,
-       assume a2 in Aut2,
-       assume p in Po,
+  <1>1 assume st : St1,
+       assume a2 : Aut2,
+       assume p : Po,
     prove
     st_aut1 (!tau_p1 (constr_tau (constr_self (st, a2), p))) = st
 
@@ -204,14 +205,14 @@ species
     <2>0 qed by step <2>1 property !st_is_fst_self, St1!equal_transitive
   <1>0 conclude
   ;
-
+  *)
 
   let init_state = !constr_self (St1!moving, Aut2!init_state);
 
-  let entry (p in Po) =
+  let entry (p) =
      !init_state;
 
-  let tau (s1 in Self, r in  Req) in  (Self * Po) =
+  let tau (s1, r) =
     if St1!equal (!st_aut1 (s1), St1!moving) then
       if Req!equal (r, Req!normal_switched) then
         !constr_tau (!constr_self (St1!normal, Aut2!init_state), Po!empty)
@@ -257,7 +258,7 @@ species
       !constr_tau (s1, Po!empty)
   ;
 
-
+  (*
   theorem normal_moving:
   St1!equal (
     !st_aut1 (
@@ -291,7 +292,7 @@ species
              St1!equal_symmetric, St1!equal_reflexive, Req!equal_reflexive
 
     <2>2
-    assume a in Aut2, assume p in Po,
+    assume a : Aut2, assume p : Po,
     prove
       st_aut1
        (tau_p1
@@ -300,15 +301,15 @@ species
               (St1!moving, a),
             p))) = St1!moving
 
-     by property st_is_fst_fst_tau
+     assumed (* by property st_is_fst_fst_tau *)
 
     <2>0 qed by step <2>1, <2>2 property Po!empty, Aut2!init_state
 
   <1>0 qed by step <1>1 property St1!equal_reflexive
   ;
+  *)
 
-
-
+  (*
   theorem normal_reverse:
   St1!equal (
     !st_aut1 (
@@ -323,11 +324,11 @@ species
     St1!reverse)
 
   proof = assumed (* To do *)
-  ;
+  ; *)
 
-  let get_state (x in Self) = !st_aut1 (x);
+  let get_state (x) = !st_aut1 (x);
 
-  let equal (x in Self, y in Self) in bool =
+  let equal (x, y) =
     St1!equal (!st_aut1 (x), !st_aut1 (y))
   ;
 
@@ -345,16 +346,16 @@ species
   ;
 
 
-   (* l'égalité ne concerne que la projection 1 *)
+  (*   (* l'égalité ne concerne que la projection 1 *)
   theorem equal_only_on_p1:
-  all s1 in St1, all a2 a3 in Aut2,
+  all s1 : St1, all a2 a3 : Aut2,
     !equal (!constr_self (s1, a2), !constr_self (s1, a3))
 
   proof =
   <1>1
-  assume s1 in St1,
-  assume a2 in Aut2,
-  assume a3 in Aut2,
+  assume s1 : St1,
+  assume a2 : Aut2,
+  assume a3 : Aut2,
   prove !equal (!constr_self (s1, a2), !constr_self (s1, a3))
 
     <2>1 prove St1!equal (!st_aut1 (!constr_self (s1, a2)), s1)
@@ -367,7 +368,7 @@ species
        definition of equal
 
   <1>0 conclude
-  ;
+  ; *)
 
 end
 ;;
@@ -383,20 +384,21 @@ species Imp2_switch_automata =
        Coll_state_aut4, Coll_switch_recovery_normal_automata,
        Coll_switch_recovery_automata);
 
+  (*
   theorem t1:
-  all s1 in Coll_state_aut1,
-  all a2 in Coll_switch_recovery_automata,
-  all po in Coll_ports,
+  all s1 : Coll_state_aut1,
+  all a2 : Coll_switch_recovery_automata,
+  all po : Coll_ports,
   Coll_state_aut1!equal (
     st_aut1 (tau_p1 (constr_tau (constr_self (s1, a2), po))), s1)
 
-  proof = assumed (* To do *);
+  proof = assumed (* To do *); *)
 
-
+  (*
   theorem safe_normal:
-  all a2 in Coll_state_aut2,
-  all s1 in Self ,
-  all r in Coll_requests,
+  all a2 : Coll_state_aut2,
+  all s1 : Self ,
+  all r : Coll_requests,
   Coll_state_aut1!equal  (
     st_aut1  (tau_p1  (tau  (s1, r))),
     Coll_state_aut1!normal) ->
@@ -404,16 +406,16 @@ species Imp2_switch_automata =
 
   proof =
   <1>1
-   assume a2 in Coll_state_aut2,
-   assume s1 in Self,
-   assume r in Coll_requests,
-   assume H1: Coll_state_aut1!equal (st_aut1 (tau_p1 (tau (s1, r))),
+   assume a2 : Coll_state_aut2,
+   assume s1 : Self,
+   assume r : Coll_requests,
+   hypothesis H1: Coll_state_aut1!equal (st_aut1 (tau_p1 (tau (s1, r))),
                                      Coll_state_aut1!normal),
    prove Coll_requests!equal (r, Coll_requests!normal_switched)
    <2>1 qed assumed (* To do *)
 
   <1>f conclude
-  ;
+  ; *)
 
 end
 ;;
