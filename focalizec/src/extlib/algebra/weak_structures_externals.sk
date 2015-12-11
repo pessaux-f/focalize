@@ -1,3 +1,14 @@
+(;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;)
+(;                                                                     ;)
+(;                        FoCaL compiler                               ;)
+(;            Raphaël Cauderlier                                       ;)
+(;                               LIP6  --  INRIA Rocquencourt          ;)
+(;                                                                     ;)
+(;  Copyright 2015 LIP6 and INRIA                                      ;)
+(;  Distributed only by permission.                                    ;)
+(;                                                                     ;)
+(;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;)
+
 #NAME weak_structures_externals.
 
 quo_rem_result : __var_a:cc.uT -> cc.uT.

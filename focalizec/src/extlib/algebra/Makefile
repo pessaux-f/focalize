@@ -97,8 +97,8 @@ EXTERNAL_VOS=\
  randoms_externals.vo arrays_externals.vo
 
 EXTERNAL_DKOS=\
- weak_structures_externals.dko
-# randoms_externals.dko arrays_externals.dko
+ weak_structures_externals.dko\
+ randoms_externals.dko arrays_externals.dko
 
 include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/focalizec/.install_var

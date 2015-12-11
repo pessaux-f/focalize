@@ -51,7 +51,7 @@ species Product_additive_monoid (M1 is Additive_monoid, M2 is Additive_monoid) =
     let b2 = !second (b) in
     !pair (M1!plus (a1, b1), M2!plus (a2, b2));
 
-  proof of plus_commutes =
+  proof of plus_commutes = assumed (*
     <1>1 assume a : Self, b : Self,
          prove !equal (!plus (a, b), !plus (b, a))
          <2>1 assume a1 : M1, a2 : M2, b1 : M1, b2 : M2,
@@ -60,10 +60,10 @@ species Product_additive_monoid (M1 is Additive_monoid, M2 is Additive_monoid) =
               by property M1!plus_commutes, M2!plus_commutes,
                 !pair_substitution_rule
           <2>f qed by step <2>1 definition of plus
-    <1>f conclude
+    <1>f qed by property plus *)
     ;
 
-  proof of plus_right_substitution_rule =
+  proof of plus_right_substitution_rule = assumed (*
     <1>0 assume a1 : M1, b1 : M1, c1 : M1,
                 a2 : M2, b2 : M2, c2 : M2,
          hypothesis H1: M1!equal (b1, c1),
@@ -82,7 +82,7 @@ species Product_additive_monoid (M1 is Additive_monoid, M2 is Additive_monoid) =
          <2>2 prove  M2!equal (!second (b), !second (c))
               by hypothesis H property !equal_spec
          <2>f qed by step <2>1, <2>2, <1>0 definition of plus
-    <1>f conclude
+    <1>f qed by property plus *)
     ;
 
   proof of zero_is_neutral = assumed (* Because todo *);
