@@ -136,7 +136,7 @@ species Imp_pair (S1 is Setoid, S2 is Setoid) =
   assumed (* ??? *)
   ;
 
-  proof of def_equal1 = assumed (*
+  proof of def_equal1 =
   <1>1  assume
           n1 n3 : S1,
           n2 n4 : S2,
@@ -195,10 +195,10 @@ species Imp_pair (S1 is Setoid, S2 is Setoid) =
 
     <2>0 qed assumed (* ASSUMED (type alias error) by step <2>3, <2>4 property def_equal *)
 
-  <1>0 conclude *)
+  <1>0 conclude
   ;
 
-  proof of  equal_reflexive = assumed (*
+  proof of  equal_reflexive =
   <1>1 assume p : Self,
     prove
      !equal (p, p)
@@ -209,7 +209,7 @@ species Imp_pair (S1 is Setoid, S2 is Setoid) =
 
      <2>0 qed assumed (* ASSUMED (type alias error) by step <2>1 property unicite_1, equal_transitive *)
 
-  <1>0 qed assumed (* ASSUMED (type alias error) conclude *) *)
+  <1>0 qed assumed (* ASSUMED (type alias error) conclude *)
   ;
 
   proof of  equal_reflexive2 =
@@ -217,7 +217,7 @@ species Imp_pair (S1 is Setoid, S2 is Setoid) =
   ;
 
 
-  proof of  equal_symmetric = assumed (*
+  proof of  equal_symmetric =
   <1>1
     assume
       p1 p2 : Self,
@@ -239,7 +239,7 @@ species Imp_pair (S1 is Setoid, S2 is Setoid) =
 
     <2>0 qed assumed (* ASSUMED (type alias error) by step <2>4 property unicite_1, equal_transitive *)
 
-  <1>0 qed assumed (* ASSUMED (type alias error) conclude *) *)
+  <1>0 qed assumed (* ASSUMED (type alias error) conclude *)
   ;
 
   proof of  equal_symmetric2 =
@@ -267,7 +267,7 @@ species Imp_pair (S1 is Setoid, S2 is Setoid) =
   <1>0 conclude
   ;
 
-  proof of  equal_transitive = assumed (*
+  proof of  equal_transitive =
   <1>1
     assume
       p1 p2 p3 : Self,
@@ -282,7 +282,7 @@ species Imp_pair (S1 is Setoid, S2 is Setoid) =
     <2>3 prove (S1!equal (!prj_a (p1), !prj_a (p3)) /\ S2!equal (!prj_b (p1), !prj_b (p3)))
       by step <2>1, <2>2 property S1!equal_transitive, S2!equal_transitive
     <2>0 qed assumed (* ASSUMED (type alias error) by step <2>3 property def_equal *)
-  <1>0 qed assumed (* ASSUMED type alias error *) *)
+  <1>0 qed assumed (* ASSUMED type alias error *)
   ;
 
   proof of  equal_transitive2 =

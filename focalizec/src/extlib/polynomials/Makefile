@@ -215,3 +215,5 @@ distributed_polys.ml: distributed_polys.fcl
 
 distributed_polys.fcd: distributed_polys.fcl
 	$(FOCALIZEC) -focalize-doc -no-coq-code -no-dedukti-code $<
+
+depend:

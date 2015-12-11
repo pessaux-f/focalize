@@ -173,7 +173,7 @@ species
   all s : Self, all r : Req,
   Po!equal(tau_p2(tau(s, r)), Po!port_out1) ->
     Req!equal(r, Req!normal_switched)
-  proof = assumed (*
+  proof =
   <1>1
     assume s : Self, r : Req,
     hypothesis H1:Po!equal(tau_p2(tau(s, r)), Po!port_out1),
@@ -181,20 +181,20 @@ species
      <2>1 prove  ~ Po!equal(Po!port_out2, Po!port_out1)
      by property Po!diff_port_out1_port_out2, Po!equal_symmetric
      <2>0
-     qed assumed (*
-      by definition of tau, constr_tau, tau_p2
-      hypothesis H1
-      step <2>1
-      property
-        Req!diff_normal_switched_reverse_switched,
-        Req!diff_normal_switched_moving,
-        Req!diff_normal_switched_moving_time_out,
-        Req!diff_reverse_switched_moving,
-        Req!diff_reverse_switched_moving_time_out,
-        Req!diff_moving_moving_time_out,
-        Req!diff_inconsistent_moving_time_out,
-        Po!diff_empty_port_out1 *)
-  <1>0 qed assumed (* by property tau_p2, tau *) *)
+     qed assumed (* exhausted search space *)
+      (* by definition of tau, constr_tau, tau_p2 *)
+      (* hypothesis H1 *)
+      (* step <2>1 *)
+      (* property *)
+      (*   Req!diff_normal_switched_reverse_switched, *)
+      (*   Req!diff_normal_switched_moving, *)
+      (*   Req!diff_normal_switched_moving_time_out, *)
+      (*   Req!diff_reverse_switched_moving, *)
+      (*   Req!diff_reverse_switched_moving_time_out, *)
+      (*   Req!diff_moving_moving_time_out, *)
+      (*   Req!diff_inconsistent_moving_time_out, *)
+      (*   Po!diff_empty_port_out1 *)
+  <1>0 qed by step <1>1 property tau_p2, tau
   ;
 
 end

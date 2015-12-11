@@ -268,7 +268,7 @@ species
 
 
   (* Proof by case on the consistency between inputs *)
-  proof of voter_independant_from_order_v1_v2 = assumed (*
+  proof of voter_independant_from_order_v1_v2 =
   <1>1
     assume
       va vb vc : V,
@@ -370,7 +370,7 @@ species
                property  V!consistency_rule_reflexive
                definition of compatible
 
-        <4>f qed assumed (* by property compatible *)
+        <4>f qed by step <4>1, <4>2 property compatible
 
       <3>2
         hypothesis
@@ -459,9 +459,9 @@ species
                property V!consistency_rule_reflexive
                definition of compatible
 
-        <4>f qed assumed (* by property compatible *)
+        <4>f qed by step <4>1, <4>2 property compatible
 
-      <3>f qed assumed (* by property compatible *)
+      <3>f qed by step <3>1, <3>2 property compatible
 
     <2>2
       hypothesis
@@ -563,7 +563,7 @@ species
          property consistency_rule_is_symmetric, V!consistency_rule_reflexive
          definition of compatible
 
-        <4>f qed assumed (* by property compatible *)
+        <4>f qed by step <4>1, <4>2 property compatible
 
       <3>2
         hypothesis
@@ -663,13 +663,13 @@ species
           <5>f qed by step <5>51, <5>71, <5>91
               definition of compatible
 
-        <4>f qed assumed (* by property compatible *)
+        <4>f qed by step <4>1, <4>2 property compatible
 
-      <3>f qed assumed (* by property compatible *)
+      <3>f qed by step <3>1, <3>2 property compatible
 
-    <2>f qed assumed (* by property compatible *)
+    <2>f qed by step <2>1, <2>2 property compatible
 
-  <1>f qed assumed (* by property compatible *) *)
+  <1>f qed by step <1>1 property compatible
   ;
 
 end
@@ -712,50 +712,50 @@ species
          (v1, P!constr (C!capt_1, E!no_match))
   ;
 
-  proof of vote_perfect  = assumed (*
-    by property V!equal_reflexive, P!equal_reflexive
-       definition of voter, diag, value *)
+  proof of vote_perfect = assumed (* exhausted search space *)
+    (*ASSUMED by property V!equal_reflexive, P!equal_reflexive *)
+    (*ASSUMED    definition of voter, diag, value *)
   ;
 
 
-  proof of vote_match_c1 = assumed (*
-    by property V!equal_reflexive, P!equal_reflexive
-       definition of voter, diag, value *)
+  proof of vote_match_c1 = assumed (* exhausted search space *)
+    (*ASSUMED by property V!equal_reflexive, P!equal_reflexive *)
+    (*ASSUMED    definition of voter, diag, value *)
   ;
 
-  proof of vote_match_c2 = assumed (*
-    by property V!equal_reflexive, P!equal_reflexive
-       definition of voter, diag, value *)
+  proof of vote_match_c2 = assumed (* exhausted search space *)
+    (*ASSUMED by property V!equal_reflexive, P!equal_reflexive *)
+    (*ASSUMED    definition of voter, diag, value *)
   ;
 
-  proof of vote_match_c3 = assumed (*
-    by property V!equal_reflexive, P!equal_reflexive
-       definition of voter, diag, value *)
+  proof of vote_match_c3 = assumed (* exhausted search space *)
+    (*ASSUMED by property V!equal_reflexive, P!equal_reflexive *)
+    (*ASSUMED    definition of voter, diag, value *)
   ;
 
-  proof of vote_partial_c1 = assumed (*
-    by property V!equal_reflexive, P!equal_reflexive
-       definition of voter, diag, value *)
+  proof of vote_partial_c1 = assumed (* exhausted search space *)
+    (*ASSUMED by property V!equal_reflexive, P!equal_reflexive *)
+    (*ASSUMED    definition of voter, diag, value *)
   ;
 
-  proof of vote_partial_c2 = assumed (*
-    by property V!equal_reflexive, P!equal_reflexive
-       definition of voter, diag, value *)
+  proof of vote_partial_c2 = assumed (* exhausted search space *)
+    (*ASSUMED by property V!equal_reflexive, P!equal_reflexive *)
+    (*ASSUMED    definition of voter, diag, value *)
   ;
 
-  proof of vote_partial_c3 = assumed (*
-    by property V!equal_reflexive, P!equal_reflexive
-       definition of voter, diag, value *)
+  proof of vote_partial_c3 = assumed (* exhausted search space *)
+    (*ASSUMED by property V!equal_reflexive, P!equal_reflexive *)
+    (*ASSUMED    definition of voter, diag, value *)
   ;
 
-  proof of vote_no_match = assumed (*
-    by property V!equal_reflexive, P!equal_reflexive
-       definition of voter, diag, value *)
+  proof of vote_no_match = assumed (* exhausted search space *)
+    (*ASSUMED by property V!equal_reflexive, P!equal_reflexive *)
+    (*ASSUMED    definition of voter, diag, value *)
   ;
 
-  proof of voter_returns_an_input_value = assumed (*
-    by property V!equal_reflexive
-       definition of voter, value *)
+  proof of voter_returns_an_input_value = assumed (* exhausted search space *)
+    (*ASSUMED by property V!equal_reflexive *)
+    (*ASSUMED    definition of voter, value *)
   ;
 
 end

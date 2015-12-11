@@ -137,8 +137,8 @@ species
   theorem st_is_fst_self:
     all st1 : St, all a3 : Aut3, all a4 : Aut4,
       st_aut_p1( constr_self( st1, a3, a4)) = st1
-  proof = assumed (*
-    by definition of st_aut_p1, constr_self *)
+  proof = assumed (* exhausted search space *)
+    (* by definition of st_aut_p1, constr_self *)
   ;
 
   theorem aut3_is_snd_self:
@@ -198,33 +198,32 @@ species Imp2_switch_recovery_automata =
   all s : Self, all r : Coll_requests,
   Coll_ports!equal(tau_p2(tau(s, r)), Coll_ports!port_out1) ->
     Coll_requests!equal(r, Coll_requests!reverse_switched)
-  proof = assumed (*
+  proof =
   <1>1
     assume s : Self, r : Coll_requests,
     hypothesis H1:Coll_ports!equal(tau_p2(tau(s, r)), Coll_ports!port_out1),
     prove Coll_requests!equal(r, Coll_requests!reverse_switched)
-     <2>1 prove  ~ Coll_ports!equal(Coll_ports!port_out2, Coll_ports!port_out1)
-     assumed (*
-     by property Coll_ports!diff_port_out1_port_out2, Coll_ports!equal_symmetric,
-     Coll_ports!equal,
-     Coll_ports!port_out2,
-     Coll_ports!port_out1 *)
+     <2>1 prove  ~ Coll_ports!equal(Coll_ports!port_out2, Coll_ports!port_out1)  assumed (* type error *)
+     (*ASSUMED by property Coll_ports!diff_port_out1_port_out2, Coll_ports!equal_symmetric, *)
+     (*ASSUMED Coll_ports!equal, *)
+     (*ASSUMED Coll_ports!port_out2, *)
+     (*ASSUMED Coll_ports!port_out1 *)
      <2>0
-     qed assumed (* tau is not defined
-      by definition of tau, constr_tau, tau_p2
-      hypothesis H1
-      step <2>1
-      property
-        Coll_requests!diff_normal_switched_reverse_switched,
-        Coll_requests!diff_normal_switched_moving,
-        Coll_requests!diff_normal_switched_moving_time_out,
-        Coll_requests!diff_reverse_switched_moving,
-        Coll_requests!diff_reverse_switched_moving_time_out,
-        Coll_requests!diff_moving_moving_time_out,
-        Coll_requests!diff_inconsistent_moving_time_out,
-        Coll_ports!diff_empty_port_out1,
-        Coll_switch_recovery_reverse_automata!port_out1_is_when_reverse_switch *)
-  <1>0 qed assumed (* by property Coll_requests!equal *) *)
+     qed assumed (* exhausted search space *)
+      (* by definition of tau, constr_tau, tau_p2 *)
+      (* hypothesis H1 *)
+      (* step <2>1 *)
+      (* property *)
+      (*   Coll_requests!diff_normal_switched_reverse_switched, *)
+      (*   Coll_requests!diff_normal_switched_moving, *)
+      (*   Coll_requests!diff_normal_switched_moving_time_out, *)
+      (*   Coll_requests!diff_reverse_switched_moving, *)
+      (*   Coll_requests!diff_reverse_switched_moving_time_out, *)
+      (*   Coll_requests!diff_moving_moving_time_out, *)
+      (*   Coll_requests!diff_inconsistent_moving_time_out, *)
+      (*   Coll_ports!diff_empty_port_out1, *)
+      (*   Coll_switch_recovery_reverse_automata!port_out1_is_when_reverse_switch *)
+  <1>0 qed assumed (* type error *) (* ASSUMED by step <1>1 property Coll_requests!equal *)
   ;
 
 

@@ -301,7 +301,7 @@ species
               (St1!moving, a),
             p))) = St1!moving
 
-     assumed (* by property st_is_fst_fst_tau *)
+     by property st_is_fst_fst_tau
 
     <2>0 qed by step <2>1, <2>2 property Po!empty, Aut2!init_state
 

@@ -358,33 +358,34 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
   property inductive_reflexivity: inductive_property(!reflexive_prop);
 
 
-  proof of equal_reflexive = assumed (* ASSUMED
-ASSUMED    <1>1 prove all x : Self, !reflexive_prop(x)
-ASSUMED         <2>1 assume x : Self,
-ASSUMED              hypothesis B: !base_case(x),
-ASSUMED              prove !reflexive_prop(x)
-ASSUMED              by hypothesis B
-ASSUMED                 property A!equal_reflexive
-ASSUMED                 definition of equal, reflexive_prop
-ASSUMED         <2>2 assume x : Self,
-ASSUMED              hypothesis I: !inductive_case(x),
-ASSUMED              hypothesis R: !reflexive_prop(!inductive_second_term(x)),
-ASSUMED              prove reflexive_prop(x)
-ASSUMED              (** we prove under induction hypothesis R *)
-ASSUMED              <3>1 prove !equal(x, x)
-ASSUMED           <4>1 prove B!equal(!inductive_first_term(x),
-ASSUMED              !inductive_first_term(x))
-ASSUMED                         by property B!equal_reflexive
-ASSUMED                   <4>f qed by hypothesis I, R
-ASSUMED                               step <4>1
-ASSUMED                               property !case_exclusive
-ASSUMED                               definition of equal, reflexive_prop
-ASSUMED              <3>f qed assumed (* ASSUMED (parentheses mismatch) by step <3>1 definition of reflexive_prop property equal *)
-ASSUMED         <2>f qed assumed (* ASSUMED (higher-order) by step <2>1, <2>2 *)
+  proof of equal_reflexive =
+    <1>1 prove all x : Self, !reflexive_prop(x)
+         assumed (*
+         <2>1 assume x : Self,
+              hypothesis B: !base_case(x),
+              prove !reflexive_prop(x)
+              by hypothesis B
+                 property A!equal_reflexive
+                 definition of equal, reflexive_prop
+         <2>2 assume x : Self,
+              hypothesis I: !inductive_case(x),
+              hypothesis R: !reflexive_prop(!inductive_second_term(x)),
+              prove reflexive_prop(x)
+              (** we prove under induction hypothesis R *)
+              <3>1 prove !equal(x, x)
+           <4>1 prove B!equal(!inductive_first_term(x),
+              !inductive_first_term(x))
+                         by property B!equal_reflexive
+                   <4>f qed by hypothesis I, R
+                               step <4>1
+                               property !case_exclusive
+                               definition of equal, reflexive_prop
+              <3>f qed by step <3>1 definition of reflexive_prop property equal
+         <2>f qed assumed (* ASSUMED (higher-order) by step <2>1, <2>2 *)
 (* ASSUMED                     definition of inductive_property *)
-ASSUMED                     (* the automagic *)
-(* ASSUMED                     property !inductive_reflexivity *)
-ASSUMED    <1>f qed by step <1>1 definition of reflexive_prop property equal *);
+                     (* the automagic *)
+(* ASSUMED                     property !inductive_reflexivity *) *)
+    <1>f qed by step <1>1 definition of reflexive_prop property equal;
 
 
   logical let symmetry_prop(x) = all y : Self,

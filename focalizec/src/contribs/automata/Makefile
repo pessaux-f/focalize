@@ -21,7 +21,7 @@ ROOT_DIR=../../../..
 SRC_DIR=$(ROOT_DIR)/focalizec/src
 
 include $(ROOT_DIR)/Makefile.common
-LIB_INSTALL_DIR=$(LIB_DIR)/automata
+INSTALL_LIB_DIR=$(LIB_DIR)/automata
 
 STDLIB_DIR=$(SRC_DIR)/stdlib
 
@@ -115,28 +115,46 @@ install:
 	@$(MKDIR) $(INSTALL_LIB_DIR) &&\
 	if [ "$(FOCALIZE_FOS)" != "" ] ; then\
 	  echo "Installing (FoCaLize) compiled certified libs." &&\
-	  $(CP) $(FOCALIZE_FOS) $(INSTALL_LIB_DIR)/\
+	  $(CP) $(FOCALIZE_FOS) $(INSTALL_LIB_DIR)/;\
+	fi &&\
+	if [ "$(FOCALIZE_FOS_UNSAFE)" != "" ] ; then\
+	  echo "Installing (FoCaLize) compiled non-certified libs." &&\
+	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(INSTALL_LIB_DIR)/;\
+	fi &&\
+	if [ "$(FOCALIZE_CMIS)" != "" ] ; then\
+	  echo "Installing (Ocaml interface) compiled certified libs." &&\
+	  $(CP) $(FOCALIZE_CMIS) $(INSTALL_LIB_DIR)/;\
+	fi &&\
+	if [ "$(FOCALIZE_CMIS_UNSAFE)" != "" ] ; then\
+	  echo "Installing (Ocaml interface) compiled non-certified libs." &&\
+	  $(CP) $(FOCALIZE_CMIS_UNSAFE) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BYT_OBJS) $(INSTALL_LIB_DIR)/\
+	  $(CP) $(FOCALIZE_BYT_OBJS) $(INSTALL_LIB_DIR)/;\
+	fi &&\
+	if [ "$(FOCALIZE_BYT_OBJS_UNSAFE)" != "" ] ; then\
+	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BIN_OBJS) $(INSTALL_LIB_DIR)/\
+	  $(CP) $(FOCALIZE_BIN_OBJS) $(INSTALL_LIB_DIR)/;\
+	fi &&\
+	if [ "$(FOCALIZE_BIN_OBJS_UNSAFE)" != "" ] ; then\
+	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_VOS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_VOS) $(INSTALL_LIB_DIR)/\
+	  $(CP) $(FOCALIZE_VOS) $(INSTALL_LIB_DIR)/;\
+	fi &&\
+	if [ "$(EXTERNAL_CMIS)" != "" ] ; then\
+	  $(CP) $(EXTERNAL_CMIS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then\
-	  $(CP) $(EXTERNAL_BYT_OBJS) $(INSTALL_LIB_DIR)/\
+	  $(CP) $(EXTERNAL_BYT_OBJS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(EXTERNAL_BIN_OBJS)" != "" ] ; then\
-	  $(CP) $(EXTERNAL_BIN_OBJS) $(INSTALL_LIB_DIR)/\
+	  $(CP) $(EXTERNAL_BIN_OBJS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(EXTERNAL_VOS)" != "" ] ; then\
-	  $(CP) $(EXTERNAL_VOS) $(INSTALL_LIB_DIR)/\
-	fi &&\
-	if [ "$(EXTERNAL_DKOS)" != "" ] ; then\
-	  $(CP) $(EXTERNAL_DKOS) $(INSTALL_LIB_DIR)/\
+	  $(CP) $(EXTERNAL_VOS) $(INSTALL_LIB_DIR)/;\
 	fi
 
 clean:

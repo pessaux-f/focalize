@@ -68,7 +68,7 @@ species Ring =
   <1>2 conclude
   ;
 
-  proof of zero_right_absorbes = assumed (*
+  proof of zero_right_absorbes =
   <1>1 assume x : Self,
        prove !equal (!mult (x, !zero), !zero)
    <2>0 prove !equal (!mult (x, !plus (!zero, !one)), x)
@@ -108,7 +108,7 @@ species Ring =
    <2>9 qed
        by step <2>8
           property zero_is_neutral, equal_transitive, equal_symmetric
-  <1>2 conclude *)
+  <1>2 conclude
   ;
 
 end
