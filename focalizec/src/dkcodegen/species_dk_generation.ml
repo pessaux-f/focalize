@@ -3803,19 +3803,19 @@ let apply_collection_generator_to_parameters ctx env formal_to_effective_map
     {b Rem} : Not exported outside this module.                               *)
 (* ************************************************************************** *)
 let print_implemented_species_as_dk_module ~current_unit out_fmter
-    impl_species_name =
+    impl_species_name ?(prefix = "") =
   match impl_species_name.Parsetree.ast_desc with
    | Parsetree.I_local vname
    | Parsetree.I_global (Parsetree.Vname vname) ->
        (* Local species, so no need to find it in another Dk "file-module". *)
-       Format.fprintf out_fmter "%s" (Parsetree_utils.name_of_vname vname)
+       Format.fprintf out_fmter "%s%s" prefix (Parsetree_utils.name_of_vname vname)
    | Parsetree.I_global (Parsetree.Qualified (fname, vname)) ->
        (* If the specified module name is the current compilation unit,  *)
        (* then again no need to find the species's module in another Dk *)
        (* "file-module" otherwise we explicitely prefix by the module    *)
        (* name corresponding to the filename.                            *)
        if fname <> current_unit then Format.fprintf out_fmter "%s." fname;
-       Format.fprintf out_fmter "%s" (Parsetree_utils.name_of_vname vname)
+       Format.fprintf out_fmter "%s%s" prefix (Parsetree_utils.name_of_vname vname)
 ;;
 
 
@@ -3930,11 +3930,11 @@ let make_collection_effective_methods ctx env implemented_species_name
       | Env.TypeInformation.SF_theorem (_, n, _, _, _, _)
       | Env.TypeInformation.SF_let (_, n, _, _, _, _, _, _) ->
           Format.fprintf out_fmter
-            "@[<2>def %a__%a :=@ @[<1>(proj_"
+            "@[<2>def %a__%a :=@ @[<1>("
             Sourcify.pp_vname species_name
             Parsetree_utils.pp_vname_with_operators_expanded n ;
           print_implemented_species_as_dk_module
-            ~current_unit out_fmter implemented_species_name;
+            ~current_unit out_fmter implemented_species_name ~prefix:"proj_";
           Format.fprintf out_fmter "__rf_%a@ "
             Parsetree_utils.pp_vname_with_operators_expanded n;
           (* Apply to the instanciations of the parameters carriers. *)
