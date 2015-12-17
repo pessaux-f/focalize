@@ -2454,18 +2454,16 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          Parsetree_utils.pp_vname_with_operators_expanded name;
 
 
-       let rec print_list_param_with_type sep out = function
+       let rec print_list_param sep out = function
          | [] -> ()
          | [(a, ty)] ->
-            Format.fprintf out "%a : cc.eT (%a)"
+            Format.fprintf out "%a"
               Parsetree_utils.pp_vname_with_operators_expanded a
-              (Dk_pprint.pp_type_simple_to_dk new_print_ctx) ty
          | (a, ty) :: l ->
-            Format.fprintf out "%a : cc.eT (%a) %s@ %a"
+            Format.fprintf out "%a%s@ %a"
               Parsetree_utils.pp_vname_with_operators_expanded a
-              (Dk_pprint.pp_type_simple_to_dk new_print_ctx) ty
               sep
-              (print_list_param_with_type sep) l
+              (print_list_param sep) l
        in
 
        (* Generate the recursive function. *)
@@ -2479,7 +2477,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
                  ai.Env.TypeInformation.ad_dependencies_from_parameters
                  generated_fields);
 
-       print_list_param_with_type "," out_fmter params_with_type;
+       print_list_param "," out_fmter params_with_type;
 
        Format.fprintf out_fmter "] %a__rec_%a"
          Parsetree_utils.pp_vname_with_operators_expanded species_name

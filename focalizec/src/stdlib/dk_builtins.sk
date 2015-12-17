@@ -21,7 +21,7 @@ unit : cc.uT.
 tt : cc.eT unit.
 
 def call_by_value_unit : R : cc.uT -> (cc.eT unit -> cc.eT R) -> cc.eT unit -> cc.eT R.
-[ R : cc.uT, f : cc.eT unit -> cc.eT R ]
+[R,f]
     call_by_value_unit R f tt --> f tt.
 
 (; Float ;)

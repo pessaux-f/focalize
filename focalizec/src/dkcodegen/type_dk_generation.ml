@@ -68,7 +68,7 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_comma
     print_ctx out_fmter tys =
   List.iter
     (fun ty ->
-      Format.fprintf out_fmter "%a : cc.uT,@ "
+      Format.fprintf out_fmter "%a,@ "
         (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
     tys
 ;;
@@ -331,14 +331,12 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                       if (sum_cstr_name = curr_sum_cstr_name) then
                         begin
                           Format.fprintf out_fmter
-                          "[%a%aRet_type : cc.uT,@ pattern : (@[%acc.eT Ret_type@]),@ default : cc.eT Ret_type] %smatch__%a@ %aRet_type@ (%a@ %a@ %a)@ pattern@ default -->@ pattern%a.@\n"
+                          "[%a%aRet_type,@ pattern,@ default] %smatch__%a@ %aRet_type@ (%a@ %a@ %a)@ pattern@ default -->@ pattern%a.@\n"
                           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas print_ctx)
                           type_def_params
-                          (fun out -> List.iteri (fun i -> Format.fprintf out "x_%d_ : cc.eT (%a),@ "
-                                                       i
-                                                       (Dk_pprint.pp_type_simple_to_dk print_ctx)))
+                          (fun out ->
+                           List.iteri (fun i _ -> Format.fprintf out "x_%d_,@ " i))
                           cstr_args
-                          (print_types_parameters_with_arrows print_ctx) cstr_args
                           qualif
                           Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name
                           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
@@ -352,14 +350,12 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                           cstr_args;
                         end else begin
                           Format.fprintf out_fmter
-                          "[%a%aRet_type : cc.uT,@ pattern : (@[%acc.eT Ret_type@]),@ default : cc.eT Ret_type] %smatch__%a@ %aRet_type@ (%a@ %a@ %a)@ pattern@ default -->@ default.@\n"
+                          "[%a%aRet_type,@ pattern,@ default] %smatch__%a@ %aRet_type@ (%a@ %a@ %a)@ pattern@ default -->@ default.@\n"
                           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas print_ctx)
                           type_def_params
-                          (fun out -> List.iteri (fun i -> Format.fprintf out "x_%d_ : cc.eT (%a),@ "
-                                                       i
-                                                       (Dk_pprint.pp_type_simple_to_dk print_ctx)))
+                          (fun out ->
+                           List.iteri (fun i _ -> Format.fprintf out "x_%d_,@ " i))
                           curr_cstr_args
-                          (print_types_parameters_with_arrows print_ctx) cstr_args
                           qualif
                           Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name
                           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
@@ -420,13 +416,9 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
            Format.fprintf out_fmter "@[[";
            print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas
              print_ctx out_fmter type_def_params;
-           Format.fprintf out_fmter "R : cc.uT, f : cc.eT (@[<1>%a__t%a@]) ->@ cc.eT R"
-                          Parsetree_utils.pp_vname_with_operators_expanded type_def_name
-                          (print_types_parameters_with_spaces print_ctx) type_def_params;
+           Format.fprintf out_fmter "R,@ f";
            List.iteri
-             (fun i -> Format.fprintf out_fmter ",@ x_%d_ : cc.eT (%a)"
-                                   i
-                                   (Dk_pprint.pp_type_simple_to_dk print_ctx))
+             (fun i _ -> Format.fprintf out_fmter ",@ x_%d_" i)
              cstr_args;
            Format.fprintf out_fmter "] call_by_value_%a__t@ "
                           Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
