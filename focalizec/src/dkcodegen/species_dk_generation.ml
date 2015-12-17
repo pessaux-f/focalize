@@ -481,7 +481,7 @@ let generate_field_definition_prelude ~in_section ?sep ?without_types ctx print_
        val_printing out;
        (match sep with
         | None -> Format.fprintf out ")"
-        | Some sep -> Format.fprintf out " %s@ " sep)
+        | Some _ -> Format.fprintf out " =>@ " ) (* Force the "=>" separator (instead of "->") for Sukerujo let binding. *)
     | Some _ -> ()               (* Defined arguments are not printed
                                    when without_types is given because
                                    without_types is used for listing parameters
@@ -2477,6 +2477,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
 
        ignore (generate_field_definition_prelude
                  ~in_section: false ~sep: "," ctx' print_ctx env
+                 ~without_types: true
                  ai.Env.TypeInformation.ad_min_dk_env
                  ai.Env.TypeInformation.ad_used_species_parameter_tys
                  ai.Env.TypeInformation.ad_dependencies_from_parameters
@@ -2522,7 +2523,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        Format.fprintf out_fmter ").@]@\n";
 
        (* Generate the CBV version. *)
-       Format.fprintf out_fmter "@[<2>[] %a__%a -->@ "
+       Format.fprintf out_fmter "@[<2>[] %a__%a -->@ ("
          Parsetree_utils.pp_vname_with_operators_expanded species_name
          Parsetree_utils.pp_vname_with_operators_expanded name;
 
@@ -2575,7 +2576,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        print_cbv [] out_fmter (List.rev params_with_type);
 
        (* Close the pretty print box. *)
-       Format.fprintf out_fmter ".@]@\n" ;
+       Format.fprintf out_fmter ").@]@\n" ;
        let compiled = {
          Misc_common.cfm_is_logical = false ;
          Misc_common.cfm_from_species = from ;
