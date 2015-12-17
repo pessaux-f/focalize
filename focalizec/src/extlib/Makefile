@@ -25,16 +25,7 @@ include $(ROOT_DIR)/Makefile.common
 
 lib: all
 
-byt bin:
-	@for i in $(SUB_DIRS); do\
-	  echo "--> $$i ..." &&\
-	  ($(CD) $$i && $(MAKE) all);\
-	  err=$$?;\
-	  echo "<-- $$i [$$err]" &&\
-	  case $$err in 0);; *) exit $$err;; esac;\
-	done
-
-clean doc depend install:
+byt bin clean doc depend install:
 	@for i in $(SUB_DIRS); do\
 	  echo "--> $$i ..." &&\
 	  ($(CD) $$i && $(MAKE) $@);\
