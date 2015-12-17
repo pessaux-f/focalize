@@ -2415,48 +2415,44 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
           (call_by_value_Ti T f v) rewrites to (f v).
         *)
 
+       (* Define the type of both symbols *)
+       Format.fprintf out_fmter
+         "@[<2>def %a__%a_type@ : Type := ("
+         Parsetree_utils.pp_vname_with_operators_expanded species_name
+         Parsetree_utils.pp_vname_with_operators_expanded name;
+
+       ignore (generate_field_definition_prelude
+                 ~in_section: false ~sep: "->" ctx' print_ctx env
+                 ai.Env.TypeInformation.ad_min_dk_env
+                 ai.Env.TypeInformation.ad_used_species_parameter_tys
+                 ai.Env.TypeInformation.ad_dependencies_from_parameters
+                 generated_fields);
+
+       List.iter
+         (fun (_, ty) ->
+          Format.fprintf out_fmter "cc.eT (%a) ->@ "
+            (Dk_pprint.pp_type_simple_to_dk new_print_ctx) ty)
+         params_with_type;
+
+       Format.fprintf out_fmter "cc.eT (%a)).@]@\n"
+         (Dk_pprint.pp_type_simple_to_dk new_print_ctx) return_ty ;
+
+
        (* Declare both symbols *)
        Format.fprintf out_fmter
-         "@[<2>def %a__rec_%a@ : "
+         "@[<2>def %a__rec_%a@ : %a__%a_type.@]@\n"
+         Parsetree_utils.pp_vname_with_operators_expanded species_name
+         Parsetree_utils.pp_vname_with_operators_expanded name
          Parsetree_utils.pp_vname_with_operators_expanded species_name
          Parsetree_utils.pp_vname_with_operators_expanded name;
-
-       ignore (generate_field_definition_prelude
-                 ~in_section: false ~sep: "->" ctx' print_ctx env
-                 ai.Env.TypeInformation.ad_min_dk_env
-                 ai.Env.TypeInformation.ad_used_species_parameter_tys
-                 ai.Env.TypeInformation.ad_dependencies_from_parameters
-                 generated_fields);
-
-       List.iter
-         (fun (_, ty) ->
-          Format.fprintf out_fmter "cc.eT (%a) ->@ "
-            (Dk_pprint.pp_type_simple_to_dk new_print_ctx) ty)
-         params_with_type;
-
-       Format.fprintf out_fmter "cc.eT (%a).@]@\n"
-         (Dk_pprint.pp_type_simple_to_dk new_print_ctx) return_ty ;
 
        Format.fprintf out_fmter
-         "@[<2>def %a__%a@ : "
+         "@[<2>def %a__%a@ : %a__%a_type.@]@\n"
+         Parsetree_utils.pp_vname_with_operators_expanded species_name
+         Parsetree_utils.pp_vname_with_operators_expanded name
          Parsetree_utils.pp_vname_with_operators_expanded species_name
          Parsetree_utils.pp_vname_with_operators_expanded name;
 
-       ignore (generate_field_definition_prelude
-                 ~in_section: false ~sep: "->" ctx' print_ctx env
-                 ai.Env.TypeInformation.ad_min_dk_env
-                 ai.Env.TypeInformation.ad_used_species_parameter_tys
-                 ai.Env.TypeInformation.ad_dependencies_from_parameters
-                 generated_fields);
-
-       List.iter
-         (fun (_, ty) ->
-          Format.fprintf out_fmter "cc.eT (%a) ->@ "
-            (Dk_pprint.pp_type_simple_to_dk new_print_ctx) ty)
-         params_with_type;
-
-       Format.fprintf out_fmter "cc.eT (%a).@]@\n"
-         (Dk_pprint.pp_type_simple_to_dk new_print_ctx) return_ty ;
 
        let rec print_list_param_with_type sep out = function
          | [] -> ()
