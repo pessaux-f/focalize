@@ -107,8 +107,10 @@ let pair_cident =
   Parsetree_utils.make_ast pair_cident_desc
 ;;
 
+
+(* Check that the constructor has a Dedukti mapping if it is external. *)
 let generate_constructor_ident_for_method_generator ctx env cstr_expr =
-  if cstr_expr = pair_cident then 2 else
+  if cstr_expr = pair_cident then () else
     (begin
         let mapping_info =
           try
@@ -138,10 +140,7 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
                raise
                  (Externals_generation_errs.No_external_constructor_def
                     ("Dk", cstr_expr))
-        )) ;
-        (* Always returns the number of type arguments that must be printed
-       after the constructor. *)
-        mapping_info.Env.DkGenInformation.cmi_num_polymorphics_extra_args
+        ))
       end)
 ;;
 
@@ -192,10 +191,7 @@ let generate_record_label_for_method_generator ctx env label =
               (Externals_generation_errs.No_external_field_def
                  ("Dk", label)) in
         (* Now directly generate the name the label is mapped onto. *)
-        Format.fprintf ctx.Context.scc_out_fmter "%s" dk_binding) ;
-    (* Always returns the number of type arguments that must be printed
-       after the label. *)
-    mapping_info.Env.DkGenInformation.lmi_num_polymorphics_extra_args
+        Format.fprintf ctx.Context.scc_out_fmter "%s" dk_binding)
   with _ ->
     (* Since in Dk all the record labels must be inserted in the generation
        environment, if we don't find the label, then we were wrong
@@ -347,15 +343,12 @@ let generate_pattern ctx dkctx env pattern
         Format.fprintf out_fmter "@[<1>%smatch__%a"
                        pattern_file_name
                        Sourcify.pp_vname pattern_vname;
-        (* Now polymorphic variables *)
-        (* Number of polymorphic variables *)
-        let extras =
-           generate_constructor_ident_for_method_generator ctx env cident
-        in
+        (* Now check that the constructor has a Dedukti mapping *)
+        generate_constructor_ident_for_method_generator ctx env cident;
         (begin
             match pat.Parsetree.ast_type with
             | Parsetree.ANTI_type t ->
-               Dk_pprint.pp_type_simple_args_to_dk dkctx out_fmter t extras
+               Dk_pprint.pp_type_simple_args_to_dk dkctx out_fmter t
             | _ ->
                Format.fprintf out_fmter "(unknown_pattern_type %a)"
                               Parsetree_utils.pp_vname_with_operators_expanded
@@ -1059,13 +1052,11 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
      | Parsetree.E_constr (cstr_ident, args) ->
          Format.fprintf out_fmter "@[<1>(%a"
            print_constr_ident cstr_ident;
-         let extras =
-           generate_constructor_ident_for_method_generator ctx env cstr_ident
-         in
+         generate_constructor_ident_for_method_generator ctx env cstr_ident;
          (* Add the type arguments of the constructor. *)
          begin match expression.Parsetree.ast_type with
          | Parsetree.ANTI_type t ->
-             Dk_pprint.pp_type_simple_args_to_dk print_ctx out_fmter t extras
+             Dk_pprint.pp_type_simple_args_to_dk print_ctx out_fmter t
          | _ -> assert false
          end;
          begin match args with
@@ -1138,13 +1129,12 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
      | Parsetree.E_record_access (expr, label) -> (
          rec_generate_expr loc_idents env expr ;
          Format.fprintf out_fmter ".@[<2>(" ;
-         let extras =
-           generate_record_label_for_method_generator ctx env label in
+         generate_record_label_for_method_generator ctx env label;
          (* Add the type arguments of the ***record type***, not the full
             expression type. *)
          (match expr.Parsetree.ast_type with
          | Parsetree.ANTI_type t ->
-             Dk_pprint.pp_type_simple_args_to_dk print_ctx out_fmter t extras
+             Dk_pprint.pp_type_simple_args_to_dk print_ctx out_fmter t
          | _ -> assert false) ;
          Format.fprintf out_fmter ")@]"
         )

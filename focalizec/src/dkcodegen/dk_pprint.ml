@@ -19,6 +19,8 @@ type dk_print_context = {
 } ;;
 
 
+exception Can_only_print_type_arguments_of_sum_types of Types.type_simple_view;;
+
 let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
      purge_type_simple_to_dk_variable_mapping, has_cbv, pp_for_cbv_type_simple_to_dk
      (* DEBUG
@@ -253,7 +255,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
 
 
 
-  and rec_pp_to_dk_args ctx ppf t n =
+  and rec_pp_to_dk_args ctx ppf t =
     match t with
     | Types.ST_construct (_, arg_tys) ->
        Format.fprintf ppf " %a" (Handy.pp_generic_separated_list ""
@@ -262,14 +264,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
        List.iter (fun t -> Format.fprintf ppf "@ %a"
                                        (rec_pp_to_dk ctx 0) t)
                  l
-    | t ->
-       (* In Dedukti, we cannot print underscores
-          instead of inferable type variables.
-          Printing the type will not be satisfactory,
-          it may be replaced by an error.
-        *)
-       Format.fprintf ppf "@ %a (; from %d underscores ;)"
-                      (rec_pp_to_dk ctx 0) t n
+    | t -> raise (Can_only_print_type_arguments_of_sum_types t)
   in
 
   let has_cbv ty =
@@ -329,7 +324,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
    (* pp_type_variable_to_dk *)
    (fun ppf ty_var -> internal_pp_var_to_dk ppf ty_var),
    (* pp_type_simple_args_to_dk *)
-   (fun ctx ppf ty n -> rec_pp_to_dk_args ctx ppf (Types.view_type_simple ty) n),
+   (fun ctx ppf ty -> rec_pp_to_dk_args ctx ppf (Types.view_type_simple ty)),
    (* purge_type_simple_to_dk_variable_mapping *)
    (fun () -> reset_type_variables_mapping_to_dk ()),
    (* has_cbv *)

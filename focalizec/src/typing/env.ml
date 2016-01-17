@@ -1364,24 +1364,17 @@ module DkGenInformation = struct
     cgi_generator_parameters : collection_generator_parameters
   }
 
-  (** In Dk generation environment ALL the sum types value constructors are
-      entered in the environment because we always need to know their number
-      of extra leading "_" due to polymorphics. If the constructor does not
-      have an external mapping, we simply put "None" in the field
-      [cmi_external_translation]. *)
+  (** In Dk generation environment ALL the sum types value
+      constructors are entered in the environment. If the constructor
+      does not have an external mapping, we simply put "None" in the
+      field [cmi_external_translation]. *)
   type constructor_mapping_info = {
-    (** The number of extra argument the constructor has due to its
-        polymorphism. *)
-    cmi_num_polymorphics_extra_args : int ;
     cmi_external_translation : Parsetree.external_translation_desc option
     }
 
   (** The list of mappings according to external languages to know to which
       string the record type field name corresponds. *)
   type label_mapping_info = {
-    (** The number of extra argument the label has due to its
-        polymorphism. *)
-    lmi_num_polymorphics_extra_args : int ;
     lmi_external_translation : Parsetree.external_translation_desc option
   }
 

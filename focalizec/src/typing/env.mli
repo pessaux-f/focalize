@@ -320,12 +320,10 @@ module DkGenInformation :
     }
 
     type constructor_mapping_info = {
-      cmi_num_polymorphics_extra_args : int ;
       cmi_external_translation : Parsetree.external_translation_desc option
     }
 
     type label_mapping_info = {
-      lmi_num_polymorphics_extra_args : int ;
       lmi_external_translation : Parsetree.external_translation_desc option
     }
 

@@ -100,10 +100,7 @@ let print_types_parameters_with_spaces print_ctx out_fmter tys =
     tys
 ;;
 
-(** [nb_extra_args] : the number of extra argument of type "Set" used to
-     represent the polymorphism in case where the constructor belongs to a
-     polymorphic type. *)
-let extend_dk_gen_env_with_type_external_mapping env nb_extra_args
+let extend_dk_gen_env_with_type_external_mapping env
     external_mapping =
   let rec rec_extend rec_env = function
     | [] -> rec_env
@@ -114,16 +111,12 @@ let extend_dk_gen_env_with_type_external_mapping env nb_extra_args
            | Parsetree.Vlident _ ->
                (* Starting by a lowercase letter means record field name. *)
                let label_mapping_info = {
-                 Env.DkGenInformation.lmi_num_polymorphics_extra_args =
-                   nb_extra_args ;
                  Env.DkGenInformation.lmi_external_translation =
                    Some external_translation.Parsetree.ast_desc } in
                Env.DkGenEnv.add_label bound_name label_mapping_info rec_env
            | Parsetree.Vuident _ | Parsetree.Viident _ | Parsetree.Vpident _ ->
                (* Starting by an uppercase letter means sum constructor. *)
                let cstr_mapping_info = {
-                 Env.DkGenInformation.cmi_num_polymorphics_extra_args =
-                   nb_extra_args ;
                  Env.DkGenInformation.cmi_external_translation =
                    Some external_translation.Parsetree.ast_desc } in
                Env.DkGenEnv.add_constructor
@@ -183,9 +176,6 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
   let type_def_params = type_descr.Env.TypeInformation.type_params in
   let (_, tydef_body) =
     Types.scheme_split type_descr.Env.TypeInformation.type_identity in
-  (* Compute the number of extra polymorphic-induced arguments to the
-     constructor. *)
-  let nb_extra_args = List.length type_def_params in
   (* Now, generates the type definition's body. *)
   match type_descr.Env.TypeInformation.type_kind with
    | Env.TypeInformation.TK_abstract ->
@@ -234,7 +224,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
           what to map them when we will see them. *)
        let env_with_external_mapping =
          extend_dk_gen_env_with_type_external_mapping
-           env nb_extra_args external_mapping in
+           env external_mapping in
        if not as_zenon_fact then
          (* Finally add the type definition in the returned environment. *)
          Env.DkGenEnv.add_type
@@ -461,9 +451,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
              (fun accu_env (sum_cstr_name, _, _) ->
                Env.DkGenEnv.add_constructor
                  sum_cstr_name
-                 { Env.DkGenInformation.cmi_num_polymorphics_extra_args =
-                     nb_extra_args ;
-                   Env.DkGenInformation.cmi_external_translation = None }
+                 { Env.DkGenInformation.cmi_external_translation = None }
                  accu_env)
              env
              sum_constructors_to_print in
@@ -529,9 +517,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
              (fun accu_env (label_name, _, _) ->
                Env.DkGenEnv.add_label
                  label_name
-                 { Env.DkGenInformation.lmi_num_polymorphics_extra_args =
-                     nb_extra_args ;
-                   Env.DkGenInformation.lmi_external_translation = None }
+                 { Env.DkGenInformation.lmi_external_translation = None }
                  accu_env)
              env
              record_fields_to_print in
