@@ -11,16 +11,6 @@
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
-(* ************************************************************************** *)
-(** {b Descr}: Code generation for *one* let binding, recursive of not.
-    If the binding is recursive, then whatever the choosen Dk primitive ("fix"
-    or "Fixpoint"),
-    This function is called by [Main_dk_generation.toplevel_let_def_compile]
-    to generate code for toplevel definitions and by [let_in_def_compile] to
-    generate code for local definitions.
-
-    {b Visibility}: Exported outside this module.                             *)
-(* ************************************************************************** *)
 
 type let_binding_pre_computation = {
   lbpc_value_body : Env.DkGenInformation.value_body ;
