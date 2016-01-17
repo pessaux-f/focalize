@@ -38,16 +38,6 @@ val generate_expr :
   Env.DkGenEnv.t -> Parsetree.expr ->
   unit
 
-val let_binding_compile :
-  Context.species_compil_context ->
-  in_recursive_let_section_of: Parsetree.vname list ->
-  local_idents: Parsetree.vname list ->
-  self_methods_status: self_methods_status ->
-  recursive_methods_status: recursive_methods_status ->
-  rec_status:Env.DkGenInformation.rec_status -> toplevel: bool ->
-  Env.DkGenEnv.t -> Parsetree.binding -> let_binding_pre_computation ->
-    Env.DkGenEnv.t
-
 val pre_compute_let_bindings_infos_for_rec :
   rec_status:Env.DkGenInformation.rec_status -> toplevel:bool ->
   Env.DkGenEnv.t -> Parsetree.binding_desc Parsetree.ast list ->

@@ -68,7 +68,7 @@ let toplevel_let_def_compile ctx env let_def =
          (* The "let" construct should always at least bind one identifier ! *)
          assert false
      | ([one_bnd], [one_pre_comp_info]) ->
-         Expr_dk_generation.let_binding_compile
+         Species_record_type_dk_generation.let_binding_compile
            ctx ~local_idents: []
            ~in_recursive_let_section_of
            (* Or whatever since "Self" does not exist anymore. *)
@@ -79,7 +79,7 @@ let toplevel_let_def_compile ctx env let_def =
         (first_pre_comp_info :: next_pre_comp_infos)) ->
          let accu_env =
            ref
-             (Expr_dk_generation.let_binding_compile
+             (Species_record_type_dk_generation.let_binding_compile
                 ctx ~local_idents: []
                 ~in_recursive_let_section_of
                 (* Or whatever since "Self" does not exist anymore. *)
@@ -93,7 +93,7 @@ let toplevel_let_def_compile ctx env let_def =
            (fun binding pre_comp_info ->
              Format.fprintf out_fmter "@]@\n@[<2>" ;
              accu_env :=
-               Expr_dk_generation.let_binding_compile
+               Species_record_type_dk_generation.let_binding_compile
                  ctx ~local_idents: []
                  ~in_recursive_let_section_of
                  (* Or whatever since "Self" does not exist anymore. *)
