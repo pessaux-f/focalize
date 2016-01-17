@@ -196,7 +196,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
              (fun accu_env vname ->
                Env.DkGenEnv.add_value
                  ~toplevel: None vname
-                 (0, Env.DkGenInformation.VB_non_toplevel) accu_env)
+                 Env.DkGenInformation.VB_non_toplevel accu_env)
              env
              vnames in
          rec_generate_logical_expr loc_idents' env' logical_expr ;

@@ -211,7 +211,7 @@ let toplevel_compile env ~current_unit out_fmter = function
       let env' = toplevel_let_def_compile ctx env let_def in
       Format.fprintf out_fmter ".@\n@\n" ;
       env'
-  | Infer.PCM_theorem (theorem_def, found_type_variables) ->
+  | Infer.PCM_theorem (theorem_def, _) ->
       Dk_pprint.purge_type_simple_to_dk_variable_mapping () ;
       let ctx = {
         Context.scc_current_unit = current_unit ;
@@ -235,11 +235,10 @@ let toplevel_compile env ~current_unit out_fmter = function
          [toplevel_theorem_compile].
          We need to bind the theorem's ident to a [VB_toplevel_property] and
          determine the number of polymorphic type variables it has. *)
-      let num_vars = List.length found_type_variables in
       let env_binding =
-        (num_vars,
-         Env.DkGenInformation.VB_toplevel_property
-           theorem_def.Parsetree.ast_desc.Parsetree.th_stmt) in
+        Env.DkGenInformation.VB_toplevel_property
+          theorem_def.Parsetree.ast_desc.Parsetree.th_stmt
+      in
       (* Return the extended environmenent. *)
       Env.DkGenEnv.add_value
         ~toplevel: (Some theorem_def.Parsetree.ast_loc)

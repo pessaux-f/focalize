@@ -1433,12 +1433,7 @@ module DkGenInformation = struct
          Parsetree.binding_body)
     | VB_toplevel_property of Parsetree.logical_expr
 
-  type value_mapping_info = (int * (** The number of polymorphic type variables
-                                       in the scheme of the ident. This will
-                                       lead to extra "_" following the ident
-                                       when it is used in applicative
-                                       position. *)
-                             value_body) (** The expression bound to the
+  type value_mapping_info = value_body (** The expression bound to the
                                              ident. *)
 
 
@@ -2622,7 +2617,7 @@ module DkGenEMAccess = struct
     let values_bucket =
       List.map
         (fun { mi_name = field_name } ->
-          (field_name, (BO_absolute (0, DkGenInformation.VB_non_toplevel))))
+          (field_name, (BO_absolute (DkGenInformation.VB_non_toplevel))))
         meths_info in
     { constructors = []; labels = []; types = []; values = values_bucket;
       species = [] }

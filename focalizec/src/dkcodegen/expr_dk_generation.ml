@@ -24,7 +24,6 @@
 
 type let_binding_pre_computation = {
   lbpc_value_body : Env.DkGenInformation.value_body ;
-  lbpc_nb_polymorphic_args : int ;
   lbpc_params_with_type : (Parsetree.vname * Types.type_simple option) list ;
   lbpc_result_ty : Types.type_simple option ;
   lbpc_generalized_vars : Types.type_variable list
@@ -673,10 +672,6 @@ let pre_compute_let_binding_info_for_rec env bd ~rec_status ~toplevel =
   let (params_with_type, result_ty, generalized_vars) =
     MiscHelpers.bind_parameters_to_types_from_type_scheme
       ~self_manifest: None (Some def_scheme) params_names in
-  (* Record NOW in the environment the number of extra arguments due to
-     polymorphism the current bound ident has in case of recursive definition.
-     Otherwise, it will only be done later. *)
-  let nb_polymorphic_args = List.length generalized_vars in
   let value_body =
     if not toplevel then Env.DkGenInformation.VB_non_toplevel
     else
@@ -690,12 +685,11 @@ let pre_compute_let_binding_info_for_rec env bd ~rec_status ~toplevel =
           if toplevel then Some bd.Parsetree.ast_loc else None in
         Env.DkGenEnv.add_value
           ~toplevel: toplevel_loc bd.Parsetree.ast_desc.Parsetree.b_name
-          (nb_polymorphic_args, value_body) env
+          value_body env
     | Env.DkGenInformation.RC_non_rec -> env) in
   (env',
    { lbpc_value_body = value_body ;
      lbpc_params_with_type = params_with_type ;
-     lbpc_nb_polymorphic_args = nb_polymorphic_args ;
      lbpc_result_ty = result_ty ;
      lbpc_generalized_vars = generalized_vars })
 ;;
@@ -783,29 +777,28 @@ let generate_expr ctx ~in_recursive_let_section_of ~local_idents
           | Parsetree.ANTI_none | Parsetree.ANTI_irrelevant
           | Parsetree.ANTI_scheme _ -> assert false
           | Parsetree.ANTI_type t -> t) in
-       let (nb_polymorphic_args, id_type_scheme) =
+       let id_type_scheme =
          try
-           let (nb, vb) =
+           let vb =
              (Env.DkGenEnv.find_value
                 ~loc: ident.Parsetree.ast_loc
                 ~current_unit: ctx.Context.scc_current_unit
                 ~current_species_name ident env) in
-           (nb, match vb with
+           (match vb with
              | Env.DkGenInformation.VB_toplevel_let_bound (_, _, ts, _) -> Some ts
              | Env.DkGenInformation.VB_non_toplevel
-             | Env.DkGenInformation.VB_toplevel_property _ -> None
-           )
+             | Env.DkGenInformation.VB_toplevel_property _ -> None)
          with
            (* If the identifier was not found, then it was may be a local
                 identifier bound by a pattern. Then we can safely ignore it. *)
-           Env.Unbound_identifier (_, _) -> (0, None)
+           Env.Unbound_identifier (_, _) -> None
        in
-       assert (nb_polymorphic_args =
+       let nb_polymorphic_args =
          match id_type_scheme with
          | Some ts ->
             let (l, _) = Types.scheme_split ts in List.length l
          | None -> 0
-              );
+       in
 
        (* If some extra "_" are needed, then enclose the whole expression
             between parens (was bug #50). *)

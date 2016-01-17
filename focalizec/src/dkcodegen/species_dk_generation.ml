@@ -1091,7 +1091,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
          Some
            (Parsetree_utils.name_of_vname
               (snd ctx.Context.scc_current_species)) in
-       let (_, value_body) =
+       let value_body =
          Env.DkGenEnv.find_value
            ~loc: by_def_expr_ident.Parsetree.ast_loc
            ~current_unit: ctx.Context.scc_current_unit
@@ -1454,7 +1454,7 @@ let zenonify_by_property ctx print_ctx env min_dk_env
          Some
            (Parsetree_utils.name_of_vname
               (snd ctx.Context.scc_current_species)) in
-       let (_, value_body) =
+       let value_body =
          Env.DkGenEnv.find_value
            ~loc: by_prop_expr_ident.Parsetree.ast_loc
            ~current_unit: ctx.Context.scc_current_unit
@@ -2883,7 +2883,7 @@ let extend_env_for_species_def ~current_species env species_descr =
       (fun accu_env (m_name, _) ->
         (* Methods are trivially not toplevel bound idents. *)
         Env.DkGenEnv.add_value
-          ~toplevel: None m_name (0, Env.DkGenInformation.VB_non_toplevel)
+          ~toplevel: None m_name Env.DkGenInformation.VB_non_toplevel
           accu_env)
       env
       species_methods_names in

@@ -349,7 +349,7 @@ module DkGenInformation :
            Parsetree.binding_body)
       | VB_toplevel_property of Parsetree.logical_expr
 
-    type value_mapping_info = (int * value_body)
+    type value_mapping_info = value_body
 
     type type_info = TypeInformation.type_description
   end
