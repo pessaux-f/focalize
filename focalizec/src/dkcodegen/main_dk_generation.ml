@@ -54,7 +54,7 @@ let toplevel_let_def_compile ctx env let_def =
   (* Recover pre-compilation info and extended environment in case of
      recursivity for all the bindings. *)
   let (env, pre_comp_infos) =
-    Species_record_type_dk_generation.pre_compute_let_bindings_infos_for_rec
+    Expr_dk_generation.pre_compute_let_bindings_infos_for_rec
       ~rec_status ~toplevel: true env
       let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
   (* Now generate each bound definition. Remark that there is no local idents
@@ -68,39 +68,39 @@ let toplevel_let_def_compile ctx env let_def =
          (* The "let" construct should always at least bind one identifier ! *)
          assert false
      | ([one_bnd], [one_pre_comp_info]) ->
-         Species_record_type_dk_generation.let_binding_compile
+         Expr_dk_generation.let_binding_compile
            ctx ~local_idents: []
            ~in_recursive_let_section_of
            (* Or whatever since "Self" does not exist anymore. *)
-           ~self_methods_status: Species_record_type_dk_generation.SMS_from_record
-           ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
+           ~self_methods_status: Expr_dk_generation.SMS_from_record
+           ~recursive_methods_status: Expr_dk_generation.RMS_regular
            ~toplevel: true ~rec_status env one_bnd one_pre_comp_info
      | ((first_bnd :: next_bnds),
         (first_pre_comp_info :: next_pre_comp_infos)) ->
          let accu_env =
            ref
-             (Species_record_type_dk_generation.let_binding_compile
+             (Expr_dk_generation.let_binding_compile
                 ctx ~local_idents: []
                 ~in_recursive_let_section_of
                 (* Or whatever since "Self" does not exist anymore. *)
                 ~self_methods_status:
-                  Species_record_type_dk_generation.SMS_from_record
+                  Expr_dk_generation.SMS_from_record
                 ~recursive_methods_status:
-                  Species_record_type_dk_generation.RMS_regular
+                  Expr_dk_generation.RMS_regular
                 ~toplevel: true ~rec_status env first_bnd
                 first_pre_comp_info) in
          List.iter2
            (fun binding pre_comp_info ->
              Format.fprintf out_fmter "@]@\n@[<2>" ;
              accu_env :=
-               Species_record_type_dk_generation.let_binding_compile
+               Expr_dk_generation.let_binding_compile
                  ctx ~local_idents: []
                  ~in_recursive_let_section_of
                  (* Or whatever since "Self" does not exist anymore. *)
                  ~self_methods_status:
-                   Species_record_type_dk_generation.SMS_from_record
+                   Expr_dk_generation.SMS_from_record
                  ~recursive_methods_status:
-                   Species_record_type_dk_generation.RMS_regular
+                   Expr_dk_generation.RMS_regular
                  ~toplevel: true ~rec_status !accu_env binding pre_comp_info)
            next_bnds next_pre_comp_infos ;
          !accu_env
@@ -262,10 +262,10 @@ let toplevel_compile env ~current_unit out_fmter = function
         (* Empty, since not under a species. *)
         Context.scc_dependency_graph_nodes = [] ;
         Context.scc_out_fmter = out_fmter } in
-      Species_record_type_dk_generation.generate_expr
+      Expr_dk_generation.generate_expr
         ctx ~local_idents: [] ~in_recursive_let_section_of: []
-        ~self_methods_status: Species_record_type_dk_generation.SMS_from_record
-        ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
+        ~self_methods_status: Expr_dk_generation.SMS_from_record
+        ~recursive_methods_status: Expr_dk_generation.RMS_regular
         env expr ;
       Format.fprintf out_fmter ").@]@\n@\n" ;
       (* Nothing to extend the environment. *)

@@ -62,9 +62,9 @@ let print_method_type ctx print_ctx env param out_fmter meth_type_kind =
      Species_record_type_dk_generation.generate_logical_expr
        ctx ~in_recursive_let_section_of: [] ~local_idents: []
        ~self_methods_status:
-       (Species_record_type_dk_generation.SMS_from_param param)
+       (Expr_dk_generation.SMS_from_param param)
        ~recursive_methods_status:
-       Species_record_type_dk_generation.RMS_regular
+       Expr_dk_generation.RMS_regular
        env lexpr ;
      Format.fprintf out_fmter ")"
 ;;
@@ -95,7 +95,7 @@ type section_variable =
   | SVHyp of                                                   (* Hypothesis *)
       (* Whether the method is abstracted,
          gives the prefix and how to print the formula *)
-      Species_record_type_dk_generation.self_methods_status *
+      Expr_dk_generation.self_methods_status *
         Parsetree.vname *              (* Name of the hypothesis *)
         Parsetree.logical_expr *       (* Formula *)
         Context.species_compil_context (* Print context for the formula *)
@@ -356,13 +356,13 @@ let instanciate_parameters_through_inheritance ctx env field_memory =
                    Env.fh_inherited_along in
              (* We must now generate the Dedukti code for this FoCaL expression. *)
              Format.fprintf out_fmter "@ @[<1>(";
-             Species_record_type_dk_generation.generate_expr
+             Expr_dk_generation.generate_expr
                ctx ~local_idents: [] ~in_recursive_let_section_of: []
                (* Or whatever, "Self" will never appear at this point. *)
                ~self_methods_status:
-                 Species_record_type_dk_generation.SMS_abstracted
+                 Expr_dk_generation.SMS_abstracted
                ~recursive_methods_status:
-                 Species_record_type_dk_generation.RMS_regular
+                 Expr_dk_generation.RMS_regular
                env instancied_expr ;
              Format.fprintf out_fmter ")@]"
             )
@@ -555,7 +555,7 @@ let generate_field_definition_prelude ~in_section ?sep ?without_types ctx print_
                                  self_map ::
                                  new_ctx.Context.scc_collections_carrier_mapping } in
                 section_variable_list :=
-                  SVHyp (Species_record_type_dk_generation.SMS_from_param
+                  SVHyp (Expr_dk_generation.SMS_from_param
                            species_param_name,
                          meth,
                          lexpr,
@@ -592,10 +592,10 @@ let generate_field_definition_prelude ~in_section ?sep ?without_types ctx print_
                       new_ctx' ~in_recursive_let_section_of: []
                       ~local_idents: []
                       ~self_methods_status:
-                        (Species_record_type_dk_generation.SMS_from_param
+                        (Expr_dk_generation.SMS_from_param
                          species_param_name)
                       ~recursive_methods_status:
-                        Species_record_type_dk_generation.RMS_regular
+                        Expr_dk_generation.RMS_regular
                       env lexpr ;
                     Format.fprintf out_fmter ")")
                   out_fmter)
@@ -678,7 +678,7 @@ let generate_field_definition_prelude ~in_section ?sep ?without_types ctx print_
                if in_section then
                  section_variable_list :=
                    SVHyp
-                     (Species_record_type_dk_generation.SMS_abstracted,
+                     (Expr_dk_generation.SMS_abstracted,
                       n, b, new_ctx) :: !section_variable_list
                else
                  begin
@@ -691,10 +691,10 @@ let generate_field_definition_prelude ~in_section ?sep ?without_types ctx print_
                          new_ctx ~local_idents: []
                          ~in_recursive_let_section_of: []
                          ~self_methods_status:
-                         Species_record_type_dk_generation.SMS_abstracted
+                         Expr_dk_generation.SMS_abstracted
                          env b
                          ~recursive_methods_status:
-                           Species_record_type_dk_generation.RMS_regular ;
+                           Expr_dk_generation.RMS_regular ;
                        Format.fprintf out ")")
                      out_fmter;
                  end;
@@ -762,20 +762,20 @@ let generate_defined_method_proto_postlude ctx print_ctx env
        Format.fprintf out_fmter ":=@ ";
        (match body with
         | Parsetree.BB_computational e ->
-            Species_record_type_dk_generation.generate_expr
+            Expr_dk_generation.generate_expr
               ctx ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
-                Species_record_type_dk_generation.SMS_abstracted
+                Expr_dk_generation.SMS_abstracted
               ~recursive_methods_status:
-                Species_record_type_dk_generation.RMS_regular
+                Expr_dk_generation.RMS_regular
               env e
         | Parsetree.BB_logical p ->
             Species_record_type_dk_generation.generate_logical_expr
               ctx ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
-                Species_record_type_dk_generation.SMS_abstracted
+                Expr_dk_generation.SMS_abstracted
               ~recursive_methods_status:
-                Species_record_type_dk_generation.RMS_regular env p))
+                Expr_dk_generation.RMS_regular env p))
 ;;
 
 
@@ -962,18 +962,18 @@ let zenonify_by_recursive_meth_definition ctx print_ctx env
      [recursive_methods_status] is [RMS_abstracted]. *)
   (match body with
    | Parsetree.BB_computational e ->
-       Species_record_type_dk_generation.generate_expr
+       Expr_dk_generation.generate_expr
          ctx ~local_idents: [] ~in_recursive_let_section_of: [vname]
-         ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
+         ~self_methods_status: Expr_dk_generation.SMS_abstracted
          ~recursive_methods_status:
-           Species_record_type_dk_generation.RMS_abstracted
+           Expr_dk_generation.RMS_abstracted
          env e
    | Parsetree.BB_logical p ->
        Species_record_type_dk_generation.generate_logical_expr
          ctx ~local_idents: [] ~in_recursive_let_section_of: [vname]
-         ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
+         ~self_methods_status: Expr_dk_generation.SMS_abstracted
          ~recursive_methods_status:
-           Species_record_type_dk_generation.RMS_abstracted env p) ;
+           Expr_dk_generation.RMS_abstracted env p) ;
   (* Done... Then, final carriage return. *)
   Format.fprintf out_fmter ".@]@\n"
 ;;
@@ -1075,12 +1075,12 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
          "(; For notation used via \"by definition of %a\". ;)@\n"
          Sourcify.pp_expr_ident by_def_expr_ident;
        Format.fprintf out_fmter "@[<2>%s :=" id ;
-       Species_record_type_dk_generation.generate_expr
+       Expr_dk_generation.generate_expr
          ctx ~local_idents: [] ~in_recursive_let_section_of: []
          ~self_methods_status:
-           Species_record_type_dk_generation.SMS_abstracted env
+           Expr_dk_generation.SMS_abstracted env
          ~recursive_methods_status:
-           Species_record_type_dk_generation.RMS_regular
+           Expr_dk_generation.RMS_regular
          body ;
        (* Done... Then, final carriage return. *)
        Format.fprintf out_fmter ".@]@\n"
@@ -1136,9 +1136,9 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
             Species_record_type_dk_generation.generate_logical_expr
               ctx ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
-                Species_record_type_dk_generation.SMS_from_record (* Or anything *)
+                Expr_dk_generation.SMS_from_record (* Or anything *)
               ~recursive_methods_status:
-                Species_record_type_dk_generation.RMS_regular env lexpr ;
+                Expr_dk_generation.RMS_regular env lexpr ;
             (* Done... Then, final carriage return. *)
             Format.fprintf out_fmter ".@]@\n"
       )
@@ -1210,9 +1210,9 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                  Species_record_type_dk_generation.generate_logical_expr
                    ctx ~local_idents: [] ~in_recursive_let_section_of: []
                    ~self_methods_status:
-                     Species_record_type_dk_generation.SMS_abstracted env
+                     Expr_dk_generation.SMS_abstracted env
                    ~recursive_methods_status:
-                     Species_record_type_dk_generation.RMS_regular body ;
+                     Expr_dk_generation.RMS_regular body ;
                  (* Done... Then, final carriage return. *)
                  Format.fprintf out_fmter ".@]@\n"
            )
@@ -1376,9 +1376,9 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
               ~self_methods_status:
                 (* Or whatever since we substituted Self by the effective
                    collection. *)
-                Species_record_type_dk_generation.SMS_from_record
+                Expr_dk_generation.SMS_from_record
               ~recursive_methods_status:
-                Species_record_type_dk_generation.RMS_regular env lexpr' ;
+                Expr_dk_generation.RMS_regular env lexpr' ;
             Format.fprintf out_fmter ").@]@\n"
        end)
    | SPOTS_param param_name ->
@@ -1430,9 +1430,9 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
             Species_record_type_dk_generation.generate_logical_expr
               ctx' ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
-                (Species_record_type_dk_generation.SMS_from_param param_name)
+                (Expr_dk_generation.SMS_from_param param_name)
               ~recursive_methods_status:
-                Species_record_type_dk_generation.RMS_regular env lexpr ;
+                Expr_dk_generation.RMS_regular env lexpr ;
             Format.fprintf out_fmter ").@]@\n"
        end)
 ;;
@@ -1479,9 +1479,9 @@ let zenonify_by_property ctx print_ctx env min_dk_env
             Species_record_type_dk_generation.generate_logical_expr
               ctx ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
-                Species_record_type_dk_generation.SMS_from_record (* Or anything *)
+                Expr_dk_generation.SMS_from_record (* Or anything *)
               ~recursive_methods_status:
-                Species_record_type_dk_generation.RMS_regular env lexpr ;
+                Expr_dk_generation.RMS_regular env lexpr ;
             (* Done... Then, final carriage return. *)
             Format.fprintf out_fmter ").@]@\n"
       )
@@ -1525,9 +1525,9 @@ let zenonify_by_property ctx print_ctx env min_dk_env
                  Species_record_type_dk_generation.generate_logical_expr
                    ctx ~local_idents: [] ~in_recursive_let_section_of: []
                    ~self_methods_status:
-                     Species_record_type_dk_generation.SMS_abstracted
+                     Expr_dk_generation.SMS_abstracted
                    ~recursive_methods_status:
-                     Species_record_type_dk_generation.RMS_regular env body ;
+                     Expr_dk_generation.RMS_regular env body ;
                  (* Done... Then, final carriage return. *)
                  Format.fprintf out_fmter ").@]@\n"
            )
@@ -1622,9 +1622,9 @@ let add_quantifications_and_implications ctx print_ctx env avail_info =
              Species_record_type_dk_generation.generate_logical_expr
                ctx ~local_idents: [] ~in_recursive_let_section_of: []
                ~self_methods_status:
-                 Species_record_type_dk_generation.SMS_abstracted
+                 Expr_dk_generation.SMS_abstracted
                ~recursive_methods_status:
-                 Species_record_type_dk_generation.RMS_regular env log_expr ;
+                 Expr_dk_generation.RMS_regular env log_expr ;
              Format.fprintf out_fmter ")@ (";
              rec_print q ;
              Format.fprintf out_fmter "@]"
@@ -1699,9 +1699,9 @@ let zenonify_fact ctx print_ctx env min_dk_env ~self_manifest
            Species_record_type_dk_generation.generate_logical_expr
              ctx ~local_idents: [] ~in_recursive_let_section_of: []
              ~self_methods_status:
-               Species_record_type_dk_generation.SMS_abstracted
+               Expr_dk_generation.SMS_abstracted
              ~recursive_methods_status:
-                Species_record_type_dk_generation.RMS_regular env hyp_logical_expr ;
+                Expr_dk_generation.RMS_regular env hyp_logical_expr ;
            (* Done... Then, final carriage return. *)
            Format.fprintf out_fmter ").@]@\n")
          vnames
@@ -1734,9 +1734,9 @@ let zenonify_fact ctx print_ctx env min_dk_env ~self_manifest
            Format.fprintf out_fmter "(" ;
            Species_record_type_dk_generation.generate_logical_expr
              ctx ~local_idents: [] ~in_recursive_let_section_of: []
-             ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
+             ~self_methods_status: Expr_dk_generation.SMS_abstracted
              ~recursive_methods_status:
-               Species_record_type_dk_generation.RMS_regular
+               Expr_dk_generation.RMS_regular
              env avail_info.psa_base_logical_expr ;
            Format.fprintf out_fmter "))" ;
            (* Close parentheses introduced by the function quantifications_and_implications *)
@@ -1776,18 +1776,18 @@ let zenonify_hyp ctx print_ctx env ~sep hyp =
          Parsetree_utils.pp_vname_with_operators_expanded vname;
        Species_record_type_dk_generation.generate_logical_expr
          ~local_idents: [] ~in_recursive_let_section_of: []
-         ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
-         ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
+         ~self_methods_status: Expr_dk_generation.SMS_abstracted
+         ~recursive_methods_status: Expr_dk_generation.RMS_regular
          ctx env logical_expr ;
        Format.fprintf out_fmter ") %s@ @]@\n" sep
    | Parsetree.H_notation (vname, expr) ->
        (* Leads to a Definition. *)
        Format.fprintf out_fmter "@[<2>%a :=@ "
          Parsetree_utils.pp_vname_with_operators_expanded vname;
-       Species_record_type_dk_generation.generate_expr
+       Expr_dk_generation.generate_expr
          ctx ~local_idents: [] ~in_recursive_let_section_of: []
-         ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
-         ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
+         ~self_methods_status: Expr_dk_generation.SMS_abstracted
+         ~recursive_methods_status: Expr_dk_generation.RMS_regular
          env expr ;
        Format.fprintf out_fmter ".@]@\n"
 ;;
@@ -1915,8 +1915,8 @@ and zenonify_proof_node_print_before ctx print_ctx env
        Format.fprintf out_fmter "dk_logic.eP (";
        Species_record_type_dk_generation.generate_logical_expr
          ~local_idents: [] ~in_recursive_let_section_of: []
-         ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
-         ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
+         ~self_methods_status: Expr_dk_generation.SMS_abstracted
+         ~recursive_methods_status: Expr_dk_generation.RMS_regular
          ctx env new_aim ;
        Format.fprintf out_fmter ")) =>@ ("
        end)
@@ -1980,8 +1980,8 @@ and admit_zenon_theorem_for_proof ctx env min_dk_env
   | ZSGM_from_logical_expr aim ->
       Species_record_type_dk_generation.generate_logical_expr
         ~local_idents: [] ~in_recursive_let_section_of: []
-        ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
-        ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
+        ~self_methods_status: Expr_dk_generation.SMS_abstracted
+        ~recursive_methods_status: Expr_dk_generation.RMS_regular
         ctx env aim;
       Format.fprintf out_fmter ")@]@\n"
 
@@ -2112,9 +2112,9 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
             Species_record_type_dk_generation.generate_logical_expr
               ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
-                Species_record_type_dk_generation.SMS_abstracted
+                Expr_dk_generation.SMS_abstracted
               ~recursive_methods_status:
-                Species_record_type_dk_generation.RMS_regular
+                Expr_dk_generation.RMS_regular
               ctx env aim
        ) ;
        Format.fprintf out_fmter ").@\n" ;
@@ -2271,8 +2271,8 @@ let generate_defined_theorem ctx print_ctx env min_dk_env ~self_manifest
      mode [SMS_abstracted]. *)
   Species_record_type_dk_generation.generate_logical_expr
     ~local_idents: [] ~in_recursive_let_section_of: []
-    ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
-    ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
+    ~self_methods_status: Expr_dk_generation.SMS_abstracted
+    ~recursive_methods_status: Expr_dk_generation.RMS_regular
     new_ctx env logical_expr ;
   Format.fprintf out_fmter ")";
   Format.fprintf out_fmter " :=@\n";
@@ -2286,8 +2286,8 @@ let generate_defined_theorem ctx print_ctx env min_dk_env ~self_manifest
        (* Print again the theorem *)
        Species_record_type_dk_generation.generate_logical_expr
          ~local_idents: [] ~in_recursive_let_section_of: []
-         ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
-         ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
+         ~self_methods_status: Expr_dk_generation.SMS_abstracted
+         ~recursive_methods_status: Expr_dk_generation.RMS_regular
          new_ctx env logical_expr ;
        Format.fprintf out_fmter ").@\n"
    | Parsetree.Pf_auto _  | Parsetree.Pf_node _ ->
@@ -2509,10 +2509,10 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
           parameters coming from lambda-lifting. Hence ~in_recursive_let_section_of: []
           instead of ~in_recursive_let_section_of: [name] (as found in Coq translation) *)
 
-       Species_record_type_dk_generation.generate_expr
+       Expr_dk_generation.generate_expr
          new_ctx ~local_idents: [] ~in_recursive_let_section_of: []
-         ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
-         ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
+         ~self_methods_status: Expr_dk_generation.SMS_abstracted
+         ~recursive_methods_status: Expr_dk_generation.RMS_regular
          env body_expr ;
        Format.fprintf out_fmter ").@]@\n";
 
@@ -3677,11 +3677,11 @@ let print_record_type_carriers_args_instanciations ctx env args_instanciations =
             corresponding_effective_vname
       | RTAI_by_in expr ->
           Format.fprintf out_fmter "@ ";
-          Species_record_type_dk_generation.generate_expr
+          Expr_dk_generation.generate_expr
             ctx ~local_idents: [] ~in_recursive_let_section_of: []
-            ~self_methods_status: Species_record_type_dk_generation.SMS_from_record
+            ~self_methods_status: Expr_dk_generation.SMS_from_record
             ~recursive_methods_status:
-              Species_record_type_dk_generation.RMS_regular
+              Expr_dk_generation.RMS_regular
             env expr)
     args_instanciations
 ;;
@@ -3726,13 +3726,13 @@ let print_methods_from_params_instanciations ctx env formal_to_effective_map l =
               For [~self_as], same thing, no relevant value since the
               application of the generator should not involve any other
               expressions than methods/theorems identifiers. *)
-           Species_record_type_dk_generation.generate_expr
+           Expr_dk_generation.generate_expr
              ctx ~local_idents: [] ~in_recursive_let_section_of: []
              ~self_methods_status:
                (* Or what you prefer. *)
-               Species_record_type_dk_generation.SMS_abstracted
+               Expr_dk_generation.SMS_abstracted
              ~recursive_methods_status:
-               Species_record_type_dk_generation.RMS_regular
+               Expr_dk_generation.RMS_regular
              env expr ;
            Format.fprintf out_fmter ")@]"
           ))

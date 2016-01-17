@@ -243,14 +243,14 @@ let generate_binding_match ctx env expr pattern =
      arguments of the sum value constructors! So, force the extra "_"s to be
      printed. *)
   Format.fprintf out_fmter "Is_true ((basics._equal_ _) (" ;
-  Species_record_type_dk_generation.generate_expr
+  Expr_dk_generation.generate_expr
     ctx ~in_recursive_let_section_of: [] ~local_idents
-    ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
-    ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
+    ~self_methods_status: Expr_dk_generation.SMS_abstracted
+    ~recursive_methods_status: Expr_dk_generation.RMS_regular
     env expr ;
   Format.fprintf out_fmter ")@ (" ;
   (* TODO: adapt to nex pattern matching generation *)
-  (* Species_record_type_dk_generation.generate_pattern *)
+  (* Expr_dk_generation.generate_pattern *)
   (*   ~force_polymorphic_explicit_args: true ctx print_ctx env pattern ; *)
   Format.fprintf out_fmter "))"
 ;;
@@ -315,16 +315,16 @@ let generate_binding_let ctx print_ctx env binding =
   (* Now, in any case, we print the body of the let binding. *)
   (match binding_desc.Parsetree.b_body with
    | Parsetree.BB_computational e ->
-       Species_record_type_dk_generation.generate_expr
+       Expr_dk_generation.generate_expr
          ctx ~in_recursive_let_section_of: [] ~local_idents
-         ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
-         ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
+         ~self_methods_status: Expr_dk_generation.SMS_abstracted
+         ~recursive_methods_status: Expr_dk_generation.RMS_regular
          env e
    | Parsetree.BB_logical p ->
        Species_record_type_dk_generation.generate_logical_expr
          ctx ~in_recursive_let_section_of: [] ~local_idents
-         ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
-         ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
+         ~self_methods_status: Expr_dk_generation.SMS_abstracted
+         ~recursive_methods_status: Expr_dk_generation.RMS_regular
          env p) ;
   (* If there were parameters, we must close a parenthesis. *)
   if binding_desc.Parsetree.b_params <> [] then
@@ -414,10 +414,10 @@ let generate_exprs_as_tuple ctx env exprs =
   match exprs with
    | [] -> assert false
    | [one] ->
-       Species_record_type_dk_generation.generate_expr
+       Expr_dk_generation.generate_expr
          ctx ~in_recursive_let_section_of: [] ~local_idents: []
-         ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
-         ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
+         ~self_methods_status: Expr_dk_generation.SMS_abstracted
+         ~recursive_methods_status: Expr_dk_generation.RMS_regular
          env one
    | _ ->
        let fake_tuple_desc = Parsetree.E_tuple exprs in
@@ -426,10 +426,10 @@ let generate_exprs_as_tuple ctx env exprs =
          Parsetree.ast_desc = fake_tuple_desc ;
          Parsetree.ast_annot = [] ;
          Parsetree.ast_type = Parsetree.ANTI_irrelevant } in
-       Species_record_type_dk_generation.generate_expr
+       Expr_dk_generation.generate_expr
          ctx ~in_recursive_let_section_of: [] ~local_idents: []
-         ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
-         ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
+         ~self_methods_status: Expr_dk_generation.SMS_abstracted
+         ~recursive_methods_status: Expr_dk_generation.RMS_regular
          env fake_tuple
 ;;
 
@@ -508,12 +508,12 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
                  "~ Is_true (expr)" if [bool_val] is false. *)
               if not bool_val then Format.fprintf out_fmter "~@ " ;
               Format.fprintf out_fmter "Is_true (@[<1>" ;
-              Species_record_type_dk_generation.generate_expr
+              Expr_dk_generation.generate_expr
                 ctx ~in_recursive_let_section_of: [] ~local_idents: []
                 ~self_methods_status:
-                  Species_record_type_dk_generation.SMS_abstracted
+                  Expr_dk_generation.SMS_abstracted
                 ~recursive_methods_status:
-                  Species_record_type_dk_generation.RMS_regular
+                  Expr_dk_generation.RMS_regular
                 env expr ;
               Format.fprintf out_fmter "@]) ->@ ")
         bindings ;
@@ -526,12 +526,12 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
            (* Surround by a Is_true since the user order can only be oa
               function returning a bool, hence must be plunged into Prop. *)
            Format.fprintf out_fmter "Is_true ((@[<1>" ;
-           Species_record_type_dk_generation.generate_expr
+           Expr_dk_generation.generate_expr
              ctx ~in_recursive_let_section_of: [] ~local_idents: []
              ~self_methods_status:
-               Species_record_type_dk_generation.SMS_abstracted
+               Expr_dk_generation.SMS_abstracted
              ~recursive_methods_status:
-               Species_record_type_dk_generation.RMS_regular env expr_order ;
+               Expr_dk_generation.RMS_regular env expr_order ;
            Format.fprintf out_fmter "@])@ " ;
            (* Now, generate the tuples of only arguments used in the order
               given by the user to provide to this order. *)
@@ -542,12 +542,12 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
            let rec_arg = List.nth rec_args index in
            let initial_var = List.nth initial_vars index in
            (* Generate the corresponding recursive call argument. *)
-           Species_record_type_dk_generation.generate_expr
+           Expr_dk_generation.generate_expr
              ctx ~in_recursive_let_section_of: [] ~local_idents: []
              ~self_methods_status:
-               Species_record_type_dk_generation.SMS_abstracted
+               Expr_dk_generation.SMS_abstracted
              ~recursive_methods_status:
-               Species_record_type_dk_generation.RMS_regular env rec_arg ;
+               Expr_dk_generation.RMS_regular env rec_arg ;
            (* Generate the initial argument of the function. *)
            Format.fprintf out_fmter "@ %a"
              Parsetree_utils.pp_vname_with_operators_expanded

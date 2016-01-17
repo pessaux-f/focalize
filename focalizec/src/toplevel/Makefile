@@ -76,6 +76,7 @@ BYT_OBJS =\
  ../coqcodegen/main_coq_generation.cmo\
  \
  ../dkcodegen/dk_pprint.cmo\
+ ../dkcodegen/expr_dk_generation.cmo\
  ../dkcodegen/species_record_type_dk_generation.cmo\
  ../dkcodegen/rec_let_dk_gen.cmo\
  ../dkcodegen/type_dk_generation.cmo\
