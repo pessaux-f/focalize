@@ -14,20 +14,6 @@
 
 
 (* ************************************************************************* *)
-(** {b Descr}: Exception raised when a termination proof stated as structural
-    refers to an identifier not being a parameter of the recursive function.
-    [Unsure] on my mind, this should have been done ealier, may be at scoping.
-
-    {b Visibility}: Exported outside this module.                            *)
-(* ************************************************************************* *)
-exception Wrong_decreasing_argument of
-  (Location.t * Parsetree.qualified_species * Parsetree.vname *
-   Parsetree.vname)
-;;
-
-
-
-(* ************************************************************************* *)
 (* only_for_Self: bool -> Format.formatter -> Parsetree.vname list ->        *)
 (*  (Env.TypeInformation.species_param *                                     *)
 (*   Env.ordered_methods_from_params) list ->                                *)

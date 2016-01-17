@@ -555,8 +555,6 @@ let print_focalize_exception ppf = function
         Handy.pp_set_underlined node_num node_name
         Handy.pp_reset_effects
   | Species_record_type_coq_generation.Wrong_decreasing_argument
-      (at, species_name, def_name, decr_arg)
-  | Species_record_type_dk_generation.Wrong_decreasing_argument
       (at, species_name, def_name, decr_arg) ->
       Format.fprintf ppf
         "%a:@\n@[%tIn@ species@ '%t%a%t'@ structural@ termination@ proof@ \

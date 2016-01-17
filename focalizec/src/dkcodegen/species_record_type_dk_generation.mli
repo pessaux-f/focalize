@@ -12,12 +12,6 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-
-exception Wrong_decreasing_argument of
-  (Location.t * Parsetree.qualified_species * Parsetree.vname *
-   Parsetree.vname)
-
-
 val make_Self_cc_binding_abst_T :
   current_species: Parsetree.qualified_species ->
     (Types.type_collection * (string * Types.collection_carrier_mapping_info))
