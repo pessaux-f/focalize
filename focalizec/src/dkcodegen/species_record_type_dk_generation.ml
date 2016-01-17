@@ -378,26 +378,6 @@ let last (str : string) : char =
   str.[String.length str - 1]
 ;;
 
-(* TODO *)
-let generate_constant_pattern ctx cst =
-  match cst.Parsetree.ast_desc with
-   | Parsetree.C_int _ ->
-       (* [Unsure] *)
-       Format.fprintf ctx.Context.scc_out_fmter "C_int"
-   | Parsetree.C_float _ ->
-       (* [Unsure] *)
-       Format.fprintf ctx.Context.scc_out_fmter "C_float"
-   | Parsetree.C_bool str ->
-       (* [true] maps on Dk "true". [false] maps on Dk "false". *)
-       Format.fprintf ctx.Context.scc_out_fmter "%s" str
-   | Parsetree.C_string str ->
-       (* [Unsure] *)
-       Format.fprintf ctx.Context.scc_out_fmter "\"%s\"%%string" str
-   | Parsetree.C_char c ->
-       (* [Unsure] *)
-       Format.fprintf ctx.Context.scc_out_fmter "\"%c\"%%char" c
-;;
-
 (* Print a char code (7 bits representing a char using ascii)
    in Dedukti. *)
 let rec print_char_code_to_dk fmter n =
@@ -616,7 +596,22 @@ let generate_pattern ctx dkctx env pattern
   let out_fmter = ctx.Context.scc_out_fmter in
   let rec rec_gen_pat pat ~d ~k ~ret_type ~e =
     match pat.Parsetree.ast_desc with
-     | Parsetree.P_const constant -> generate_constant_pattern ctx constant
+    | Parsetree.P_const constant ->
+       (* "match e with c -> d | _ -> k" is the same as "if e = c then d else k" *)
+       Format.fprintf out_fmter "(dk_bool.ite (%a) "
+                      (generate_simple_type_of_ast dkctx)
+                      ret_type ;
+       Format.fprintf out_fmter "(dk_builtins.eq (";
+       generate_pattern_type pat;
+       Format.fprintf out_fmter ") (";
+       e ();
+       Format.fprintf out_fmter ") (";
+       generate_constant ctx constant;
+       Format.fprintf out_fmter ")) (";
+       d ();
+       Format.fprintf out_fmter ") (";
+       k ();
+       Format.fprintf out_fmter "))"
      | Parsetree.P_var name ->
         (* "match e with x -> d | _ -> k" is the same as "(fun x -> d) e" *)
         Format.fprintf out_fmter "(%a :@ cc.eT@ "
