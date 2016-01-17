@@ -2456,10 +2456,10 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
 
        let rec print_list_param sep out = function
          | [] -> ()
-         | [(a, ty)] ->
+         | [(a, _)] ->
             Format.fprintf out "%a"
               Parsetree_utils.pp_vname_with_operators_expanded a
-         | (a, ty) :: l ->
+         | (a, _) :: l ->
             Format.fprintf out "%a%s@ %a"
               Parsetree_utils.pp_vname_with_operators_expanded a
               sep
