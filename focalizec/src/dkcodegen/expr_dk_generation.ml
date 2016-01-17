@@ -44,6 +44,8 @@ type recursive_methods_status =
 
 
 (***** Constants *****)
+(** For numbers, characters and strings literals, we use Sukerujo,
+    a parser for Dedukti with some syntactic sugar. **)
 
 let butfst (str : string) : string =
   String.sub str 1 (String.length str - 1)
@@ -96,7 +98,10 @@ let print_constr_ident out i =
   let Parsetree.CI id = i.Parsetree.ast_desc in
   print_ident out id
 ;;
-(* Special pair constructor *)
+
+
+(* Tuples are represented as nested couples and couples are a predefined
+   datatype; we define here an ident for its constructor. *)
 let pair_cident =
   let pair_ident_desc = Parsetree.I_global
                           (Parsetree.Qualified
@@ -109,7 +114,7 @@ let pair_cident =
 
 
 (* Check that the constructor has a Dedukti mapping if it is external. *)
-let generate_constructor_ident_for_method_generator ctx env cstr_expr =
+let check_constructor_ident ctx env cstr_expr =
   if cstr_expr = pair_cident then () else
     (begin
         let mapping_info =
@@ -144,10 +149,9 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
       end)
 ;;
 
-
-
 (* Exactly the same principle than for sum type constructors in the above
-   function [generate_constructor_ident_for_method_generator]. *)
+   function [check_constructor_ident]. *)
+(* But also print the label. *)
 let generate_record_label_for_method_generator ctx env label =
   try
     let mapping_info =
@@ -245,7 +249,7 @@ let generate_simple_type_of_ast dkctx out_fmter a =
       - [~ret_type]: The type returned by the pattern.
       - [~e]: a function to print the expression matched
 
-    {b Exported} : Yes                                                        *)
+    {b Exported} : No                                                         *)
 (* ************************************************************************** *)
 let generate_pattern ctx dkctx env pattern
                      ~d ~k ~ret_type ~e =
@@ -344,7 +348,7 @@ let generate_pattern ctx dkctx env pattern
                        pattern_file_name
                        Sourcify.pp_vname pattern_vname;
         (* Now check that the constructor has a Dedukti mapping *)
-        generate_constructor_ident_for_method_generator ctx env cident;
+        check_constructor_ident ctx env cident;
         (begin
             match pat.Parsetree.ast_type with
             | Parsetree.ANTI_type t ->
@@ -412,6 +416,9 @@ let generate_pattern ctx dkctx env pattern
   (* Now, let's do the job. *)
   rec_gen_pat pattern ~d ~k ~ret_type ~e
 ;;
+
+
+(* [local_idents] : the bound variables, used to distinguish in-parameter. *)
 
 let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
     ~self_methods_status ~recursive_methods_status ident =
@@ -1052,7 +1059,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
      | Parsetree.E_constr (cstr_ident, args) ->
          Format.fprintf out_fmter "@[<1>(%a"
            print_constr_ident cstr_ident;
-         generate_constructor_ident_for_method_generator ctx env cstr_ident;
+         check_constructor_ident ctx env cstr_ident;
          (* Add the type arguments of the constructor. *)
          begin match expression.Parsetree.ast_type with
          | Parsetree.ANTI_type t ->
