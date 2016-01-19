@@ -12,26 +12,6 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-
-exception Attempt_proof_by_def_of_species_param of
-  (Location.t * Parsetree.expr_ident)
-
-exception Attempt_proof_by_def_of_declared_method_of_self of
-  (Location.t * Parsetree.expr_ident)
-
-exception Attempt_proof_by_def_of_local_ident of
-  (Location.t * Parsetree.expr_ident)
-
-exception Attempt_proof_by_prop_of_local_ident of
-  (Location.t * Parsetree.expr_ident)
-
-exception Attempt_proof_by_unknown_hypothesis of
-  (Location.t * Parsetree.vname)
-
-exception Attempt_proof_by_unknown_step of
-  (Location.t * Parsetree.node_label)
-
-
 val species_compile :
   Env.DkGenEnv.t -> current_unit: Types.fname -> Format.formatter ->
     Parsetree.species_def_desc Parsetree.ast ->
@@ -49,7 +29,3 @@ val collection_compile :
       Env.TypeInformation.species_description ->
         DepGraphData.name_node list ->
           Env.DkGenInformation.method_info list
-
-val toplevel_theorem_compile :
-  Context.species_compil_context -> Env.DkGenEnv.t ->
-    Parsetree.theorem_def -> Parsetree.vname list

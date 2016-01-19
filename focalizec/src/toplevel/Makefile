@@ -81,6 +81,7 @@ BYT_OBJS =\
  ../dkcodegen/species_record_type_dk_generation.cmo\
  ../dkcodegen/rec_let_dk_gen.cmo\
  ../dkcodegen/type_dk_generation.cmo\
+ ../dkcodegen/proof_dk_generation.cmo\
  ../dkcodegen/species_dk_generation.cmo\
  ../dkcodegen/main_dk_generation.cmo\
  \
