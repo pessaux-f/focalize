@@ -22,9 +22,7 @@ type dk_print_context = {
 exception Can_only_print_type_arguments_of_sum_types of Types.type_simple_view;;
 
 let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
-     purge_type_simple_to_dk_variable_mapping, has_cbv, pp_for_cbv_type_simple_to_dk
-     (* DEBUG
-     , debug_variable_mapping *)) =
+     purge_type_simple_to_dk_variable_mapping, has_cbv, pp_for_cbv_type_simple_to_dk) =
   (* ************************************************************** *)
   (* ((type_simple * string) list) ref                              *)
   (** {b Descr} : The mapping giving for each variable already seen
@@ -106,9 +104,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
   let internal_pp_var_to_dk ppf ty_var =
     let ty_variable_name = get_or_make_type_variable_name_to_dk ty_var in
     Format.fprintf ppf "%s" ty_variable_name
-    (* DEBUG
-    ; Format.fprintf ppf "(*%d,l:%d*)" ty_var.tv_debug ty_var.tv_level *)
-    in
+  in
 
   let to_dk_module ctx ty =
     match ty with
@@ -331,14 +327,5 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
    (fun ty -> has_cbv (Types.view_type_simple ty)),
    (* pp_for_cbv_type_simple_to_dk *)
    (fun ctx ppf ty -> rec_pp_cbv_to_dk ctx 0 ppf (Types.view_type_simple ty))
-   (* DEBUG
-   ,
-   (* debug_variable_mapping *)
-   (fun () ->
-     List.iter
-       (fun (var, name) ->
-         Format.eprintf "(%d, %s) " var.tv_debug name)
-       !type_variable_names_mapping ;
-     Format.eprintf "@.") *)
   )
 ;;
