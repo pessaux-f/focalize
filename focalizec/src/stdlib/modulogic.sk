@@ -26,6 +26,7 @@ def foralltype : (type -> prop) -> prop := dk_logic.forall_type.
 def existstype : (type -> prop) -> prop := dk_logic.exists_type.
 
 def equal      : a : type -> term a -> term a -> prop := dk_logic.equal.
+def triangle (x : prop) := x.
 
 (; Definition of Proofs of Symbols ;)
 

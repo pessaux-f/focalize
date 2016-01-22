@@ -16,6 +16,7 @@ def Prop := dk_logic.Prop.
 def eP := dk_logic.eP.
 def eeP : Prop -> cc.uT := dk_logic.eeP.
 def Is_true : Bool -> Prop := dk_logic.ebP.
+def is_true := Is_true.
 def True := dk_logic.True.
 def False := dk_logic.False.
 def TrueT := dk_logic.TrueT.
