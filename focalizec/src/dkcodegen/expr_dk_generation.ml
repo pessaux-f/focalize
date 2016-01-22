@@ -266,9 +266,9 @@ let generate_pattern ctx dkctx env pattern
         Format.fprintf out_fmter "(%a :@ cc.eT@ "
                        Parsetree_utils.pp_vname_with_operators_expanded name;
         generate_pattern_type pat;
-        Format.fprintf out_fmter " =>@ ";
+        Format.fprintf out_fmter " =>@ (";
         d ();
-        Format.fprintf out_fmter ")@ ";
+        Format.fprintf out_fmter "))@ ";
         e ()
      | Parsetree.P_as (p, name) ->
         (* "match e with p(y) as x -> d(x,y) | _ -> k"
@@ -277,9 +277,9 @@ let generate_pattern ctx dkctx env pattern
         Format.fprintf out_fmter "(%a :@ "
                        Parsetree_utils.pp_vname_with_operators_expanded name;
         generate_pattern_type pat;
-        Format.fprintf out_fmter " =>@ ";
+        Format.fprintf out_fmter " =>@ (";
         rec_gen_pat p ~d ~k ~ret_type ~e;
-        Format.fprintf out_fmter ")@ ";
+        Format.fprintf out_fmter "))@ ";
         e ()
      | Parsetree.P_wild ->
         (* "match e with _ -> d" is the same as "d" *)
@@ -361,11 +361,13 @@ let generate_pattern ctx dkctx env pattern
         List.iter (fun pat ->
                    Format.fprintf out_fmter "pattern_var_%d_ :@ cc.eT@ " !count;
                    generate_simple_type_of_ast dkctx out_fmter pat;
-                   Format.fprintf out_fmter " =>@ ";
+                   Format.fprintf out_fmter " =>@ (";
                    incr count)
                   pats;
         (* Then case 2/2: Generate the matching on the fresh variables *)
         rec_generate_pats_list 0 ~k ~d ~ret_type pats;
+        (* Close parens *)
+        for _ = 1 to !count do Format.fprintf out_fmter ")" done;
         Format.fprintf out_fmter ")";
 
         (* Now the continuation (else case) *)
@@ -754,9 +756,9 @@ let generate_expr ctx ~in_recursive_let_section_of ~local_idents
                 res_ty)
               fun_ty
               vnames) ;
-         Format.fprintf out_fmter "=>@ " ;
+         Format.fprintf out_fmter "=>@ (" ;
          rec_generate_expr (vnames @ loc_idents) env body ;
-         Format.fprintf out_fmter ")@]" ;
+         Format.fprintf out_fmter "))@]" ;
      | Parsetree.E_var ident -> (
        let current_species_name =
          Some
