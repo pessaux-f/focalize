@@ -211,8 +211,8 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
                    hypothesis H
                    property A!equal_symmetric, A!equal_transitive
            <2>f qed by step <2>1, <2>2, <2>5
-                       definition of equal
-      <1>f qed by step <1>1 property equal;
+                        definition of equal
+      <1>f conclude;
 
 
    (**
@@ -247,17 +247,17 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
              !inductive_second_term(!inductive(x_2, y)))
                 <3>1 prove !equal(!inductive_second_term(!inductive(x_1, y)),
           y)
-                     by property !inductive_reverse_second, equal
+                     by property !inductive_reverse_second
                 <3>2 prove !equal(!inductive_second_term(!inductive(x_2, y)),
           y)
-                     by property !inductive_reverse_second, equal
+                     by property !inductive_reverse_second
                 <3>f qed by step <3>1, <3>2
-                            property !equal_symmetric, !equal_transitive, equal
+                            property !equal_symmetric, !equal_transitive
            <2>f qed
                 by step <2>1, <2>2, <2>3
                    property !case_exclusive
                    definition of equal
-      <1>f qed by step <1>1 property equal;
+      <1>f conclude;
 
   (**
      Strict injection, we build an arbitrary number of different terms.
@@ -292,17 +292,17 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
               !inductive_second_term(!inductive(x, y_2)))
                  <3>1 prove !equal(!inductive_second_term(!inductive(x, y_1)),
            y_1)
-                      by property !inductive_reverse_second, equal
+                      by property !inductive_reverse_second
                  <3>2 prove !equal(!inductive_second_term(!inductive(x, y_2)),
            y_2)
-                      by property !inductive_reverse_second, equal
+                      by property !inductive_reverse_second
                  <3>f qed by hypothesis H
                              step  <3>1, <3>2
-                             property !equal_symmetric, !equal_transitive, equal
+                             property !equal_symmetric, !equal_transitive
             <2>f qed by step <2>1, <2>2, <2>3
                         property !case_exclusive
                         definition of equal
-        <1>2 qed by step <1>1 property equal;
+        <1>2 conclude;
 
    theorem inductive_substitution_rule: all x_1 x_2 : B, all y_1 y_2 : Self,
     B!equal(x_1, x_2) -> !equal(y_1, y_2) ->
@@ -317,8 +317,8 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
 
   (** Wow! Nice theorem, chose another name for your's *)
   theorem element_is_same: !equal(!element, !element)
-    proof = by property !base_has_case, A!equal_reflexive, !base_substitution_rule
-               definition of element;
+    proof = by property !base_has_case, A!equal_reflexive
+               definition of element, equal;
 
   (** Not to be used later, just a tease *)
   theorem structural_equal_inductive: all x y : Self,
@@ -360,7 +360,6 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
 
   proof of equal_reflexive =
     <1>1 prove all x : Self, !reflexive_prop(x)
-         assumed (*
          <2>1 assume x : Self,
               hypothesis B: !base_case(x),
               prove !reflexive_prop(x)
@@ -380,12 +379,12 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
                                step <4>1
                                property !case_exclusive
                                definition of equal, reflexive_prop
-              <3>f qed by step <3>1 definition of reflexive_prop property equal
+              <3>f qed by step <3>1 definition of reflexive_prop
          <2>f qed assumed (* ASSUMED (higher-order) by step <2>1, <2>2 *)
 (* ASSUMED                     definition of inductive_property *)
                      (* the automagic *)
-(* ASSUMED                     property !inductive_reflexivity *) *)
-    <1>f qed by step <1>1 definition of reflexive_prop property equal;
+(* ASSUMED                     property !inductive_reflexivity *)
+    <1>f qed by step <1>1 definition of reflexive_prop;
 
 
   logical let symmetry_prop(x) = all y : Self,
@@ -411,9 +410,9 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
          inductive_first_term(x))
                    <4>1 prove B!equal(inductive_first_term(x),
               inductive_first_term(y))
-                        assumed (* ASSUMED (Zenon error: exhausted search space without finding a proof) by hypothesis I, H *)
-(* ASSUMED                           property case_exclusive, case_complete *)
-(* ASSUMED                           definition of equal *)
+                        by hypothesis I, H
+                           property case_exclusive, case_complete
+                           definition of equal
                    <4>f qed by step <4>1 property B!equal_symmetric
               <3>2 prove !equal(inductive_second_term(y),
         inductive_second_term(x))
@@ -422,20 +421,20 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
                         by hypothesis H, I
                            property case_exclusive, case_complete
                            definition of equal
-                   <4>f qed assumed (* ASSUMED (Zenon warning: Undeclared function symbol : p) by step <4>1 *)
-(* ASSUMED                               hypothesis R *)
-(* ASSUMED                               definition of symmetry_prop, inductive_property property equal *)
+                   <4>f qed by step <4>1
+                               hypothesis R
+                               definition of symmetry_prop, inductive_property
               <3>3 prove ~(!base_case(y))
-                   assumed (* ASSUMED (Zenon error: exhausted search space without finding a proof) by hypothesis H, I *)
-(* ASSUMED                      definition of equal *)
-(* ASSUMED                      property !case_exclusive, !case_complete *)
+                   by hypothesis H, I
+                      definition of equal
+                      property !case_exclusive, !case_complete
               <3>f qed by step <3>1, <3>2, <3>3
                           hypothesis H
                           definition of equal
          <2>f qed assumed (* ASSUMED (higher order) by step <2>1, <2>2 *)
 (* ASSUMED                     definition of inductive_property, symmetry_prop *)
 (* ASSUMED                     property inductive_symmetry *)
-    <1>f qed by step <1>1 definition of symmetry_prop property equal;
+    <1>f qed by step <1>1 definition of symmetry_prop;
 
 
   logical let transitivity_prop(x) = all y z : Self,
@@ -456,7 +455,7 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
                   by hypothesis B, H_xy, H_yz
                      definition of equal
                      property A!equal_transitive
-             <3>f qed by step <3>1 definition of transitivity_prop property equal
+             <3>f qed by step <3>1 definition of transitivity_prop
         <2>2 assume x : Self,
              hypothesis I: !inductive_case(x),
              hypothesis R: !transitivity_prop(!inductive_second_term(x)),
@@ -466,27 +465,27 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
                   hypothesis H_yz: !equal(y, z),
                   prove !equal(x, z)
                   <4>a prove !inductive_case(y)
-                       assumed (* ASSUMED (Zenon error: exhausted search space without finding a proof) by hypothesis H_xy, I *)
-(* ASSUMED                          definition of equal *)
-(* ASSUMED                          property !case_complete, !case_exclusive *)
+                       by hypothesis H_xy, I
+                          definition of equal
+                          property !case_complete, !case_exclusive
                   <4>b prove !inductive_case(z)
-                       assumed (* ASSUMED (Zenon error: exhausted search space without finding a proof) by hypothesis H_yz *)
-(* ASSUMED                          step <4>a *)
-(* ASSUMED                          definition of equal *)
-(* ASSUMED                          property !case_complete, !case_exclusive *)
+                       by hypothesis H_yz
+                          step <4>a
+                          definition of equal
+                          property !case_complete, !case_exclusive
                   <4>1 prove B!equal(!inductive_first_term(x),
              !inductive_first_term(z))
                        <5>1 prove B!equal(!inductive_first_term(x),
           !inductive_first_term(y))
-                            assumed (* ASSUMED (Zenon error: exhausted search space without finding a proof) by hypothesis H_xy, I *)
-(* ASSUMED                               definition of equal *)
-(* ASSUMED                               property !case_complete, !case_exclusive *)
+                            by hypothesis H_xy, I
+                               definition of equal
+                               property !case_complete, !case_exclusive
                        <5>2 prove B!equal(!inductive_first_term(y),
           !inductive_first_term(z))
-                            assumed (* ASSUMED (Zenon error: exhausted search space without finding a proof) by hypothesis H_yz *)
-(* ASSUMED                               step <4>a *)
-(* ASSUMED                               definition of equal *)
-(* ASSUMED                               property !case_complete, !case_exclusive *)
+                            by hypothesis H_yz
+                               step <4>a
+                               definition of equal
+                               property !case_complete, !case_exclusive
                        <5>f qed by step <5>1, <5>2
                                    property B!equal_transitive
                   <4>2 prove !equal(!inductive_second_term(x),
@@ -504,16 +503,16 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
                                property case_exclusive, case_complete
                        <5>f qed by step <5>1, <5>2
                                    hypothesis R
-                                   definition of transitivity_prop property equal
+                                   definition of transitivity_prop
                   <4>f qed by step <4>1, <4>2, <4>b
                               hypothesis I
                               definition of equal
                               property case_complete, case_exclusive
-             <3>f qed by step <3>1 definition of transitivity_prop property equal
+             <3>f qed by step <3>1 definition of transitivity_prop
         <2>f qed assumed (* ASSUMED (higher-order) by step <2>1, <2>2 *)
 (* ASSUMED                    definition of inductive_property *)
 (* ASSUMED                    property !inductive_transitivity, transitivity_prop *)
-   <1>f qed by step <1>1 definition of transitivity_prop property equal;
+   <1>f qed by step <1>1 definition of transitivity_prop;
 
 
 end

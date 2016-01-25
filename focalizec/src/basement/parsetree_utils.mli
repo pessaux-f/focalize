@@ -182,6 +182,17 @@ val unqualified_vname_of_expr_ident : Parsetree.expr_ident -> Parsetree.vname
 val get_free_local_vnames_from_expr_desc :
   Parsetree.expr_desc -> Parsetree.vname list
 
+val get_free_local_idents_from_expr_desc :
+  Parsetree.expr_desc -> Parsetree.expr_ident list
+
+val get_free_local_idents_from_logical_expr :
+  Parsetree.logical_expr -> Parsetree.expr_ident list
+
+val get_free_local_idents_from_binding_body :
+  Parsetree.vname list ->
+  Parsetree.binding_body ->
+  Parsetree.expr_ident list
+
 val make_annot : Parsetree.annotation -> 'a -> 'a Parsetree.ast
 
 val make_ast : 'a -> 'a Parsetree.ast

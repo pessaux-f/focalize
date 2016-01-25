@@ -66,20 +66,11 @@ let section_gen_sym =
    Section variables are passed to Zenon because it needs them for type inference. *)
 type section_variable =
   | SVType of string                                           (* Type *)
-  | SVTypeAlias of string * Types.type_simple * Dk_pprint.dk_print_context
-                                                               (* Type alias *)
+  | SVTypeAlias of string * Types.type_simple                  (* Type alias *)
   | SVVar of                                                   (* Variable *)
       string *                  (* Prefix: empty string or module name *)
         Parsetree.vname *       (* Name of the variable *)
-        Types.type_simple *     (* Type of the variable *)
-        Dk_pprint.dk_print_context  (* Print context for the type *)
-  | SVHyp of                                                   (* Hypothesis *)
-      (* Whether the method is abstracted,
-         gives the prefix and how to print the formula *)
-      Expr_dk_generation.self_methods_status *
-        Parsetree.vname *              (* Name of the hypothesis *)
-        Parsetree.logical_expr *       (* Formula *)
-        Context.species_compil_context (* Print context for the formula *)
+        Types.type_simple       (* Type of the variable *)
 ;;
 
 (* List of variable declarations for current section.
@@ -92,34 +83,7 @@ let find_method_type_kind_by_name vname coll_meths =
 ;;
 
 (** {descr} Collects the section variables needed for the proof. *)
-let generate_field_definition_prelude_true ctx print_ctx min_dk_env
-    used_species_parameter_tys dependencies_from_params =
-  let cc_mapping_extension =
-    List.map
-      (fun species_param_type_name ->
-        let as_string =
-          Parsetree_utils.vname_as_string_with_operators_expanded
-            species_param_type_name in
-        let param_name =  "_p_" ^ as_string in
-          section_variable_list :=
-            SVType param_name :: !section_variable_list;
-        (* Return the stuff to extend the collection_carrier_mapping. *)
-        ((ctx.Context.scc_current_unit, as_string),
-         (param_name, Types.CCMI_is)))
-      used_species_parameter_tys in
-  (* Extend the collection_carrier_mapping of the context with species
-     parameters stuff. *)
-  let new_ctx = { ctx with
-    Context.scc_collections_carrier_mapping =
-       cc_mapping_extension @ ctx.Context.scc_collections_carrier_mapping } in
-  (* Same thing for the printing comtext. *)
-  let new_print_ctx = {
-    print_ctx with
-      Dk_pprint.dpc_collections_carrier_mapping =
-        cc_mapping_extension @
-          print_ctx.Dk_pprint.dpc_collections_carrier_mapping } in
-  (* Abstract according to the species's parameters the current method depends
-     on. *)
+let generate_field_definition_prelude_true min_dk_env dependencies_from_params =
   List.iter
     (fun (species_param, (Env.ODFP_methods_list meths_from_param)) ->
       (* Recover the species parameter's name. *)
@@ -140,25 +104,8 @@ let generate_field_definition_prelude_true ctx print_ctx min_dk_env
          match meth_ty_kind with
          | Parsetree_utils.DETK_computational meth_ty ->
             section_variable_list :=
-              SVVar (prefix, meth, meth_ty, new_print_ctx) :: !section_variable_list
-         | Parsetree_utils.DETK_logical lexpr ->
-            (* Inside the logical expression of the method of the
-               parameter "Self" must be printed as "_p_param_name_T". *)
-            let self_map =
-              Species_record_type_dk_generation.
-              make_Self_cc_binding_species_param
-                ~current_species: ctx.Context.scc_current_species
-                species_param_name in
-            let new_ctx' = { new_ctx with
-                             Context.scc_collections_carrier_mapping =
-                               self_map ::
-                                 new_ctx.Context.scc_collections_carrier_mapping } in
-            section_variable_list :=
-              SVHyp (Expr_dk_generation.SMS_from_param
-                       species_param_name,
-                     meth,
-                     lexpr,
-                     new_ctx') :: !section_variable_list)
+              SVVar (prefix, meth, meth_ty) :: !section_variable_list
+         | Parsetree_utils.DETK_logical _ -> ())
         meths_from_param)
     dependencies_from_params;
   (* Generate the parameters denoting methods of ourselves we depend on
@@ -171,9 +118,7 @@ let generate_field_definition_prelude_true ctx print_ctx min_dk_env
            | Env.TypeInformation.MDEM_Defined_carrier sch ->
                let ty = Types.specialize sch in
                section_variable_list :=
-                 SVTypeAlias ("abst_T",
-                              ty,
-                              new_print_ctx)
+                 SVTypeAlias ("abst_T", ty)
                  :: !section_variable_list;
            | Env.TypeInformation.MDEM_Defined_computational _
            | Env.TypeInformation.MDEM_Defined_logical _ -> ()
@@ -186,12 +131,8 @@ let generate_field_definition_prelude_true ctx print_ctx min_dk_env
                let ty = Types.specialize sch in
                section_variable_list :=
                  SVVar
-                   ("abst_", n, ty, new_print_ctx) :: !section_variable_list;
-           | Env.TypeInformation.MDEM_Declared_logical (n, b) ->
-              section_variable_list :=
-                SVHyp
-                  (Expr_dk_generation.SMS_abstracted,
-                   n, b, new_ctx) :: !section_variable_list)
+                   ("abst_", n, ty) :: !section_variable_list;
+           | Env.TypeInformation.MDEM_Declared_logical _ -> ())
          min_dk_env;;
 
 (* {b Descr} : Generates the postlude of the prototype of a definec method. It
@@ -453,7 +394,38 @@ let ensure_enforced_dependencies_by_definition_are_definitions min_dk_env
     enf_deps
 ;;
 
+let zenonify_free_ident print_ctx out ident =
+  let print_ty out =
+    match ident.Parsetree.ast_type with
+    | Parsetree.ANTI_none
+    | Parsetree.ANTI_irrelevant -> assert false
+    | Parsetree.ANTI_type t -> Dk_pprint.pp_type_simple_to_dk
+                                print_ctx out t
+    | Parsetree.ANTI_scheme _ -> assert false
+  in
+  Format.fprintf out "@[%a : cc.eT (%t).@]@\n"
+                 Parsetree_utils.pp_vname_with_operators_expanded
+                 (Parsetree_utils.unqualified_vname_of_expr_ident ident)
+                 print_ty
+;;
 
+let zenonify_all_free_idents print_ctx out expr =
+  List.iter (zenonify_free_ident print_ctx out)
+            (Parsetree_utils.get_free_local_idents_from_expr_desc
+               expr.Parsetree.ast_desc)
+;;
+
+let zenonify_all_free_idents_from_logical_expr print_ctx out lexpr =
+  List.iter (zenonify_free_ident print_ctx out)
+            (Parsetree_utils.get_free_local_idents_from_logical_expr
+               lexpr)
+;;
+
+let zenonify_all_free_idents_from_binding_body print_ctx out params body =
+  List.iter (zenonify_free_ident print_ctx out)
+            (Parsetree_utils.get_free_local_idents_from_binding_body
+               params body)
+;;
 
 let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
     available_hyps by_def_expr_ident =
@@ -473,6 +445,8 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                       (by_def_expr_ident.Parsetree.ast_loc, by_def_expr_ident))
        in
        let (id, body) = lookup vname available_hyps in
+       (* Declare possibly free idents *)
+       zenonify_all_free_idents print_ctx out_fmter body;
        Format.fprintf out_fmter
          "(; For notation used via \"by definition of %a\". ;)@\n"
          Sourcify.pp_expr_ident by_def_expr_ident;
@@ -509,8 +483,12 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
        match value_body with
         | Env.DkGenInformation.VB_non_toplevel -> assert false
         | Env.DkGenInformation.VB_toplevel_let_bound
-              (rec_status, params, scheme, body) -> (
-            match rec_status with
+            (rec_status, params, scheme, body) ->
+           zenonify_all_free_idents_from_binding_body
+             print_ctx out_fmter
+             params body;
+           (* Declare possibly free idents *)
+           (match rec_status with
             | Env.DkGenInformation.RC_non_rec ->
                 (* Non recursive toplevel function: use a "Definition". *)
                 Format.fprintf out_fmter "@[<2>%s" name_for_zenon ;
@@ -532,7 +510,9 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
             (* Then, final carriage return. *)
             Format.fprintf out_fmter ".@]@\n"
         | Env.DkGenInformation.VB_toplevel_property lexpr ->
-            Format.fprintf out_fmter "@[<2>%s :=@ " name_for_zenon ;
+           zenonify_all_free_idents_from_logical_expr
+             print_ctx out_fmter lexpr;
+           Format.fprintf out_fmter "@[<2>%s :=@ " name_for_zenon ;
             (* Since the used definition is at toplevel, there is no abstraction
                no notion of "Self", no dependencies. *)
             Species_record_type_dk_generation.generate_logical_expr
@@ -566,6 +546,8 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                       (by_def_expr_ident.Parsetree.ast_loc, by_def_expr_ident))
              | Env.TypeInformation.MDEM_Defined_computational
                    (_, is_rec, _, params, scheme, body) -> (
+               zenonify_all_free_idents_from_binding_body
+                 print_ctx out_fmter params body;
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(; For method of Self used via \"by definition of \
@@ -596,6 +578,8 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                      Format.fprintf out_fmter ".@]@\n"
                  )
              | Env.TypeInformation.MDEM_Defined_logical (_, _, body) ->
+                zenonify_all_free_idents_from_logical_expr
+                  print_ctx out_fmter body;
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(; For method of Self used via \"by definition of \
@@ -742,6 +726,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
             Format.fprintf out_fmter
               " :@ cc.eT (%a).@]@\n" (Dk_pprint.pp_type_simple_to_dk print_ctx) meth_ty
         | Env.MTK_logical lexpr ->
+            zenonify_all_free_idents_from_logical_expr print_ctx out_fmter lexpr;
             Format.fprintf out_fmter
               "@[<2>";
             if mod_name <> ctx.Context.scc_current_unit then
@@ -817,6 +802,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
               (Dk_pprint.pp_type_simple_to_dk print_ctx)
               meth_ty
         | Parsetree_utils.DETK_logical lexpr ->
+            zenonify_all_free_idents_from_logical_expr print_ctx out_fmter lexpr;
             (* Inside the logical expression of the method of the parameter
                "Self" must be printed as "_p_param_name_T". *)
             let self_map =
@@ -875,6 +861,7 @@ let zenonify_by_property ctx print_ctx env min_dk_env
             Format.fprintf out_fmter "@[<2>%s :@ cc.eT (%a).@]@\n"
               name_for_zenon (Dk_pprint.pp_type_simple_to_dk print_ctx) meth_ty
         | Env.DkGenInformation.VB_toplevel_property lexpr ->
+            zenonify_all_free_idents_from_logical_expr print_ctx out_fmter lexpr;
             Format.fprintf out_fmter "@[<2>%s :@ dk_logic.eP (" name_for_zenon;
             (* Since the used definition is at toplevel, there is no abstraction
                no notion of "Self", no dependencies. *)
@@ -913,6 +900,7 @@ let zenonify_by_property ctx print_ctx env min_dk_env
                    (Dk_pprint.pp_type_simple_to_dk print_ctx) meth_ty
              | Env.TypeInformation.MDEM_Declared_logical (_, body)
              | Env.TypeInformation.MDEM_Defined_logical (_, _, body) ->
+                 zenonify_all_free_idents_from_logical_expr print_ctx out_fmter body;
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(; For method of Self used via \"by property %a\". ;)@\n"
@@ -1094,6 +1082,7 @@ let zenonify_fact ctx print_ctx env min_dk_env ~self_manifest
                  raise
                    (Attempt_proof_by_unknown_hypothesis
                       (fact.Parsetree.ast_loc, vname))) in
+           zenonify_all_free_idents_from_logical_expr print_ctx out_fmter hyp_logical_expr;
            Format.fprintf out_fmter "(; For hypothesis \"%a\". ;)@\n"
              Sourcify.pp_vname vname;
            Format.fprintf out_fmter "@[<2>%a :@ dk_logic.eP ("
@@ -1125,6 +1114,8 @@ let zenonify_fact ctx print_ctx env min_dk_env ~self_manifest
                  raise
                    (Attempt_proof_by_unknown_step
                       (fact.Parsetree.ast_loc, node_label))) in
+           zenonify_all_free_idents_from_logical_expr
+             print_ctx out_fmter avail_info.psa_base_logical_expr;
            Format.fprintf out_fmter "(; For step <%d>%s. ;)@\n"
              (fst node_label) (snd node_label);
            Format.fprintf out_fmter "@[<2>%a :@ dk_logic.eP ("
@@ -1168,7 +1159,7 @@ let zenonify_hyp ctx print_ctx env ~sep hyp =
               Parsetree_utils.pp_vname_with_operators_expanded vname
               (Dk_pprint.pp_type_simple_to_dk print_ctx) ty sep;
             section_variable_list :=
-              SVVar ("", vname, ty, print_ctx) :: !section_variable_list
+              SVVar ("", vname, ty) :: !section_variable_list
         | _ -> assert false
        end)
    | Parsetree.H_hypothesis (vname, logical_expr) ->
@@ -1408,10 +1399,10 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
        (* Start with Type aliases because they belong to the header *)
        List.iter (
          function
-         | SVTypeAlias (s, ty, ctx) ->
+         | SVTypeAlias (s, ty) ->
             Format.fprintf out_fmter "%%%%begin-type-alias: %s := %a@\n%%%%end-type-alias@\n"
                            s
-                           (Dk_pprint.pp_type_simple_to_dk ctx) ty
+                           (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
          | _ -> ())
        !section_variable_list;
        (* Now all other section variables *)
@@ -1419,12 +1410,11 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
          function
          | SVTypeAlias _ -> ()
          | SVType vname -> Format.fprintf out_fmter "%s_T : cc.uT.@\n" vname
-         | SVVar (prefix, vname, ty, pctx) ->
+         | SVVar (prefix, vname, ty) ->
             Format.fprintf out_fmter
               "%s%a :@ cc.eT %a.@\n"
               prefix Parsetree_utils.pp_vname_with_operators_expanded vname
-              (Dk_pprint.pp_type_simple_to_dk pctx) ty
-         | SVHyp _ -> ()
+              (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
          )
          (List.rev !section_variable_list);
        Format.fprintf out_fmter
@@ -1467,21 +1457,21 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
        (* Now, print the lemma body. Inside, any method of "Self" is
           abstracted (without lambda-lift) and named "abst_xxx". That's why we
           use the mode [SMS_abstracted]. *)
+       let aim = match aim_gen_method with ZSGM_from_logical_expr aim -> aim in
+       zenonify_all_free_idents_from_logical_expr
+         print_ctx out_fmter aim;
        Format.fprintf out_fmter "(; Theorem's body. ;)@\n";
        Format.fprintf out_fmter "%a : dk_logic.eP (@\n"
          Parsetree_utils.pp_vname_with_operators_expanded aim_name;
        (* Generate the aim depending on if we are in a regular proof or in the
           initial stage of a termination proof. *)
-       (match aim_gen_method with
-        | ZSGM_from_logical_expr aim ->
-            Species_record_type_dk_generation.generate_logical_expr
-              ~local_idents: [] ~in_recursive_let_section_of: []
-              ~self_methods_status:
-                Expr_dk_generation.SMS_abstracted
-              ~recursive_methods_status:
-                Expr_dk_generation.RMS_regular
-              ctx env aim
-       ) ;
+       Species_record_type_dk_generation.generate_logical_expr
+         ~local_idents: [] ~in_recursive_let_section_of: []
+         ~self_methods_status:
+         Expr_dk_generation.SMS_abstracted
+         ~recursive_methods_status:
+         Expr_dk_generation.RMS_regular
+         ctx env aim;
        Format.fprintf out_fmter ").@\n" ;
        (* End of Zenon stuff. *)
        Format.fprintf out_fmter "%%%%end-auto-proof@\n";
@@ -1528,8 +1518,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_dk_env
        the same job than for regular field definition prelude but changing
        abstractions that are performed by extra parameters by Variable, Let
        or Hypothesis. *)
-    generate_field_definition_prelude_true ctx print_ctx min_dk_env
-         used_species_parameter_tys dependencies_from_params
+    generate_field_definition_prelude_true min_dk_env dependencies_from_params
   in
   (* *********************** *)
   (* Start really the job... *)

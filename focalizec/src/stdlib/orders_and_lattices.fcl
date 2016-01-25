@@ -324,16 +324,16 @@ species Ordered_set_as_meet_semi_lattice =
                                 definition of inf
                         <5>f qed
                              by step <5>1, <5>2
-                                property equal_transitive, inf
+                                property equal_transitive
                   <4>2 hypothesis H : ~ (!leq (y, x)),
                         prove !equal (x, !inf (y, x))
                         by hypothesis H
                            property equal_reflexive
                            definition of inf
-                  <4>f qed by step <4>1, <4>2 property inf
+                  <4>f qed by step <4>1, <4>2
              <3>f qed
                 by step <3>1, <3>2
-                   property equal_symmetric, equal_transitive, inf
+                   property equal_symmetric, equal_transitive
         <2>2 hypothesis Hyx : !leq (y, x),
              prove !equal (!inf (x, y), !inf (y, x))
              (* [rr]: could do as <2>1 above, but zenon is wiser *)
@@ -342,8 +342,8 @@ species Ordered_set_as_meet_semi_lattice =
                 definition of inf
         <2>f qed
            by step <2>1, <2>2
-              property total_order, inf
-   <1>2 qed by step <1>1 property inf
+              property total_order
+   <1>2 conclude
   ;
 
 end
@@ -432,12 +432,12 @@ species Ordered_set_as_lattice =
                            definition of geq
                    <4>2 prove !equal (!sup (y, x), y)
                         by step <4>1
-                           property equal_reflexive, geq
+                           property equal_reflexive
                            definition of sup
                    <4>f qed
                       by step <4>2
                          property sup_commutes,
-                                  equal_symmetric, equal_transitive, sup
+                                  equal_symmetric, equal_transitive
               <3>2 prove !equal (x, !inf (x, y))
                    by hypothesis H
                       property equal_reflexive
@@ -446,10 +446,10 @@ species Ordered_set_as_lattice =
                                 !inf (x, y))
 (* [rr]: loops?    by step <3>1 property !inf_substitution_rule, !equal_symmetric *)
                    by step <3>1
-                      property inf_right_substitution_rule, equal_symmetric, inf, sup
+                      property inf_right_substitution_rule, equal_symmetric
               <3>f qed
                  by step <3>3, <3>2
-                    property equal_symmetric, equal_transitive, inf, sup
+                    property equal_symmetric, equal_transitive
          <2>2 hypothesis H : !leq (y, x),
               prove !equal (x, !inf (x, !sup (x, y)))
               <3>1 prove !geq (x, y)
@@ -457,20 +457,20 @@ species Ordered_set_as_lattice =
                       definition of geq
               <3>2 prove !equal (x, !sup (x, y))
                    by step <3>1
-                      property equal_reflexive, geq
+                      property equal_reflexive
                       definition of sup
               <3>3 prove !equal (!inf (x, !sup (x, y)),
                                 !inf (x, x))
                    by step <3>2
-                      property inf_right_substitution_rule, equal_symmetric, inf, sup
+                      property inf_right_substitution_rule, equal_symmetric
               <3>f qed
                  by step <3>2, <3>3
                     property inf_idempotent,
-                             equal_symmetric, equal_transitive, inf, sup
+                             equal_symmetric, equal_transitive
          <2>f qed
             by step <2>1, <2>2
-               property total_order, inf, sup
-    <1>f qed by step <1>1 property inf, sup
+               property total_order
+    <1>f conclude
 
    ;
 
@@ -485,10 +485,10 @@ species Ordered_set_as_lattice =
               <3>2 prove !equal (!sup (x, !inf (x, y)),
                                  !sup (x, x))
                    by step <3>1
-                      property sup_right_substitution_rule, equal_symmetric, inf, sup
+                      property sup_right_substitution_rule, equal_symmetric
               <3>f qed by step <3>2
                           property sup_idempotent, equal_reflexive,
-                          equal_symmetric, equal_transitive, inf, sup
+                          equal_symmetric, equal_transitive
          <2>2 hypothesis H : !leq (y, x),
               prove !equal (x, !sup (x, !inf (x, y)))
               <3>2 prove !equal (!sup (x, y), !sup (x, !inf (x, y)))
@@ -497,15 +497,15 @@ species Ordered_set_as_lattice =
                         definition of inf
                    <4>2 prove !equal (y, !inf (x, y))
                         by step <4>1 property inf_commutes,
-                           equal_transitive, equal_symmetric, inf
-                   <4>f qed by step <4>2 property sup_right_substitution_rule, inf, sup
+                           equal_transitive, equal_symmetric
+                   <4>f qed by step <4>2 property sup_right_substitution_rule
               <3>3 prove !equal (!sup (x, y), x)
                    by hypothesis H property equal_reflexive
                       definition of sup, geq
               <3>f qed by step <3>2,  <3>3
-                       property equal_symmetric, equal_transitive, inf, sup
-         <2>f qed by step <2>1, <2>2 property total_order, inf, sup
-    <1>f qed by step <1>1 property inf, sup
+                       property equal_symmetric, equal_transitive
+         <2>f qed by step <2>1, <2>2 property total_order
+    <1>f conclude
     ;
 
 end

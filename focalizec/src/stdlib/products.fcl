@@ -146,7 +146,7 @@ species Product_set (A is Setoid, B is Setoid) =
                B!equal_transitive, B!equal_symmetric
            <2>f qed by step <2>1, <2>2
                        definition of equal
-      <1>f qed by step <1>1 property equal;
+      <1>f conclude;
 
   (** consistency between builder and equality, second arg *)
   theorem pair_right_substitution_rule: all x : A, all y_1 y_2 : B,
@@ -174,7 +174,7 @@ species Product_set (A is Setoid, B is Setoid) =
              property B!equal_transitive, B!equal_symmetric
            <2>f qed by step <2>1, <2>2
                        definition of equal
-      <1>f qed by step <1>1 property equal;
+      <1>f conclude;
 
   (** Programmers should use this global consistency property when possible *)
   theorem pair_substitution_rule: all x_1 x_2 : A, all y_1 y_2 : B,
@@ -242,8 +242,8 @@ species Categorical_property_of_Product_set
                      <4>f qed by step <4>1, <4>2, <4>3
                                  property B!equal_transitive, B!equal_symmetric
                 <3>f qed by step <3>1 definition of morph
-           <2>f qed by step <2>1, <2>2 property P!equal_spec, morph
-      <1>f qed by step <1>1 property morph
+           <2>f qed by step <2>1, <2>2 property P!equal_spec
+      <1>f conclude
   ;
 
     theorem morph_first_factorize: all x : E,
@@ -275,8 +275,8 @@ species Cartesian_product (A is Setoid, B is Setoid) =
 
   representation = A * B;
 
-  let first (x) = fst(x);
-  let second (x) = snd(x);
+  let first (x) = match x with | (r, _) -> r;
+  let second (x) = match x with | (_, r) -> r;
   let pair (x, y) = (x, y);
 
   (* [rr]:  warning unused variable by Zenon should not be *)
