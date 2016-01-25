@@ -65,11 +65,12 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrow
    Useful for Dedukti rewrite contexts.
 *)
 let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas
-    print_ctx out_fmter tys =
+    print_ctx as_zenon_fact out_fmter tys =
   List.iter
     (fun ty ->
-      Format.fprintf out_fmter "%a,@ "
-        (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
+      Format.fprintf out_fmter "%a%t,@ "
+        (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
+        (fun out -> if as_zenon_fact then Format.fprintf out " :@ cc.uT"))
     tys
 ;;
 
@@ -281,7 +282,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
               (type_descr.Env.TypeInformation.type_loc.Location.
                  l_beg.Location.pos_fname)) in
        let qualif =
-         if ctx.Context.rcc_current_unit <> tydef_comp_unit && as_zenon_fact
+         if ctx.Context.rcc_current_unit <> tydef_comp_unit || as_zenon_fact
          then tydef_comp_unit ^ "."
          else "" in
        (* Then really print the constructors declarations. *)
@@ -321,16 +322,24 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                       if (sum_cstr_name = curr_sum_cstr_name) then
                         begin
                           Format.fprintf out_fmter
-                          "[%a%aRet_type,@ pattern,@ default] %smatch__%a@ %aRet_type@ (%a@ %a@ %a)@ pattern@ default -->@ pattern%a.@\n"
-                          (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas print_ctx)
+                          "[%a%aRet_type%t,@ pattern%t,@ default%t] %smatch__%a@ %aRet_type@ (%s%a@ %a@ %a)@ pattern@ default -->@ pattern%a.@\n"
+                          (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas print_ctx as_zenon_fact)
                           type_def_params
                           (fun out ->
-                           List.iteri (fun i _ -> Format.fprintf out "x_%d_,@ " i))
+                           List.iteri (fun i ty -> Format.fprintf out "x_%d_" i;
+                                                 if as_zenon_fact then
+                                                   Format.fprintf out " :@ cc.eT (%a)"
+                                                     (Dk_pprint.pp_type_simple_to_dk print_ctx) ty;
+                                                 Format.fprintf out ",@ "))
                           cstr_args
+                          (fun out -> if as_zenon_fact then Format.fprintf out " :@ cc.uT")
+                          (fun out -> if as_zenon_fact then Format.fprintf out " :@ @[%acc.eT Ret_type@]" (print_types_parameters_with_arrows print_ctx) cstr_args)
+                          (fun out -> if as_zenon_fact then Format.fprintf out " :@ cc.eT Ret_type")
                           qualif
                           Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name
                           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
                           type_def_params
+                          qualif
                           Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name
                           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
                           type_def_params
@@ -340,16 +349,24 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                           cstr_args;
                         end else begin
                           Format.fprintf out_fmter
-                          "[%a%aRet_type,@ pattern,@ default] %smatch__%a@ %aRet_type@ (%a@ %a@ %a)@ pattern@ default -->@ default.@\n"
-                          (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas print_ctx)
+                          "[%a%aRet_type%t,@ pattern%t,@ default%t] %smatch__%a@ %aRet_type@ (%s%a@ %a@ %a)@ pattern@ default -->@ default.@\n"
+                          (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas print_ctx as_zenon_fact)
                           type_def_params
                           (fun out ->
-                           List.iteri (fun i _ -> Format.fprintf out "x_%d_,@ " i))
+                           List.iteri (fun i ty -> Format.fprintf out "x_%d_" i;
+                                                 if as_zenon_fact then
+                                                   Format.fprintf out " :@ cc.eT (%a)"
+                                                     (Dk_pprint.pp_type_simple_to_dk print_ctx) ty;
+                                                 Format.fprintf out ",@ "))
                           curr_cstr_args
+                          (fun out -> if as_zenon_fact then Format.fprintf out " :@ cc.uT" else ())
+                          (fun out -> if as_zenon_fact then Format.fprintf out " :@ @[%acc.eT Ret_type@]" (print_types_parameters_with_arrows print_ctx) cstr_args)
+                          (fun out -> if as_zenon_fact then Format.fprintf out " :@ cc.eT Ret_type" else ())
                           qualif
                           Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name
                           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
                           type_def_params
+                          qualif
                           Parsetree_utils.pp_vname_with_operators_expanded curr_sum_cstr_name
                           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
                           type_def_params
@@ -405,7 +422,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
              Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name;
            Format.fprintf out_fmter "@[[";
            print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas
-             print_ctx out_fmter type_def_params;
+             print_ctx as_zenon_fact out_fmter type_def_params;
            Format.fprintf out_fmter "R,@ f";
            List.iteri
              (fun i _ -> Format.fprintf out_fmter ",@ x_%d_" i)
