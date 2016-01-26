@@ -6,6 +6,7 @@ def prop  : Type := dk_logic.Prop.
 def proof : prop -> Type := dk_logic.eP.
 def type  : Type := cc.uT.
 def term  : type -> Type := cc.eT.
+def arrow : type -> type -> type := cc.Arrow.
 iota  : type.
 
 (; Symbols ;)
