@@ -524,3 +524,41 @@ seq
 	=> H1 (H4 : proof (equal a t1 t2)
                => H2 (H4 p H3)).
 
+def Rconglr : a : type ->
+              p : (term a -> prop) ->
+              t1 : term a ->
+              t2 : term a ->
+              (proof (p t2) -> seq) ->
+              proof (p t1) ->
+              proof (equal a t1 t2) ->
+              seq.
+
+def Rcongrl : a : type ->
+              p : (term a -> prop) ->
+              t1 : term a ->
+              t2 : term a ->
+              (proof (p t2) -> seq) ->
+              proof (p t1) ->
+              proof (equal a t2 t1) ->
+              seq.
+
+def equal_refl : A : type -> t : term A -> proof (equal A t t)
+               := dk_logic.refl.
+
+def equal_congruence (A : type)
+                     (t : term A)
+                     (u : term A)
+                     (P : term A -> prop)
+                     (H : proof (equal A t u)) :
+                     proof (P t) ->
+                     proof (P u)
+                     := H P.
+
+def equal_sym (A : type) (t : term A) (u : term A) (H : proof (equal A t u)) : proof (equal A u t)
+:= equal_congruence A t u (x : term A => equal A x t) H (equal_refl A t).
+
+[a,p,t1,t2,HN2,H1,He] Rconglr a p t1 t2 HN2 H1 He -->
+  HN2 (equal_congruence a t1 t2 p He H1).
+
+[a,p,t1,t2,HN2,H1,He] Rcongrl a p t1 t2 HN2 H1 He -->
+  Rconglr a p t1 t2 HN2 H1 (equal_sym a t2 t1 He).

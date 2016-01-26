@@ -263,19 +263,14 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
     | t -> raise (Can_only_print_type_arguments_of_sum_types t)
   in
 
-  let has_cbv ty =
-    match ty with
-    | Types.ST_tuple _ | Types.ST_construct _ -> true
-    | Types.ST_var _ | Types.ST_arrow _ | Types.ST_sum_arguments _ | Types.ST_prop
-    | Types.ST_self_rep | Types.ST_species_rep _ -> false
-  in
+  let has_cbv _ = true in
 
   let rec_pp_cbv_to_dk_tuple ctx prio ppf = function
     | [] -> assert false  (* Tuples should never have 0 component. *)
     | [last] ->
         Format.fprintf ppf "%a" (rec_pp_to_dk ctx prio) last
     | ty1 :: ty2 :: rem ->
-        Format.fprintf ppf "dk_tuple.call_by_value_prod@ %a@ %a"
+        Format.fprintf ppf "dk_builtins.call_by_value (dk_tuple.prod@ %a@ %a)"
           (rec_pp_to_dk ctx prio) ty1
           (rec_pp_to_dk_tuple ctx 0)
           (ty2 :: rem)
@@ -289,21 +284,8 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
         Format.fprintf ppf "@[<2>(%a)@]"
           (rec_pp_cbv_to_dk_tuple ctx 3) tys ;
         if prio >= 3 then Format.fprintf ppf ")@]"
-    | Types.ST_construct (type_name, arg_tys) ->
-        (begin
-        (* Priority of arguments of a sum type constructor : like an regular
-           application : 0. *)
-        match arg_tys with
-         | [] -> Format.fprintf ppf "call_by_value_%a"
-               pp_type_name_to_dk_no_module type_name
-         | _ ->
-             Format.fprintf ppf "@[<1>(call_by_value_%a@ %a)@]"
-               pp_type_name_to_dk_no_module type_name
-               (Handy.pp_generic_separated_list " "
-                  (rec_pp_to_dk ctx 0)) arg_tys
-        end)
-    | _ -> assert false
-                 (* rec_pp_cbv_to_dk should only be called when has_cbv returns true *)
+    | ty -> Format.fprintf ppf "@[<1>(dk_builtins.call_by_value (%a))@]"
+               (rec_pp_to_dk ctx 0) ty
   in
 
   let rec_pp_cbv_to_dk ctx prio ppf ty =

@@ -20,10 +20,9 @@ ROOT_DIR = ../../..
 # Must be defined before including Makefile.common since is used by it.
 BYT_OBJS = dk_pprint.cmo\
 	expr_dk_generation.cmo let_dk_generation.cmo\
-	proof_dk_generation.cmo\
 	species_record_type_dk_generation.cmo rec_let_dk_gen.cmo\
-	type_dk_generation.cmo species_dk_generation.cmo \
-	main_dk_generation.cmo
+	type_dk_generation.cmo 	proof_dk_generation.cmo\
+	species_dk_generation.cmo main_dk_generation.cmo
 
 include $(ROOT_DIR)/Makefile.common
 

@@ -852,8 +852,9 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
         ((* ---> Now, generate the prelude of the only method introduced by
               "let rec". *)
           generate_field_definition_prelude
-            ctx' print_ctx ai.Env.TypeInformation.ad_min_dk_env ai.Env.TypeInformation.ad_used_species_parameter_tys) in
-      let pfdp ?sep without_types =
+            ctx' print_ctx ai.Env.TypeInformation.ad_min_dk_env
+            ai.Env.TypeInformation.ad_used_species_parameter_tys) in
+      let pfdp ?sep without_types _ =
         (match sep with
          | None -> print_field_definition_prelude
                     ~without_types ctx'
@@ -872,7 +873,8 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
                         ai.Env.TypeInformation.ad_dependencies_from_parameters
                         generated_fields)
       in
-       Rec_let_dk_gen.generate_recursive_definition new_ctx new_print_ctx env name params scheme body_expr pfdp;
+       Rec_let_dk_gen.generate_recursive_definition
+         new_ctx new_print_ctx env name params scheme body_expr ~for_zenon:false pfdp;
        let compiled = {
          Misc_common.cfm_is_logical = false ;
          Misc_common.cfm_from_species = from ;

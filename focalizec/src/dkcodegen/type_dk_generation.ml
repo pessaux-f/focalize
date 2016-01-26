@@ -61,17 +61,24 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrow
     tys
 ;;
 
-(* Same but commas between parameters instead of spaces.
-   Useful for Dedukti rewrite contexts.
-*)
-let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas
-    print_ctx as_zenon_fact out_fmter tys =
-  List.iter
-    (fun ty ->
-      Format.fprintf out_fmter "%a%t,@ "
+(* Same but commas between parameters instead of spaces.  Useful for
+   Dedukti rewrite contexts.  optional argument final_comma indicates
+   whether or not we should output a trailing comma
+ *)
+let rec print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas
+     ?(final_comma = true) print_ctx as_zenon_fact out_fmter tys =
+  match tys with
+  | [] -> ()
+  | [ty] when not final_comma ->
+     Format.fprintf out_fmter "%a%t"
         (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
-        (fun out -> if as_zenon_fact then Format.fprintf out " :@ cc.uT"))
-    tys
+        (fun out -> if as_zenon_fact then Format.fprintf out " :@ cc.uT")
+  | ty :: tys ->
+     Format.fprintf out_fmter "%a%t,@ "
+        (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
+        (fun out -> if as_zenon_fact then Format.fprintf out " :@ cc.uT");
+     print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas
+       print_ctx as_zenon_fact ~final_comma out_fmter tys
 ;;
 
 let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces
@@ -262,16 +269,41 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
 
              (sum_cstr_name, sum_cstr_ty, sum_cstr_args))
            cstrs in
-       Format.fprintf out_fmter "(; Inductive definition ;)@\n@[<2>%a__t : "
-         Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
-       (* Print the parameter(s) stuff if any. Do it only now the unifications
-          have been done with the sum constructors to be sure that thanks to
-          unifications, "sames" variables will have the "same" name everywhere
-          (i.e. in the the parameters enumeration of the type and in the sum
-          constructors definitions). *)
+       Format.fprintf out_fmter "(; Inductive definition ;)@\n";
+       if not as_zenon_fact then
+         begin
+           (* First a static version in Type *)
+           Format.fprintf out_fmter "@[<2>__%a__t : "
+             Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
+           (* Print the parameter(s) stuff if any. Do it only now the
+              unifications have been done with the sum constructors to
+              be sure that thanks to unifications, "sames" variables
+              will have the "same" name everywhere (i.e. in the the
+              parameters enumeration of the type and in the sum
+              constructors definitions). *)
+           print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
+             print_ctx out_fmter type_def_params;
+           Format.fprintf out_fmter "Type.@\n"
+         end;
+       (* Now the useful version in cc.uT *)
+       Format.fprintf out_fmter "%s%a__t : "
+           (if as_zenon_fact then "" else "def ")
+           Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
          print_ctx out_fmter type_def_params;
-       Format.fprintf out_fmter "cc.uT.@\n(; Constructors ;)";
+       Format.fprintf out_fmter "cc.uT.@\n";
+       if not as_zenon_fact then
+         (* Link both types *)
+         Format.fprintf out_fmter "[%a] cc.eT (%a__t %a) --> __%a__t %a.@\n"
+           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas print_ctx false ~final_comma:false)
+           type_def_params
+           Parsetree_utils.pp_vname_with_operators_expanded type_def_name
+           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
+           type_def_params
+           Parsetree_utils.pp_vname_with_operators_expanded type_def_name
+           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
+           type_def_params;
+       Format.fprintf out_fmter "(; Constructors ;)";
        (* Qualify constructor if we are printing a fact for Zenon and the
           location where we generate it is not in the compilation unit
           hosting the type definition. Drop the file-system full path (was
@@ -427,14 +459,13 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
            List.iteri
              (fun i _ -> Format.fprintf out_fmter ",@ x_%d_" i)
              cstr_args;
-           Format.fprintf out_fmter "] call_by_value_%a__t@ "
+           Format.fprintf out_fmter "] dk_builtins.call_by_value (%a__t"
                           Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
-           List.iter (Format.fprintf out_fmter "%a " (Dk_pprint.pp_type_simple_to_dk print_ctx))
-                     type_def_params;
-           Format.fprintf out_fmter "R@ f@ (%a"
-             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name;
            List.iter (Format.fprintf out_fmter "@ %a" (Dk_pprint.pp_type_simple_to_dk print_ctx))
                      type_def_params;
+           Format.fprintf out_fmter ") R@ f@ (%a"
+             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name;
+           List.iter (fun _ -> Format.fprintf out_fmter "@ _") type_def_params;
            List.iteri
              (fun i _ -> Format.fprintf out_fmter "@ x_%d_" i)
              cstr_args;
