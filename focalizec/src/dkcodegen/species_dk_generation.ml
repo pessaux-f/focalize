@@ -371,7 +371,7 @@ let generate_def_dependency_equivalence env ctx generated_fields from name =
     - [~sep] : What to print between arguments
     - [~without_types] : Whether to print types after arguments and defined parameters
  *)
-let print_field_definition_prelude ?sep ?without_types ctx print_ctx env min_dk_env
+let print_field_definition_prelude ?sep ?(without_types = false) ctx print_ctx env min_dk_env
     used_species_parameter_tys dependencies_from_params generated_fields =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Generate the parameters from the species parameters' types we use.
@@ -385,31 +385,28 @@ let print_field_definition_prelude ?sep ?without_types ctx print_ctx env min_dk_
      | None -> Format.fprintf out "@ ("
      | Some _ -> ());
     arg_printing out;
-    (match without_types with
-     | None -> Format.fprintf out " :@ ";
-                type_printing out
-     | Some _ -> ());
+    (if not without_types then
+       Format.fprintf out " :@ %t" type_printing);
     (match sep with
      | None -> Format.fprintf out ")"
      | Some sep -> Format.fprintf out " %s@ " sep)
   in
   let print_defined_arg arg_printing val_printing out =
-    match without_types with
-    | None ->
-       (match sep with
-        | None -> Format.fprintf out "@ ("
-        | Some _ -> ());
+    if not without_types then
+      (* Defined arguments are not printed
+         when without_types is given because
+         without_types is used for listing parameters
+         when applying a function and we don't need them
+         in that case*)
+      ((match sep with
+       | None -> Format.fprintf out "@ ("
+       | Some _ -> ());
        arg_printing out;
        Format.fprintf out " :=@ ";
        val_printing out;
        (match sep with
         | None -> Format.fprintf out ")"
-        | Some _ -> Format.fprintf out " =>@ " ) (* Force the "=>" separator (instead of "->") for Sukerujo let binding. *)
-    | Some _ -> ()               (* Defined arguments are not printed
-                                   when without_types is given because
-                                   without_types is used for listing parameters
-                                   when applying a function and we don't need them
-                                   in that case*)
+        | Some _ -> Format.fprintf out " =>@ " )) (* Force the "=>" separator (instead of "->") for Sukerujo let binding. *)
   in
   let cc_mapping_extension =
     List.map
@@ -841,217 +838,41 @@ let generate_theorem ctx print_ctx env min_dk_env used_species_parameter_tys
 let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
     generated_fields from name params scheme body
     ai =
-  let out_fmter = ctx.Context.scc_out_fmter in
   match body with
    | Parsetree.BB_logical _ ->
        failwith "recursive logical : TODO"  (* [Unsure] *)
    | Parsetree.BB_computational body_expr ->
-       let species_name = snd (ctx.Context.scc_current_species) in
-       (* Extend the context with the mapping between these recursive
-          functions and their extra arguments. Since we are in Dk, we
-          need to take care of the logical definitions and of the
-          explicite types abstraction management. *)
-       let ctx' = {
-         ctx with
-           Context.scc_lambda_lift_params_mapping =
-             [(name,
-               Misc_common.make_params_list_from_abstraction_info
-                 ~care_logical: true ~care_types: true ai)] } in
-       (* We get the function's parameters and their types. This will serve
-          at various stage, each time we will need to speak about a
-          parameter. *)
-       (* For [bind_parameters_to_types_from_type_scheme], not that we do not
-          have anymore information about "Self"'s structure... *)
-       let (params_with_type, return_ty_opt, _) =
-         MiscHelpers.bind_parameters_to_types_from_type_scheme
-           ~self_manifest: None (Some scheme) params in
-       (* Just remove the option that must always be Some since we provided
-          a scheme. *)
-       let params_with_type =
-         List.map
-           (fun (n, opt_ty) ->
-             match opt_ty with None -> assert false | Some t -> (n, t))
-           params_with_type in
-       let return_ty =
-         match return_ty_opt with None -> assert false | Some t -> t in
-
-(* [Unsure] *)
-       let (abstracted_methods, new_ctx, new_print_ctx) =
-         ((* ---> Now, generate the prelude of the only method introduced by
+      let ctx' = {
+        ctx with
+        Context.scc_lambda_lift_params_mapping =
+          [(name,
+            Misc_common.make_params_list_from_abstraction_info
+              ~care_logical: true ~care_types: true ai)] } in
+      let (abstracted_methods, new_ctx, new_print_ctx) =
+        ((* ---> Now, generate the prelude of the only method introduced by
               "let rec". *)
-           generate_field_definition_prelude
-             ctx' print_ctx ai.Env.TypeInformation.ad_min_dk_env ai.Env.TypeInformation.ad_used_species_parameter_tys) in
-
-
-       (*
-          A recursive method m is defined in Dedukti by two symbols m and rec_m:
-
-          let rec m (arg1, arg2) = F(m, arg1, arg2)
-
-          becomes
-
-          def rec_m : T1 -> T2 -> T.
-          def m : T1 -> T2 -> T.
-          [arg1 : T1, arg2 : T2] rec_m arg1 arg2 --> F(m, arg1, arg2).
-          [arg1 : T1, arg2 : T2] m arg1 arg2 --> call_by_value_T2 T (call_by_value_T1 (T2 -> T) rec_m arg1) arg2.
-
-          call_by_value_Ti has been defined with Ti such that if v is a value of type Ti and f a function of type
-          Ti -> T then
-          (call_by_value_Ti T f v) rewrites to (f v).
-        *)
-
-       (* Define the type of both symbols *)
-       Format.fprintf out_fmter
-         "@[<2>def %a__%a_type@ : Type := ("
-         Parsetree_utils.pp_vname_with_operators_expanded species_name
-         Parsetree_utils.pp_vname_with_operators_expanded name;
-
-       print_field_definition_prelude
-         ~sep: "->" ctx' print_ctx env
-         ai.Env.TypeInformation.ad_min_dk_env
-         ai.Env.TypeInformation.ad_used_species_parameter_tys
-         ai.Env.TypeInformation.ad_dependencies_from_parameters
-         generated_fields;
-
-       List.iter
-         (fun (_, ty) ->
-          Format.fprintf out_fmter "cc.eT (%a) ->@ "
-            (Dk_pprint.pp_type_simple_to_dk new_print_ctx) ty)
-         params_with_type;
-
-       Format.fprintf out_fmter "cc.eT (%a)).@]@\n"
-         (Dk_pprint.pp_type_simple_to_dk new_print_ctx) return_ty ;
-
-
-       (* Declare both symbols *)
-       Format.fprintf out_fmter
-         "@[<2>def %a__rec_%a@ : %a__%a_type.@]@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded species_name
-         Parsetree_utils.pp_vname_with_operators_expanded name
-         Parsetree_utils.pp_vname_with_operators_expanded species_name
-         Parsetree_utils.pp_vname_with_operators_expanded name;
-
-       Format.fprintf out_fmter
-         "@[<2>def %a__%a@ : %a__%a_type.@]@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded species_name
-         Parsetree_utils.pp_vname_with_operators_expanded name
-         Parsetree_utils.pp_vname_with_operators_expanded species_name
-         Parsetree_utils.pp_vname_with_operators_expanded name;
-
-
-       let rec print_list_param sep out = function
-         | [] -> ()
-         | [(a, _)] ->
-            Format.fprintf out "%a"
-              Parsetree_utils.pp_vname_with_operators_expanded a
-         | (a, _) :: l ->
-            Format.fprintf out "%a%s@ %a"
-              Parsetree_utils.pp_vname_with_operators_expanded a
-              sep
-              (print_list_param sep) l
-       in
-
-       (* Generate the recursive function. *)
-       Format.fprintf out_fmter "@[<2>[";
-
-       print_field_definition_prelude ~sep: "," ctx' print_ctx env
-         ~without_types: true
-         ai.Env.TypeInformation.ad_min_dk_env
-         ai.Env.TypeInformation.ad_used_species_parameter_tys
-         ai.Env.TypeInformation.ad_dependencies_from_parameters
-         generated_fields;
-
-       print_list_param "," out_fmter params_with_type;
-
-       Format.fprintf out_fmter "] %a__rec_%a"
-         Parsetree_utils.pp_vname_with_operators_expanded species_name
-         Parsetree_utils.pp_vname_with_operators_expanded name;
-
-       print_field_definition_prelude ~without_types: true ctx' print_ctx env
-         ai.Env.TypeInformation.ad_min_dk_env
-         ai.Env.TypeInformation.ad_used_species_parameter_tys
-         ai.Env.TypeInformation.ad_dependencies_from_parameters
-         generated_fields;
-
-       List.iter
-         (fun (a, _) ->
-          Format.fprintf out_fmter "@ (%a)"
-              Parsetree_utils.pp_vname_with_operators_expanded a)
-         params_with_type;
-
-       Format.fprintf out_fmter "@ -->@\n";
-
-       (* Let-bind the unqualified version of the recursive method because it is how
-          it appears in the recursive call. *)
-       Format.fprintf out_fmter "(%a :=@ %a__%a =>@ "
-         Parsetree_utils.pp_vname_with_operators_expanded name
-         Parsetree_utils.pp_vname_with_operators_expanded species_name
-         Parsetree_utils.pp_vname_with_operators_expanded name;
-
-       (* In Dedukti, we do want the current recursive method to be applied to
-          parameters coming from lambda-lifting. Hence ~in_recursive_let_section_of: []
-          instead of ~in_recursive_let_section_of: [name] (as found in Coq translation) *)
-
-       Expr_dk_generation.generate_expr
-         new_ctx ~local_idents: [] ~in_recursive_let_section_of: []
-         ~self_methods_status: Expr_dk_generation.SMS_abstracted
-         ~recursive_methods_status: Expr_dk_generation.RMS_regular
-         env body_expr ;
-       Format.fprintf out_fmter ").@]@\n";
-
-       (* Generate the CBV version. *)
-       Format.fprintf out_fmter "@[<2>[] %a__%a -->@ ("
-         Parsetree_utils.pp_vname_with_operators_expanded species_name
-         Parsetree_utils.pp_vname_with_operators_expanded name;
-
-       print_field_definition_prelude ~sep: "=>" ctx' print_ctx env
-         ai.Env.TypeInformation.ad_min_dk_env
-         ai.Env.TypeInformation.ad_used_species_parameter_tys
-         ai.Env.TypeInformation.ad_dependencies_from_parameters
-         generated_fields;
-
-       List.iter
-         (fun (a, ty) ->
-          Format.fprintf out_fmter "%a : cc.eT (%a) =>@ "
-              Parsetree_utils.pp_vname_with_operators_expanded a
-              (Dk_pprint.pp_type_simple_to_dk new_print_ctx) ty)
-         params_with_type;
-
-       let rec print_cbv_types_as_arrows out = function
-         | [] -> Dk_pprint.pp_type_simple_to_dk new_print_ctx out return_ty
-         | ty :: l ->
-            Format.fprintf out "(@[cc.Arrow %a %a@])"
-              (Dk_pprint.pp_type_simple_to_dk new_print_ctx) ty
-              print_cbv_types_as_arrows l
-       in
-
-       let rec print_cbv accu out = function
-         | [] ->
-            Format.fprintf out "@[%a__rec_%a"
-               Parsetree_utils.pp_vname_with_operators_expanded species_name
-               Parsetree_utils.pp_vname_with_operators_expanded name;
-            print_field_definition_prelude ~without_types: true ctx' print_ctx env
-              ai.Env.TypeInformation.ad_min_dk_env
-              ai.Env.TypeInformation.ad_used_species_parameter_tys
-              ai.Env.TypeInformation.ad_dependencies_from_parameters
-              generated_fields;
-            Format.fprintf out "@]"
-         | (a, ty) :: l when Dk_pprint.has_cbv ty ->
-            Format.fprintf out "@[%a@ %a@ (%a)@ %a@]"
-               (Dk_pprint.pp_for_cbv_type_simple_to_dk new_print_ctx) ty
-               print_cbv_types_as_arrows accu
-               (print_cbv (ty :: accu)) l
-               Parsetree_utils.pp_vname_with_operators_expanded a
-         | (a, ty) :: l ->
-            Format.fprintf out "@[%a@ %a@]"
-               (print_cbv (ty :: accu)) l
-               Parsetree_utils.pp_vname_with_operators_expanded a
-       in
-
-       print_cbv [] out_fmter (List.rev params_with_type);
-
-       (* Close the pretty print box. *)
-       Format.fprintf out_fmter ").@]@\n" ;
+          generate_field_definition_prelude
+            ctx' print_ctx ai.Env.TypeInformation.ad_min_dk_env ai.Env.TypeInformation.ad_used_species_parameter_tys) in
+      let pfdp ?sep without_types =
+        (match sep with
+         | None -> print_field_definition_prelude
+                    ~without_types ctx'
+                    print_ctx env
+                    ai.Env.TypeInformation.ad_min_dk_env
+                    ai.Env.TypeInformation.ad_used_species_parameter_tys
+                    ai.Env.TypeInformation.ad_dependencies_from_parameters
+                    generated_fields
+         | Some sep -> print_field_definition_prelude
+                        ~sep
+                        ~without_types
+                        ctx'
+                        print_ctx env
+                        ai.Env.TypeInformation.ad_min_dk_env
+                        ai.Env.TypeInformation.ad_used_species_parameter_tys
+                        ai.Env.TypeInformation.ad_dependencies_from_parameters
+                        generated_fields)
+      in
+       Rec_let_dk_gen.generate_recursive_definition new_ctx new_print_ctx env name params scheme body_expr pfdp;
        let compiled = {
          Misc_common.cfm_is_logical = false ;
          Misc_common.cfm_from_species = from ;
