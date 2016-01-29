@@ -1360,6 +1360,17 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
                            (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
          | _ -> ())
        !section_variable_list;
+       (* Declare all is-param carrier types *)
+       let is_params =
+         List.map
+           (function
+             | _, (param_name, Types.CCMI_is) -> Some param_name
+             | _, (_, Types.CCMI_in _) -> None)
+           ctx.Context.scc_collections_carrier_mapping in
+       List.iter
+         (function None -> () | Some param ->
+          Format.fprintf out_fmter "%s_T : cc.uT.@\n" param)
+         is_params;
        (* Now all other section variables *)
        List.iter (
          function
