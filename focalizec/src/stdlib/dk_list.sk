@@ -46,24 +46,24 @@ def simple_match : A : cc.uT ->
                    match A (_x : List A => return).
 
 def match__nil : A : cc.uT ->
-                 List A ->
                  return : cc.uT ->
+                 List A ->
                  cc.eT return ->
                  cc.eT return ->
                  cc.eT return.
 [A,ret,ncase,ccase]
-    match__nil A (nil _) ret ncase ccase --> ncase
+    match__nil A ret (nil _) ncase ccase --> ncase
 [A,a,l,ret,ncase,ccase]
-    match__nil A (cons _ a l) ret ncase ccase --> ccase.
+    match__nil A ret (cons _ a l) ncase ccase --> ccase.
 
 def match__cons : A : cc.uT ->
-                  List A ->
                   return : cc.uT ->
+                  List A ->
                   (cc.eT A -> List A -> cc.eT return) ->
                   cc.eT return ->
                   cc.eT return.
 [A,l,ret,ncase,ccase]
-    match__cons A l ret ccase ncase --> simple_match A ret ncase ccase l.
+    match__cons A ret l ccase ncase --> simple_match A ret ncase ccase l.
 
 (; Append ;)
 def append : A : cc.uT -> List A -> List A -> List A.
