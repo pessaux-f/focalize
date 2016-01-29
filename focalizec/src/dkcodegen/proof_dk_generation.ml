@@ -360,35 +360,26 @@ let ensure_enforced_dependencies_by_definition_are_definitions min_dk_env
     enf_deps
 ;;
 
-let zenonify_free_ident print_ctx out ident =
-  let print_ty out =
-    match ident.Parsetree.ast_type with
-    | Parsetree.ANTI_none
-    | Parsetree.ANTI_irrelevant -> assert false
-    | Parsetree.ANTI_type t -> Dk_pprint.pp_type_simple_to_dk
-                                print_ctx out t
-    | Parsetree.ANTI_scheme _ -> assert false
-  in
-  Format.fprintf out "@[%a : cc.eT (%t).@]@\n"
-                 Parsetree_utils.pp_vname_with_operators_expanded
-                 (Parsetree_utils.unqualified_vname_of_expr_ident ident)
-                 print_ty
+let zenonify_free_ident ctx print_ctx env out ident =
+  Format.fprintf out "@[%t : %t.@]@\n"
+                 (fun _ -> Expr_dk_generation.generate_expr_ident ctx ident)
+                 (fun _ -> Expr_dk_generation.generate_expr_ident_type ctx print_ctx env ident)
 ;;
 
-let zenonify_all_free_idents print_ctx out expr =
-  List.iter (zenonify_free_ident print_ctx out)
+let zenonify_all_free_idents ctx print_ctx env out expr =
+  List.iter (zenonify_free_ident ctx print_ctx env out)
             (Parsetree_utils.get_free_local_idents_from_expr_desc
                expr.Parsetree.ast_desc)
 ;;
 
-let zenonify_all_free_idents_from_logical_expr print_ctx out lexpr =
-  List.iter (zenonify_free_ident print_ctx out)
+let zenonify_all_free_idents_from_logical_expr ctx print_ctx env out lexpr =
+  List.iter (zenonify_free_ident ctx print_ctx env out)
             (Parsetree_utils.get_free_local_idents_from_logical_expr
                lexpr)
 ;;
 
-let zenonify_all_free_idents_from_binding_body print_ctx out params body =
-  List.iter (zenonify_free_ident print_ctx out)
+let zenonify_all_free_idents_from_binding_body ctx print_ctx env out params body =
+  List.iter (zenonify_free_ident ctx print_ctx env out)
             (Parsetree_utils.get_free_local_idents_from_binding_body
                params body)
 ;;
@@ -412,7 +403,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
        in
        let (id, body) = lookup vname available_hyps in
        (* Declare possibly free idents *)
-       zenonify_all_free_idents print_ctx out_fmter body;
+       zenonify_all_free_idents ctx print_ctx env out_fmter body;
        Format.fprintf out_fmter
          "(; For notation used via \"by definition of %a\". ;)@\n"
          Sourcify.pp_expr_ident by_def_expr_ident;
@@ -450,10 +441,10 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
         | Env.DkGenInformation.VB_non_toplevel -> assert false
         | Env.DkGenInformation.VB_toplevel_let_bound
             (rec_status, params, scheme, body) ->
-           zenonify_all_free_idents_from_binding_body
-             print_ctx out_fmter
-             params body;
            (* Declare possibly free idents *)
+           zenonify_all_free_idents_from_binding_body
+             ctx print_ctx env out_fmter
+             params body;
            (match rec_status with
             | Env.DkGenInformation.RC_non_rec ->
                 (* Non recursive toplevel function: use a "Definition". *)
@@ -477,7 +468,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
             Format.fprintf out_fmter ".@]@\n"
         | Env.DkGenInformation.VB_toplevel_property lexpr ->
            zenonify_all_free_idents_from_logical_expr
-             print_ctx out_fmter lexpr;
+             ctx print_ctx env out_fmter lexpr;
            Format.fprintf out_fmter "@[<2>%s :=@ " name_for_zenon ;
             (* Since the used definition is at toplevel, there is no abstraction
                no notion of "Self", no dependencies. *)
@@ -513,7 +504,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
              | Env.TypeInformation.MDEM_Defined_computational
                    (_, is_rec, _, params, scheme, body) -> (
                zenonify_all_free_idents_from_binding_body
-                 print_ctx out_fmter params body;
+                 ctx print_ctx env out_fmter params body;
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(; For method of Self used via \"by definition of \
@@ -543,7 +534,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                  )
              | Env.TypeInformation.MDEM_Defined_logical (_, _, body) ->
                 zenonify_all_free_idents_from_logical_expr
-                  print_ctx out_fmter body;
+                  ctx print_ctx env out_fmter body;
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(; For method of Self used via \"by definition of \
@@ -690,7 +681,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
             Format.fprintf out_fmter
               " :@ cc.eT (%a).@]@\n" (Dk_pprint.pp_type_simple_to_dk print_ctx) meth_ty
         | Env.MTK_logical lexpr ->
-            zenonify_all_free_idents_from_logical_expr print_ctx out_fmter lexpr;
+            zenonify_all_free_idents_from_logical_expr ctx print_ctx env out_fmter lexpr;
             Format.fprintf out_fmter
               "@[<2>";
             if mod_name <> ctx.Context.scc_current_unit then
@@ -766,7 +757,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
               (Dk_pprint.pp_type_simple_to_dk print_ctx)
               meth_ty
         | Parsetree_utils.DETK_logical lexpr ->
-            zenonify_all_free_idents_from_logical_expr print_ctx out_fmter lexpr;
+            zenonify_all_free_idents_from_logical_expr ctx print_ctx env out_fmter lexpr;
             (* Inside the logical expression of the method of the parameter
                "Self" must be printed as "_p_param_name_T". *)
             let self_map =
@@ -825,7 +816,7 @@ let zenonify_by_property ctx print_ctx env min_dk_env
             Format.fprintf out_fmter "@[<2>%s :@ cc.eT (%a).@]@\n"
               name_for_zenon (Dk_pprint.pp_type_simple_to_dk print_ctx) meth_ty
         | Env.DkGenInformation.VB_toplevel_property lexpr ->
-            zenonify_all_free_idents_from_logical_expr print_ctx out_fmter lexpr;
+            zenonify_all_free_idents_from_logical_expr ctx print_ctx env out_fmter lexpr;
             Format.fprintf out_fmter "@[<2>%s :@ dk_logic.eP (" name_for_zenon;
             (* Since the used definition is at toplevel, there is no abstraction
                no notion of "Self", no dependencies. *)
@@ -864,7 +855,7 @@ let zenonify_by_property ctx print_ctx env min_dk_env
                    (Dk_pprint.pp_type_simple_to_dk print_ctx) meth_ty
              | Env.TypeInformation.MDEM_Declared_logical (_, body)
              | Env.TypeInformation.MDEM_Defined_logical (_, _, body) ->
-                 zenonify_all_free_idents_from_logical_expr print_ctx out_fmter body;
+                 zenonify_all_free_idents_from_logical_expr ctx print_ctx env out_fmter body;
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(; For method of Self used via \"by property %a\". ;)@\n"
@@ -1046,7 +1037,7 @@ let zenonify_fact ctx print_ctx env min_dk_env ~self_manifest
                  raise
                    (Attempt_proof_by_unknown_hypothesis
                       (fact.Parsetree.ast_loc, vname))) in
-           zenonify_all_free_idents_from_logical_expr print_ctx out_fmter hyp_logical_expr;
+           zenonify_all_free_idents_from_logical_expr ctx print_ctx env out_fmter hyp_logical_expr;
            Format.fprintf out_fmter "(; For hypothesis \"%a\". ;)@\n"
              Sourcify.pp_vname vname;
            Format.fprintf out_fmter "@[<2>%a :@ dk_logic.eP ("
@@ -1079,7 +1070,7 @@ let zenonify_fact ctx print_ctx env min_dk_env ~self_manifest
                    (Attempt_proof_by_unknown_step
                       (fact.Parsetree.ast_loc, node_label))) in
            zenonify_all_free_idents_from_logical_expr
-             print_ctx out_fmter avail_info.psa_base_logical_expr;
+             ctx print_ctx env out_fmter avail_info.psa_base_logical_expr;
            Format.fprintf out_fmter "(; For step <%d>%s. ;)@\n"
              (fst node_label) (snd node_label);
            Format.fprintf out_fmter "@[<2>%a :@ dk_logic.eP ("
@@ -1423,7 +1414,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
           use the mode [SMS_abstracted]. *)
        let aim = match aim_gen_method with ZSGM_from_logical_expr aim -> aim in
        zenonify_all_free_idents_from_logical_expr
-         print_ctx out_fmter aim;
+         ctx print_ctx env out_fmter aim;
        Format.fprintf out_fmter "(; Theorem's body. ;)@\n";
        Format.fprintf out_fmter "%a : dk_logic.eP (@\n"
          Parsetree_utils.pp_vname_with_operators_expanded aim_name;

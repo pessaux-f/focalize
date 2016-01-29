@@ -23,6 +23,8 @@ exception Can_only_print_type_arguments_of_sum_types of Types.type_simple_view
 
 val pp_type_simple_to_dk :
   dk_print_context -> Format.formatter -> Types.type_simple -> unit
+val pp_type_scheme_to_dk :
+  dk_print_context -> Format.formatter -> Types.type_scheme -> unit
 val pp_type_variable_to_dk : Format.formatter -> Types.type_variable -> unit
 val pp_type_simple_args_to_dk :
   dk_print_context -> Format.formatter -> Types.type_simple -> unit

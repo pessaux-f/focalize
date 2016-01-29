@@ -612,32 +612,13 @@ let get_free_local_vnames_from_expr_desc initial_e_descr =
 let (get_free_local_idents_from_expr_desc,
      get_free_local_idents_from_logical_expr,
      get_free_local_idents_from_binding_body) =
-  let abst_vname vname =
-    Parsetree.Vlident
-      ("abst_" ^ vname_as_string_with_operators_expanded vname)
-  in
-
-  let abst_ident_desc = function
-    | Parsetree.EI_method (None, vn) ->
-       Parsetree.EI_method (None, abst_vname vn)
-    | _ -> assert false
-  in
-
-  let abst ident = {ident with
-                     Parsetree.ast_desc =
-                       abst_ident_desc ident.Parsetree.ast_desc}
-  in
-
   (* Remind in [bound_vnames] the identifiers bound in the expression ... by
      binding constructs (fun and patterns) to ignore them. *)
   let rec rec_get_descr bound_vnames = function
   | Parsetree.E_self | Parsetree.E_const _ | Parsetree.E_external _ -> []
   | Parsetree.E_fun (args, body) -> rec_get_expr (args @ bound_vnames) body
-  | Parsetree.E_var ({ Parsetree.ast_desc = Parsetree.EI_local vname } as v) ->
-      if List.mem vname bound_vnames then [] else [v]
-  | Parsetree.E_var ({ Parsetree.ast_desc = Parsetree.EI_method (None, vname) } as v) ->
-      if List.mem vname bound_vnames then [] else [abst v]
-  | Parsetree.E_var _ -> []
+  | Parsetree.E_var ({ Parsetree.ast_desc = Parsetree.EI_local vname }) when List.mem vname bound_vnames -> []
+  | Parsetree.E_var v -> [v]
   | Parsetree.E_app (e1, e2) ->
       let e2s_vnames = rec_get_exprs bound_vnames e2 in
       Handy.list_concat_uniq (rec_get_expr bound_vnames e1) e2s_vnames

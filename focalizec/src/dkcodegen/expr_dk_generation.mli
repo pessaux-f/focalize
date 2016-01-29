@@ -28,6 +28,18 @@ type let_binding_pre_computation = {
   lbpc_generalized_vars : Types.type_variable list
 }
 
+val generate_expr_ident :
+  Context.species_compil_context ->
+  Parsetree.expr_ident ->
+  unit
+
+val generate_expr_ident_type :
+  Context.species_compil_context ->
+  Dk_pprint.dk_print_context ->
+  Env.DkGenEnv.t ->
+  Parsetree.expr_ident ->
+  unit
+
 val generate_expr :
   Context.species_compil_context ->
   in_recursive_let_section_of: Parsetree.vname list ->

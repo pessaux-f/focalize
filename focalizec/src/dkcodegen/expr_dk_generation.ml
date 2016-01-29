@@ -77,6 +77,11 @@ let print_ident out i =
   (* Hack for unit *)
   | Parsetree.I_global (Parsetree.Qualified ("basics", Parsetree.Vuident "()")) ->
      Format.fprintf out "dk_builtins.tt"
+  (* nil and cons are keywords for Sukerujo *)
+  | Parsetree.I_global (Parsetree.Qualified ("basics", Parsetree.Vuident "::")) ->
+     Format.fprintf out "cons"
+  | Parsetree.I_global (Parsetree.Qualified ("basics", Parsetree.Vuident "[]")) ->
+     Format.fprintf out "nil"
   | Parsetree.I_global (Parsetree.Qualified (fname, vname)) ->
      Format.fprintf out "%s.%a"
        fname
@@ -333,9 +338,15 @@ let generate_pattern ctx dkctx env pattern
           | Parsetree.I_global (Parsetree.Vname v)
           | Parsetree.I_local v -> ("", v)
         in
-        Format.fprintf out_fmter "@[<1>%smatch__%a"
+        let pattern_str =
+          match Parsetree_utils.vname_as_string_with_operators_expanded pattern_vname with
+          | "[]" -> "nil"
+          | "::" -> "cons"
+          | s -> s
+        in
+        Format.fprintf out_fmter "@[<1>%smatch__%s"
                        pattern_file_name
-                       Sourcify.pp_vname pattern_vname;
+                       pattern_str;
         (* Now check that the constructor has a Dedukti mapping *)
         check_constructor_ident ctx env cident;
         (begin
@@ -630,6 +641,54 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
               )
           )
       )
+;;
+
+
+(* Generate an expr_ident with methods abstracted, usefull for
+   declaring it to Zenon. *)
+let generate_expr_ident ctx ident =
+  generate_expr_ident_for_E_var
+    ctx
+    ~in_recursive_let_section_of:[]
+    ~local_idents:[]
+    ~self_methods_status:SMS_abstracted
+    ~recursive_methods_status:RMS_abstracted
+    ident
+;;
+
+(* Generate the type scheme associated with an ident in the environment. *)
+let generate_expr_ident_type ctx print_ctx env ident =
+  let out_fmter = ctx.Context.scc_out_fmter in
+  let id_type_simple =
+    (match ident.Parsetree.ast_type with
+     | Parsetree.ANTI_none | Parsetree.ANTI_irrelevant
+     | Parsetree.ANTI_scheme _ -> assert false
+     | Parsetree.ANTI_type t -> t) in
+  let id_type_scheme =
+    try
+      let vb =
+        (Env.DkGenEnv.find_value
+           ~loc: ident.Parsetree.ast_loc
+           ~current_unit: ctx.Context.scc_current_unit
+           ~current_species_name: (Some (Parsetree_utils.name_of_vname
+                                           (snd ctx.Context.scc_current_species)))
+           ident env)
+      in
+      (match vb with
+       | Env.DkGenInformation.VB_toplevel_let_bound (_, _, ts, _) -> Some ts
+       | Env.DkGenInformation.VB_non_toplevel
+       | Env.DkGenInformation.VB_toplevel_property _ -> None)
+    with
+      (* If the identifier was not found, then it was may be a local
+                identifier bound by a pattern. Then we can safely ignore it. *)
+      Env.Unbound_identifier (_, _) -> None
+  in
+  match id_type_scheme with
+  | None ->
+     Format.fprintf out_fmter "cc.eT (%a)"
+       (Dk_pprint.pp_type_simple_to_dk print_ctx) id_type_simple
+  | Some sch ->
+     Dk_pprint.pp_type_scheme_to_dk print_ctx out_fmter sch
 ;;
 
 

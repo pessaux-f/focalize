@@ -311,3 +311,12 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
    (fun ctx ppf ty -> rec_pp_cbv_to_dk ctx 0 ppf (Types.view_type_simple ty))
   )
 ;;
+
+
+let pp_type_scheme_to_dk ctx ppf sch =
+  let (vars, ty) = Types.scheme_split sch in
+  List.iter
+    (Format.fprintf ppf "%a : cc.uT ->@ " pp_type_variable_to_dk)
+    vars;
+  Format.fprintf ppf "cc.eT (%a)" (pp_type_simple_to_dk ctx) ty
+;;
