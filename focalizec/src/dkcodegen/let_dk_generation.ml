@@ -32,16 +32,10 @@ exception Logical_methods_only_inside_species of Location.t ;;
 
     {b Visibility}: Exported outside this module.                             *)
 (* ************************************************************************** *)
-let rec let_binding_compile ctx
-    ~in_recursive_let_section_of ~local_idents ~self_methods_status
-    ~recursive_methods_status ~rec_status ~toplevel env bd
-    pre_computed_bd_info =
-  if rec_status = Env.DkGenInformation.RC_rec then
-    (rec_let_binding_compile ctx
+let non_rec_let_binding_compile ctx
     ~in_recursive_let_section_of ~local_idents ~self_methods_status
     ~recursive_methods_status ~toplevel env bd
-    pre_computed_bd_info)
-  else (
+    pre_computed_bd_info =
   (* Create once for all the flag used to insert the let-bound idents in the
      environment. *)
   let toplevel_loc = if toplevel then Some bd.Parsetree.ast_loc else None in
@@ -118,15 +112,15 @@ let rec let_binding_compile ctx
      current bound identifier has. *)
   Env.DkGenEnv.add_value
     ~toplevel: toplevel_loc bd.Parsetree.ast_desc.Parsetree.b_name
-    pre_computed_bd_info.Expr_dk_generation.lbpc_value_body env)
+    pre_computed_bd_info.Expr_dk_generation.lbpc_value_body env
+;;
 
-and rec_let_binding_compile ctx
+let rec_let_binding_compile ctx
     ~in_recursive_let_section_of ~local_idents ~self_methods_status
-    ~recursive_methods_status ~toplevel env bd
+    ~recursive_methods_status env bd
     pre_computed_bd_info =
   let out_fmter = ctx.Context.scc_out_fmter in
   let fun_name = bd.Parsetree.ast_desc.Parsetree.b_name in
-
   (* Generate the binder and the bound name for the function. *)
   Format.fprintf out_fmter "def %a :@ "
     Parsetree_utils.pp_vname_with_operators_expanded
@@ -161,7 +155,6 @@ and rec_let_binding_compile ctx
               for each parameter name ! *)
            assert false)
     params_with_type ;
-
   let return_ty =
   (match pre_computed_bd_info.Expr_dk_generation.lbpc_result_ty with
    | None ->
@@ -174,49 +167,6 @@ and rec_let_binding_compile ctx
                  (Dk_pprint.pp_type_simple_to_dk print_ctx) return_ty;
   (* Now, print the result type of the "definition". *)
   Format.fprintf out_fmter ".@\n";
-
-  let result =
-    let_binding_compile ctx
-    ~in_recursive_let_section_of ~local_idents ~self_methods_status
-    ~recursive_methods_status
-    ~rec_status:Env.DkGenInformation.RC_non_rec ~toplevel env
-    {bd with
-      Parsetree.ast_desc =
-        {bd.Parsetree.ast_desc with
-          Parsetree.b_name =
-            Parsetree.Vlident
-              (Format.fprintf Format.str_formatter "rec_%a"
-                 Parsetree_utils.pp_vname_with_operators_expanded fun_name;
-               Format.flush_str_formatter ()
-              )}}
-    pre_computed_bd_info in
-
-
-  (* Copied from species_dk_generation.ml, see the explanation there. *)
-  (* Generate the CBV version. *)
-  Format.fprintf out_fmter ".@]@\n@[<2>[] %a -->@ "
-    Parsetree_utils.pp_vname_with_operators_expanded fun_name;
-
-  List.iter
-    (fun var ->
-      Format.fprintf out_fmter "%a : cc.uT =>@ "
-        Dk_pprint.pp_type_variable_to_dk var)
-    generalized_vars ;
-
-  List.iter
-    (fun (param_vname, pot_param_ty) ->
-      match pot_param_ty with
-       | Some param_ty ->
-           Format.fprintf out_fmter "%a : cc.eT (%a) =>@ "
-             Parsetree_utils.pp_vname_with_operators_expanded param_vname
-             (Dk_pprint.pp_type_simple_to_dk print_ctx) param_ty
-       | None ->
-           (* Because we provided a type scheme to the function
-              [bind_parameters_to_types_from_type_scheme], MUST get one type
-              for each parameter name ! *)
-          assert false)
-    params_with_type;
-
   let rec print_cbv_types_as_arrows out = function
     | [] -> Dk_pprint.pp_type_simple_to_dk print_ctx out return_ty
     | ty :: l ->
@@ -224,13 +174,8 @@ and rec_let_binding_compile ctx
                       (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
                       print_cbv_types_as_arrows l
   in
-
   let rec print_cbv accu out = function
-    | [] ->
-       Format.fprintf out "@[rec_%a"
-                      Parsetree_utils.pp_vname_with_operators_expanded fun_name;
-       (* TODO something *)
-       Format.fprintf out "@]"
+    | [] -> Parsetree_utils.pp_vname_with_operators_expanded out fun_name
     | (a, Some ty) :: l when Dk_pprint.has_cbv ty ->
        Format.fprintf out "@[%a@ %a@ (%a)@ %a@]"
                       (Dk_pprint.pp_for_cbv_type_simple_to_dk print_ctx) ty
@@ -243,9 +188,78 @@ and rec_let_binding_compile ctx
                       Parsetree_utils.pp_vname_with_operators_expanded a
     | (_, None) :: _ -> assert false
   in
-
+  Format.fprintf out_fmter "@[[";
+  List.iter
+    (fun var ->
+      Format.fprintf out_fmter "%a,@ "
+        Dk_pprint.pp_type_variable_to_dk var)
+    generalized_vars ;
+  List.iteri
+    (fun i (param_vname, _) ->
+         Format.fprintf out_fmter (if i = 0 then "%a" else ",@ %a")
+             Parsetree_utils.pp_vname_with_operators_expanded param_vname)
+    params_with_type ;
+  Format.fprintf out_fmter "] %a"
+                 Parsetree_utils.pp_vname_with_operators_expanded
+                 fun_name;
+  List.iter
+    (fun var ->
+      Format.fprintf out_fmter "@ %a"
+        Dk_pprint.pp_type_variable_to_dk var)
+    generalized_vars ;
+  List.iter
+    (fun (param_vname, _) ->
+           Format.fprintf out_fmter "@ %a"
+             Parsetree_utils.pp_vname_with_operators_expanded param_vname)
+    params_with_type ;
+  Format.fprintf out_fmter " -->@ (%a :=@ "
+                 Parsetree_utils.pp_vname_with_operators_expanded
+                 fun_name;
+  List.iter
+    (fun var ->
+      Format.fprintf out_fmter "@ (%a : cc.uT =>@ "
+        Dk_pprint.pp_type_variable_to_dk var)
+    generalized_vars ;
+  List.iter
+    (function
+      | (param_vname, Some ty) ->
+         Format.fprintf out_fmter "@ (%a : cc.eT (%a) =>@ "
+           Parsetree_utils.pp_vname_with_operators_expanded param_vname
+           (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
+      | _, None -> assert false)
+    params_with_type ;
   print_cbv [] out_fmter (List.rev params_with_type);
-  result
+  List.iter (fun _ -> Format.fprintf out_fmter ")") generalized_vars;
+  List.iter (fun _ -> Format.fprintf out_fmter ")") params_with_type;
+  Format.fprintf out_fmter "@ =>@ ";
+  (* Here, each parameter name of the binding may mask a "in"-parameter. *)
+  let local_idents' =
+    (List.map fst pre_computed_bd_info.Expr_dk_generation.lbpc_params_with_type) @ local_idents in
+  (* Now, let's generate the bound body. *)
+  (match bd.Parsetree.ast_desc.Parsetree.b_body with
+  | Parsetree.BB_computational e ->
+      Expr_dk_generation.generate_expr
+        ctx ~in_recursive_let_section_of ~local_idents: local_idents'
+        ~self_methods_status ~recursive_methods_status env e
+  | Parsetree.BB_logical _ -> assert false) ;
+  Format.fprintf out_fmter ")@]";
+  (* The value has already been added to the environment. *)
+  env
+
+let let_binding_compile ctx
+    ~in_recursive_let_section_of ~local_idents ~self_methods_status
+    ~recursive_methods_status ~rec_status ~toplevel env bd
+    pre_computed_bd_info =
+  if rec_status = Env.DkGenInformation.RC_rec then
+    (rec_let_binding_compile ctx
+    ~in_recursive_let_section_of ~local_idents ~self_methods_status
+    ~recursive_methods_status env bd
+    pre_computed_bd_info)
+  else (non_rec_let_binding_compile ctx
+    ~in_recursive_let_section_of ~local_idents ~self_methods_status
+    ~recursive_methods_status ~toplevel env bd
+    pre_computed_bd_info)
+;;
 
 
 
@@ -329,5 +343,4 @@ let toplevel_let_def_compile ctx env let_def =
   Format.fprintf out_fmter "@]" ;
   env'
 ;;
-
 
