@@ -135,6 +135,15 @@ let generate_field_definition_prelude_true min_dk_env dependencies_from_params =
            | Env.TypeInformation.MDEM_Declared_logical _ -> ())
          min_dk_env;;
 
+let add_equality_hypothesis_for_rec ctx =
+  (* Add the equality between CBV f x and f(x). *)
+  let output_string = Format.fprintf ctx.Context.scc_out_fmter "%s@\n" in
+  output_string "dk_builtins.cbv_eq : cc.eP (dk_logic.forall_type (A : cc.uT =>";
+  output_string "   dk_logic.forall_type (R : cc.uT =>";
+  output_string "   dk_logic.forall (cc.Arrow A R) (f : cc.eT (cc.Arrow A R) =>";
+  output_string "   dk_logic.forall A (a : cc.eT A =>";
+  output_string "   dk_logic.equal R (dk_builtins.call_by_value A R f a) (f a)))))).";;
+
 (* {b Descr} : Generates the postlude of the prototype of a definec method. It
    Prints its arguments with their type (not those induced by lambda-liftings),
    its return type and its body (if some is provided) WITH methods
@@ -142,25 +151,16 @@ let generate_field_definition_prelude_true min_dk_env dependencies_from_params =
 (* Should be places in Species_dk_generation but we need it for
    printing Zenon's "by definition"s. *)
 let generate_defined_method_proto_postlude ctx print_ctx env
-    ~self_manifest params scheme body_opt =
+    ~self_manifest ~rec_status name params scheme body_opt =
   let out_fmter = ctx.Context.scc_out_fmter in
-  (* Add the parameters of the let-binding with their type. *)
-  (* Ignore the result type of the "let" if it's a function because we never
-     print the type constraint on the result of the "let". We only print them
-     in the arguments of the let-bound ident.
-     Note by the whay that we do not have anymore information about "Self"'s
-     structure... *)
-  (* However, print the generalised variable usign the same trick than in
-     [let_binding_compile]. Consult comment over there... This was bug #55. *)
   let (generalized_vars, _) = Types.scheme_split scheme in
-  List.iter
-    (fun var ->
-      Format.fprintf out_fmter "@ (%a : cc.uT)"
-        Dk_pprint.pp_type_variable_to_dk var)
-    generalized_vars ;
   let (params_with_type, ending_ty_opt, _) =
     MiscHelpers.bind_parameters_to_types_from_type_scheme
       ~self_manifest (Some scheme) params in
+  let fun_name = match name with
+    | Parsetree.Vname v
+    | Parsetree.Qualified(_, v) -> v
+  in
   let ending_ty =
     (match ending_ty_opt with
      | None ->
@@ -168,46 +168,78 @@ let generate_defined_method_proto_postlude ctx print_ctx env
             always be returned a type, i.e, something [Some ...].  *)
          assert false
      | Some t -> t) in
-  List.iter
-    (fun (param_vname, opt_param_ty) ->
-      match opt_param_ty with
-       | Some param_ty ->
-           Format.fprintf out_fmter "@ (%a : cc.eT %a)"
-             Parsetree_utils.pp_vname_with_operators_expanded param_vname
-             (Dk_pprint.pp_type_simple_to_dk print_ctx) param_ty
-       | None ->
-           Format.fprintf out_fmter "@ %a"
-             Parsetree_utils.pp_vname_with_operators_expanded param_vname)
-    params_with_type ;
-  (* Now, we print the ending type of the method. *)
-  Format.fprintf out_fmter " :@ cc.eT (%a) "
-    (Dk_pprint.pp_type_simple_to_dk print_ctx) ending_ty ;
-  (* Generates the body's code of the method if some is provided.
+  (match rec_status with
+   | Env.RC_rec _ ->
+      let body = match body_opt with
+        | Some (Parsetree.BB_computational b) -> b
+        | _ -> assert false
+      in
+      Format.fprintf out_fmter " :@ ";
+      List.iter
+        (fun var ->
+         Format.fprintf out_fmter "%a : cc.uT ->@ "
+                        Dk_pprint.pp_type_variable_to_dk var)
+        generalized_vars ;
+      List.iter
+        (fun (_, opt_param_ty) ->
+         match opt_param_ty with
+         | Some param_ty ->
+            Format.fprintf out_fmter "cc.eT (%a) ->@ "
+                           (Dk_pprint.pp_type_simple_to_dk print_ctx) param_ty
+         | None -> assert false)
+        params_with_type ;
+      (* Now, we print the ending type of the method. *)
+      Format.fprintf out_fmter "cc.eT (%a).@\n"
+                     (Dk_pprint.pp_type_simple_to_dk print_ctx) ending_ty ;
+      add_equality_hypothesis_for_rec ctx;
+      Rec_let_dk_gen.generate_recursive_definition
+        ctx print_ctx env fun_name params scheme body ~abstract:false ~toplevel:true
+        (fun ?sep _ _ -> ignore sep)
+   | Env.RC_non_rec ->
+      List.iter
+        (fun var ->
+         Format.fprintf out_fmter "@ (%a : cc.uT)"
+                        Dk_pprint.pp_type_variable_to_dk var)
+        generalized_vars ;
+      List.iter
+        (fun (param_vname, opt_param_ty) ->
+         match opt_param_ty with
+         | Some param_ty ->
+            Format.fprintf out_fmter "@ (%a : cc.eT %a)"
+                           Parsetree_utils.pp_vname_with_operators_expanded param_vname
+                           (Dk_pprint.pp_type_simple_to_dk print_ctx) param_ty
+         | None ->
+            Format.fprintf out_fmter "@ %a"
+                           Parsetree_utils.pp_vname_with_operators_expanded param_vname)
+        params_with_type ;
+      (* Now, we print the ending type of the method. *)
+      Format.fprintf out_fmter " :@ cc.eT (%a) "
+                     (Dk_pprint.pp_type_simple_to_dk print_ctx) ending_ty ;
+      (* Generates the body's code of the method if some is provided.
      No local idents in the context because we just enter the scope of a species
      fields and so we are not under a core expression. Since we are generating
      a "let", methods from Self are printed "abst_XXX" since dependencies have
      leaded to "Variables abst_XXX" before this new "Variable". *)
-  (match body_opt with
-   | None -> ()
-   | Some body ->
-       Format.fprintf out_fmter ":=@ ";
-       (match body with
-        | Parsetree.BB_computational e ->
-            Expr_dk_generation.generate_expr
-              ctx ~local_idents: [] ~in_recursive_let_section_of: []
-              ~self_methods_status:
+      (match body_opt with
+       | None -> ()
+       | Some body ->
+          Format.fprintf out_fmter ":=@ ";
+          (match body with
+           | Parsetree.BB_computational e ->
+              Expr_dk_generation.generate_expr
+                ctx ~local_idents: [] ~in_recursive_let_section_of: []
+                ~self_methods_status:
                 Expr_dk_generation.SMS_abstracted
-              ~recursive_methods_status:
+                ~recursive_methods_status:
                 Expr_dk_generation.RMS_regular
-              env e
-        | Parsetree.BB_logical p ->
-            Species_record_type_dk_generation.generate_logical_expr
-              ctx ~local_idents: [] ~in_recursive_let_section_of: []
-              ~self_methods_status:
+                env e
+           | Parsetree.BB_logical p ->
+              Species_record_type_dk_generation.generate_logical_expr
+                ctx ~local_idents: [] ~in_recursive_let_section_of: []
+                ~self_methods_status:
                 Expr_dk_generation.SMS_abstracted
-              ~recursive_methods_status:
-                Expr_dk_generation.RMS_regular env p))
-;;
+                ~recursive_methods_status:
+                Expr_dk_generation.RMS_regular env p)));;
 
 
 
@@ -268,8 +300,6 @@ let rec find_only_PN_subs_in_proof_nodes = function
       | _ -> find_only_PN_subs_in_proof_nodes q
 ;;
 
-
-
 (** To make recursive definitions working with Zenon.
 
     {b Rem} : For Function. *)
@@ -278,16 +308,11 @@ let zenonify_by_recursive_meth_definition ctx print_ctx env
   match body with
   | Parsetree.BB_logical _ -> assert false (* Not implemented *)
   | Parsetree.BB_computational body ->
-     (* Add the equality between CBV f x and f(x). *)
-     let output_string = Format.fprintf ctx.Context.scc_out_fmter "%s@\n" in
-     output_string "dk_builtins.cbv_eq : cc.eP (dk_logic.forall_type (A : cc.uT =>";
-     output_string "   dk_logic.forall_type (R : cc.uT =>";
-     output_string "   dk_logic.forall (cc.Arrow A R) (f : cc.eT (cc.Arrow A R) =>";
-     output_string "   dk_logic.forall A (a : cc.eT A =>";
-     output_string "   dk_logic.equal R (dk_builtins.call_by_value A R f a) (f a)))))).";
+     add_equality_hypothesis_for_rec ctx;
      Rec_let_dk_gen.generate_recursive_definition
-       ctx print_ctx env vname params scheme body ~for_zenon:true
-       (fun ?sep _ _ -> ignore sep);;
+       ctx print_ctx env vname params scheme body ~abstract:true ~toplevel:false
+       (fun ?sep _ _ -> ignore sep);
+     Format.fprintf ctx.Context.scc_out_fmter ".@\n";;
 
 (** Ensure that the enforced dependencies of a Dedukti script or assumed proof
     are related to entities that are really definitions, and not signatures or
@@ -407,7 +432,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
        Format.fprintf out_fmter
          "(; For notation used via \"by definition of %a\". ;)@\n"
          Sourcify.pp_expr_ident by_def_expr_ident;
-       Format.fprintf out_fmter "@[<2>%s :=" id ;
+       Format.fprintf out_fmter "@[<2>def %s :=" id ;
        Expr_dk_generation.generate_expr
          ctx ~local_idents: [] ~in_recursive_let_section_of: []
          ~self_methods_status:
@@ -445,31 +470,20 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
            zenonify_all_free_idents_from_binding_body
              ctx print_ctx env out_fmter
              params body;
-           (match rec_status with
-            | Env.DkGenInformation.RC_non_rec ->
-                (* Non recursive toplevel function: use a "Definition". *)
-                Format.fprintf out_fmter "@[<2>%s" name_for_zenon ;
-                (* We now generate the sequence of real parameters of the
-                   method, NOT those induced by abstractions and finally the
-                   method's body. Anyway, since the used definition is at
-                   toplevel, there is no abstraction no notion of "Self", no
-                   dependencies. *)
-              generate_defined_method_proto_postlude
-                ctx print_ctx env ~self_manifest params scheme (Some body)
-           | Env.DkGenInformation.RC_rec ->
-               (* Recursive function. Because toplevel, currently always
-                  generated by "Fixpoint". *)
-               Format.fprintf out_fmter "@[<2>%s" name_for_zenon ;
-               generate_defined_method_proto_postlude
-                 ctx print_ctx env ~self_manifest params scheme
-                 (Some body)
-            );
-            (* Then, final carriage return. *)
-            Format.fprintf out_fmter ".@]@\n"
+           Format.fprintf out_fmter "@[<2>def %s" name_for_zenon ;
+           (* We now generate the sequence of real parameters of the
+              method, NOT those induced by abstractions and finally the
+              method's body. Anyway, since the used definition is at
+              toplevel, there is no abstraction no notion of "Self", no
+              dependencies. *)
+           generate_defined_method_proto_postlude
+             ctx print_ctx env ~self_manifest ~rec_status qvname params scheme (Some body);
+           (* Then, final carriage return. *)
+           Format.fprintf out_fmter ".@]@\n"
         | Env.DkGenInformation.VB_toplevel_property lexpr ->
            zenonify_all_free_idents_from_logical_expr
              ctx print_ctx env out_fmter lexpr;
-           Format.fprintf out_fmter "@[<2>%s :=@ " name_for_zenon ;
+           Format.fprintf out_fmter "@[<2>def %s :=@ " name_for_zenon ;
             (* Since the used definition is at toplevel, there is no abstraction
                no notion of "Self", no dependencies. *)
             Species_record_type_dk_generation.generate_logical_expr
@@ -502,7 +516,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                    (Attempt_proof_by_def_of_declared_method_of_self
                       (by_def_expr_ident.Parsetree.ast_loc, by_def_expr_ident))
              | Env.TypeInformation.MDEM_Defined_computational
-                   (_, is_rec, _, params, scheme, body) -> (
+                   (_, rec_status, _, params, scheme, body) -> (
                zenonify_all_free_idents_from_binding_body
                  ctx print_ctx env out_fmter params body;
                  (* A bit of comment. *)
@@ -510,7 +524,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                    "(; For method of Self used via \"by definition of \
                    %a\". ;)@\n"
                    Sourcify.pp_expr_ident by_def_expr_ident ;
-                 match is_rec with
+                 match rec_status with
                  | Env.RC_rec _ ->
                      (* Since we are in the case of a method of Self, we must
                         find the abstraction_info and the abstracted_methods
@@ -518,7 +532,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                      zenonify_by_recursive_meth_definition
                        ctx print_ctx env vname params scheme body
                  | Env.RC_non_rec  ->
-                     Format.fprintf out_fmter "@[<2>abst_%a"
+                     Format.fprintf out_fmter "@[<2>def abst_%a"
                        Parsetree_utils.pp_vname_with_operators_expanded
                        vname ;
                      (* We now generate the sequence of real parameters of the
@@ -527,7 +541,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                         abstracted by "abst_xxx". Non recursive, hence not
                         decreasing argument to pass. *)
                      generate_defined_method_proto_postlude
-                       ctx print_ctx env ~self_manifest params scheme
+                       ctx print_ctx env ~self_manifest ~rec_status (Parsetree.Vname vname) params scheme
                        (Some body) ;
                      (* Done... Then, final carriage return. *)
                      Format.fprintf out_fmter ".@]@\n"
@@ -540,7 +554,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                    "(; For method of Self used via \"by definition of \
                    %a\". ;)@\n"
                    Sourcify.pp_expr_ident by_def_expr_ident;
-                 Format.fprintf out_fmter "@[<2>abst_%a :=@ "
+                 Format.fprintf out_fmter "@[<2>def abst_%a :=@ "
                    Parsetree_utils.pp_vname_with_operators_expanded vname ;
                  (* We now generate the sequence of real parameters of the
                     method, not those induced by abstraction and finally the

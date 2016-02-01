@@ -20,6 +20,7 @@ val generate_recursive_definition :
   Parsetree.vname list ->
   Types.type_scheme ->
   Parsetree.expr ->
-  for_zenon:bool ->
+  abstract:bool ->
+  toplevel:bool ->
   (?sep:string -> bool -> Format.formatter -> unit) -> unit
 

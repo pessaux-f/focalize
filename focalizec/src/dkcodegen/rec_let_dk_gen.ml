@@ -56,16 +56,18 @@ let rec print_cbv print_ctx print_name return_ty accu out = function
 ;;
 
 
-
-let generate_recursive_definition ctx print_ctx env name params scheme body_expr ~for_zenon
+let generate_recursive_definition ctx print_ctx env name params scheme body_expr ~abstract ~toplevel
                                   (print_field_definition_prelude : ?sep:string -> bool -> Format.formatter -> unit) =
   let species_name = snd (ctx.Context.scc_current_species) in
   let prefix =
-    if for_zenon then
+    if abstract then
       "abst_"
     else
-      Parsetree_utils.vname_as_string_with_operators_expanded
-        species_name ^ "__"
+      if toplevel then
+        ""
+      else
+        Parsetree_utils.vname_as_string_with_operators_expanded
+          species_name ^ "__"
   in
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Extend the context with the mapping between these recursive
@@ -161,5 +163,5 @@ let generate_recursive_definition ctx print_ctx env name params scheme body_expr
     ~self_methods_status: Expr_dk_generation.SMS_abstracted
     ~recursive_methods_status: Expr_dk_generation.RMS_regular
     env body_expr ;
-  Format.fprintf out_fmter ")).@]@\n";
+  Format.fprintf out_fmter "))@]@\n";
 ;;

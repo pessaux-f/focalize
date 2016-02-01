@@ -653,7 +653,8 @@ let generate_defined_non_recursive_method ctx print_ctx env min_dk_env
      "abst_xxx". Since the method is non recursive, there is no decreasing
      argument to pass. *)
   Proof_dk_generation.generate_defined_method_proto_postlude
-    new_ctx new_print_ctx env ~self_manifest params scheme (Some body) ;
+    new_ctx new_print_ctx env ~self_manifest ~rec_status:Env.RC_non_rec
+    (Parsetree.Vname name) params scheme (Some body) ;
   (* Done... Then, final carriage return. *)
   Format.fprintf out_fmter ".@]@\n" ;
   abstracted_methods
@@ -874,7 +875,8 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
                         generated_fields)
       in
        Rec_let_dk_gen.generate_recursive_definition
-         new_ctx new_print_ctx env name params scheme body_expr ~for_zenon:false pfdp;
+         new_ctx new_print_ctx env name params scheme body_expr ~abstract:false ~toplevel:false pfdp;
+       Format.fprintf ctx.Context.scc_out_fmter ".@\n";
        let compiled = {
          Misc_common.cfm_is_logical = false ;
          Misc_common.cfm_from_species = from ;

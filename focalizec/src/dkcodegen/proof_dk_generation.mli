@@ -36,6 +36,8 @@ val generate_defined_method_proto_postlude :
   Dk_pprint.dk_print_context ->
   Env.DkGenEnv.t ->
   self_manifest:Types.type_simple option ->
+  rec_status:Env.rec_status ->
+  Parsetree.qualified_vname ->
   Parsetree.vname list ->
   Types.type_scheme -> Parsetree.binding_body option -> unit
 
