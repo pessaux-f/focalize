@@ -731,13 +731,13 @@ let pre_compute_let_binding_info_for_rec env bd ~rec_status ~toplevel =
          bd.Parsetree.ast_desc.Parsetree.b_body) in
   let env' =
     (match rec_status with
-    | Env.DkGenInformation.RC_rec ->
+    | Env.RC_rec _ ->
         let toplevel_loc =
           if toplevel then Some bd.Parsetree.ast_loc else None in
         Env.DkGenEnv.add_value
           ~toplevel: toplevel_loc bd.Parsetree.ast_desc.Parsetree.b_name
           value_body env
-    | Env.DkGenInformation.RC_non_rec -> env) in
+    | Env.RC_non_rec -> env) in
   (env',
    { lbpc_value_body = value_body ;
      lbpc_params_with_type = params_with_type ;
@@ -928,7 +928,7 @@ let generate_expr ctx ~in_recursive_let_section_of ~local_idents
      | Parsetree.E_let (let_def, in_expr) ->
         let (env, pre_comp_infos) =
           pre_compute_let_bindings_infos_for_rec
-            ~rec_status: Env.DkGenInformation.RC_non_rec
+            ~rec_status: Env.RC_non_rec
             ~toplevel: false env
             let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
         let rec aux out_fmter = function

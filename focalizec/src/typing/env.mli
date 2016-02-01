@@ -338,10 +338,6 @@ module DkGenInformation :
       | RPK_struct of Parsetree.vname
       | RPK_other
 
-    type rec_status =
-      | RC_non_rec
-      | RC_rec
-
     type value_body =
       | VB_non_toplevel
       | VB_toplevel_let_bound of

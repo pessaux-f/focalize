@@ -250,7 +250,7 @@ let let_binding_compile ctx
     ~in_recursive_let_section_of ~local_idents ~self_methods_status
     ~recursive_methods_status ~rec_status ~toplevel env bd
     pre_computed_bd_info =
-  if rec_status = Env.DkGenInformation.RC_rec then
+  if rec_status = Env.RC_rec Env.RPK_other then
     (rec_let_binding_compile ctx
     ~in_recursive_let_section_of ~local_idents ~self_methods_status
     ~recursive_methods_status env bd
@@ -273,11 +273,11 @@ let toplevel_let_def_compile ctx env let_def =
   let out_fmter = ctx.Context.scc_out_fmter in
   let rec_status =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
-     | Parsetree.RF_no_rec -> Env.DkGenInformation.RC_non_rec
-     | Parsetree.RF_rec -> Env.DkGenInformation.RC_rec
+     | Parsetree.RF_no_rec -> Env.RC_non_rec
+     | Parsetree.RF_rec -> Env.RC_rec Env.RPK_other
     ) in
   let in_recursive_let_section_of =
-    if rec_status <> Env.DkGenInformation.RC_non_rec then  (* Is rec. *)
+    if rec_status <> Env.RC_non_rec then  (* Is rec. *)
       List.map
         (fun b -> b.Parsetree.ast_desc.Parsetree.b_name)
         let_def.Parsetree.ast_desc.Parsetree.ld_bindings

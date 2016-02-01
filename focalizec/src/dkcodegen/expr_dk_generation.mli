@@ -50,6 +50,6 @@ val generate_expr :
   unit
 
 val pre_compute_let_bindings_infos_for_rec :
-  rec_status:Env.DkGenInformation.rec_status -> toplevel:bool ->
+  rec_status:Env.rec_status -> toplevel:bool ->
   Env.DkGenEnv.t -> Parsetree.binding_desc Parsetree.ast list ->
     (Env.DkGenEnv.t * (let_binding_pre_computation list))

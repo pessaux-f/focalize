@@ -1409,23 +1409,6 @@ module DkGenInformation = struct
     | RPK_struct of Parsetree.vname
     | RPK_other
 
-
-
-  (* ************************************************************************ *)
-  (** {b Descr}: Tells if a definition is recursive or not. Allows embedding
-      the kind of termination proof the definition has if it as one.
-      Since we currently have 2 Dk generation models: "Fixpoint" and "Function"
-      we need to remind which one was used in case a proof is done
-      "by definition" of a recursive definition. In effect, depending on the
-      used model, we must not generate the same code for Zenon.
-
-      {b Visibility}: Exported outside this module.                           *)
-  (* ************************************************************************ *)
-  type rec_status =
-    | RC_non_rec
-    | RC_rec
-
-
   type value_body =
     | VB_non_toplevel
     | VB_toplevel_let_bound of
