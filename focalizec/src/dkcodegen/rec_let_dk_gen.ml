@@ -43,14 +43,10 @@ let rec print_cbv_types_as_arrows print_ctx return_ty out = function
    Not exported. *)
 let rec print_cbv print_ctx print_name return_ty accu out = function
   | [] -> print_name out;
-  | (a, ty) :: l when Dk_pprint.has_cbv ty ->
+  | (a, ty) :: l ->
      Format.fprintf out "@[%a@ %a@ (%a)@ %a@]"
                     (Dk_pprint.pp_for_cbv_type_simple_to_dk print_ctx) ty
                     (print_cbv_types_as_arrows print_ctx return_ty) accu
-                    (print_cbv print_ctx print_name return_ty (ty :: accu)) l
-                    Parsetree_utils.pp_vname_with_operators_expanded a
-  | (a, ty) :: l ->
-     Format.fprintf out "@[%a@ %a@]"
                     (print_cbv print_ctx print_name return_ty (ty :: accu)) l
                     Parsetree_utils.pp_vname_with_operators_expanded a
 ;;

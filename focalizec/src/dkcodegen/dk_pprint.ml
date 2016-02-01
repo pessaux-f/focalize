@@ -22,7 +22,7 @@ type dk_print_context = {
 exception Can_only_print_type_arguments_of_sum_types of Types.type_simple_view;;
 
 let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
-     purge_type_simple_to_dk_variable_mapping, has_cbv, pp_for_cbv_type_simple_to_dk) =
+     purge_type_simple_to_dk_variable_mapping, pp_for_cbv_type_simple_to_dk) =
   (* ************************************************************** *)
   (* ((type_simple * string) list) ref                              *)
   (** {b Descr} : The mapping giving for each variable already seen
@@ -263,8 +263,6 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
     | t -> raise (Can_only_print_type_arguments_of_sum_types t)
   in
 
-  let has_cbv _ = true in
-
   let rec_pp_cbv_to_dk_tuple ctx prio ppf = function
     | [] -> assert false  (* Tuples should never have 0 component. *)
     | [last] ->
@@ -276,7 +274,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
           (ty2 :: rem)
   in
 
-  let rec_pp_cbv_to_dk_no_module ctx prio ppf ty =
+  let rec_pp_cbv_to_dk ctx prio ppf ty =
     match ty with
     | Types.ST_tuple tys ->
         (* Tuple priority: 3. *)
@@ -286,13 +284,6 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
         if prio >= 3 then Format.fprintf ppf ")@]"
     | ty -> Format.fprintf ppf "@[<1>(dk_builtins.call_by_value (%a))@]"
                (rec_pp_to_dk ctx 0) ty
-  in
-
-  let rec_pp_cbv_to_dk ctx prio ppf ty =
-    match to_dk_module ctx ty with
-    | None -> rec_pp_cbv_to_dk_no_module ctx prio ppf ty
-    | Some m -> Format.fprintf ppf "%s.%a" m
-                 (rec_pp_cbv_to_dk_no_module ctx prio) ty
   in
 
   (* ************************************************** *)
@@ -305,8 +296,6 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
    (fun ctx ppf ty -> rec_pp_to_dk_args ctx ppf (Types.view_type_simple ty)),
    (* purge_type_simple_to_dk_variable_mapping *)
    (fun () -> reset_type_variables_mapping_to_dk ()),
-   (* has_cbv *)
-   (fun ty -> has_cbv (Types.view_type_simple ty)),
    (* pp_for_cbv_type_simple_to_dk *)
    (fun ctx ppf ty -> rec_pp_cbv_to_dk ctx 0 ppf (Types.view_type_simple ty))
   )

@@ -28,7 +28,6 @@ val pp_type_scheme_to_dk :
 val pp_type_variable_to_dk : Format.formatter -> Types.type_variable -> unit
 val pp_type_simple_args_to_dk :
   dk_print_context -> Format.formatter -> Types.type_simple -> unit
-val has_cbv : Types.type_simple -> bool
 val pp_for_cbv_type_simple_to_dk :
   dk_print_context -> Format.formatter -> Types.type_simple -> unit
 
