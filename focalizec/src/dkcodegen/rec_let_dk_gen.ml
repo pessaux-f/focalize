@@ -51,6 +51,23 @@ let rec print_cbv print_ctx print_name return_ty accu out = function
                     Parsetree_utils.pp_vname_with_operators_expanded a
 ;;
 
+(* Recursive functions are declared and then defined by a rewrite rule
+   forbidding partial application. *)
+let declare_recursive_function out_fmter print_ctx prefix name
+           params_with_type return_ty
+           (print_field_definition_prelude : ?sep:string -> bool -> Format.formatter -> unit) =
+  Format.fprintf out_fmter
+    "@[<2>def %s%a@ : %t%tcc.eT (%a).@]@\n"
+    prefix
+    Parsetree_utils.pp_vname_with_operators_expanded name
+    (print_field_definition_prelude ~sep:"->" false)
+    (fun out_fmter ->
+     List.iter
+       (fun (_, ty) ->
+        Format.fprintf out_fmter "cc.eT (%a) ->@ "
+          (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
+       params_with_type)
+    (Dk_pprint.pp_type_simple_to_dk print_ctx) return_ty;;
 
 let generate_recursive_definition ctx print_ctx env name params scheme body_expr ~abstract ~toplevel
                                   (print_field_definition_prelude : ?sep:string -> bool -> Format.formatter -> unit) =
@@ -66,10 +83,6 @@ let generate_recursive_definition ctx print_ctx env name params scheme body_expr
           species_name ^ "__"
   in
   let out_fmter = ctx.Context.scc_out_fmter in
-  (* Extend the context with the mapping between these recursive
-          functions and their extra arguments. Since we are in Dk, we
-          need to take care of the logical definitions and of the
-          explicite types abstraction management. *)
   (* We get the function's parameters and their types. This will serve
           at various stage, each time we will need to speak about a
           parameter. *)
@@ -88,11 +101,10 @@ let generate_recursive_definition ctx print_ctx env name params scheme body_expr
   let return_ty =
     match return_ty_opt with None -> assert false | Some t -> t in
   (*
-          A recursive method m is defined in Dedukti by two symbols m and rec_m:
+          A recursive method m is defined in Dedukti by a rewrite-rule:
           let rec m (arg1, arg2) = F(m, arg1, arg2)
           becomes
           <<start>>
-          def rec_m : T1 -> T2 -> T.
           def m : T1 -> T2 -> T.
           [arg1 : T1, arg2 : T2] m arg1 arg2 -->
                  (m := call_by_value_T2 T (call_by_value_T1 (T2 -> T) m arg1) arg2
@@ -103,18 +115,8 @@ let generate_recursive_definition ctx print_ctx env name params scheme body_expr
           (call_by_value_Ti T f v) rewrites to (f v).
    *)
   (* Declare the symbol *)
-  Format.fprintf out_fmter
-                 "@[<2>def %s%a@ : %t%tcc.eT (%a).@]@\n"
-                 prefix
-                 Parsetree_utils.pp_vname_with_operators_expanded name
-                 (print_field_definition_prelude ~sep:"->" false)
-                 (fun out_fmter ->
-                  List.iter
-                    (fun (_, ty) ->
-                     Format.fprintf out_fmter "cc.eT (%a) ->@ "
-                       (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
-                    params_with_type)
-                 (Dk_pprint.pp_type_simple_to_dk print_ctx) return_ty;
+  declare_recursive_function out_fmter print_ctx prefix name params_with_type
+                             return_ty print_field_definition_prelude;
   (* Generate the recursive function. *)
   Format.fprintf out_fmter "@[<2>[";
   print_field_definition_prelude  ~sep:"," true out_fmter;
@@ -152,8 +154,8 @@ let generate_recursive_definition ctx print_ctx env name params scheme body_expr
                  (List.rev params_with_type)
                  (fun out -> List.iter (fun _ -> Format.fprintf out ")") params_with_type);
   (* In Dedukti, we do want the current recursive method to be applied to
-          parameters coming from lambda-lifting. Hence ~in_recursive_let_section_of: []
-          instead of ~in_recursive_let_section_of: [name] (as found in Coq translation) *)
+     parameters coming from lambda-lifting. Hence ~in_recursive_let_section_of: []
+     instead of ~in_recursive_let_section_of: [name] (as found in Coq translation) *)
   Expr_dk_generation.generate_expr
     ctx ~local_idents: [] ~in_recursive_let_section_of: []
     ~self_methods_status: Expr_dk_generation.SMS_abstracted
@@ -161,3 +163,4 @@ let generate_recursive_definition ctx print_ctx env name params scheme body_expr
     env body_expr ;
   Format.fprintf out_fmter "))@]@\n";
 ;;
+
