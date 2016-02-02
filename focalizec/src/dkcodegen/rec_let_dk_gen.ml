@@ -12,6 +12,8 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
+type pfdp_type = ?sep:string -> bool -> Format.formatter -> unit;;
+
 (* Prints a list of params separated by sep.
    Not exported.
  *)
@@ -55,7 +57,7 @@ let rec print_cbv print_ctx print_name return_ty accu out = function
    forbidding partial application. *)
 let declare_recursive_function out_fmter print_ctx prefix name ~close_parens
            params_with_type return_ty
-           (print_field_definition_prelude : ?sep:string -> bool -> Format.formatter -> unit) =
+           (print_field_definition_prelude : pfdp_type) =
   Format.fprintf out_fmter
     "@[<2>def %s%a@ : %t%tcc.eT (%a)%t.@]@\n"
     prefix
@@ -71,7 +73,7 @@ let declare_recursive_function out_fmter print_ctx prefix name ~close_parens
     (fun out -> for _ = 1 to close_parens do Format.fprintf out ")" done);;
 
 let generate_recursive_definition ctx print_ctx env name params scheme body_expr ~abstract ~close_parens ~toplevel
-                                  (print_field_definition_prelude : ?sep:string -> bool -> Format.formatter -> unit) =
+                                  (print_field_definition_prelude : pfdp_type) =
   let species_name = snd (ctx.Context.scc_current_species) in
   let prefix =
     if abstract then
