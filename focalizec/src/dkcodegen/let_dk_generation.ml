@@ -235,7 +235,7 @@ let rec_let_binding_compile ctx
   (match bd.Parsetree.ast_desc.Parsetree.b_body with
   | Parsetree.BB_computational e ->
       Expr_dk_generation.generate_expr
-        ctx ~in_recursive_let_section_of ~local_idents: local_idents'
+        ctx ~in_recursive_let_section_of:[] ~local_idents: local_idents'
         ~self_methods_status ~recursive_methods_status env e
   | Parsetree.BB_logical _ -> assert false) ;
   Format.fprintf out_fmter ")@]";
@@ -246,15 +246,16 @@ let let_binding_compile ctx
     ~in_recursive_let_section_of ~local_idents ~self_methods_status
     ~recursive_methods_status ~rec_status ~toplevel env bd
     pre_computed_bd_info =
-  if rec_status = Env.RC_rec Env.RPK_other then
-    (rec_let_binding_compile ctx
-    ~in_recursive_let_section_of ~local_idents ~self_methods_status
-    ~recursive_methods_status env bd
-    pre_computed_bd_info)
-  else (non_rec_let_binding_compile ctx
-    ~in_recursive_let_section_of ~local_idents ~self_methods_status
-    ~recursive_methods_status ~toplevel env bd
-    pre_computed_bd_info)
+  match rec_status with
+  | Env.RC_rec _ ->
+     rec_let_binding_compile
+       ctx ~in_recursive_let_section_of:[] ~local_idents ~self_methods_status
+       ~recursive_methods_status env bd
+    pre_computed_bd_info
+  | Env.RC_non_rec ->
+     non_rec_let_binding_compile
+       ctx ~in_recursive_let_section_of ~local_idents ~self_methods_status
+       ~recursive_methods_status ~toplevel env bd pre_computed_bd_info
 ;;
 
 
