@@ -400,7 +400,11 @@ let print_field_definition_prelude ?sep ?(without_types = false) ctx print_ctx e
          in that case*)
       ((match sep with
        | None -> Format.fprintf out "@ ("
-       | Some _ -> ());
+       | Some _ -> Format.fprintf out "("
+       (* This open paren has to be closed at the end of the scope of
+          this let-binding, this cannot be done in this
+          function. Parens to close are counted by the [pfdp_parens]
+          function. *));
        arg_printing out;
        Format.fprintf out " :=@ ";
        val_printing out;
@@ -552,6 +556,20 @@ let print_field_definition_prelude ?sep ?(without_types = false) ctx print_ctx e
                        Format.fprintf out ")")
                      out_fmter)
          min_dk_env;
+;;
+
+(* Count the extra parens coming from print_field_definition_prelude *)
+let pfdp_parens min_dk_env =
+  List.fold_left
+    (fun i m ->
+     match snd m with
+     | Env.TypeInformation.MDEM_Defined_carrier _
+     | Env.TypeInformation.MDEM_Defined_computational _
+     | Env.TypeInformation.MDEM_Defined_logical _ ->      1 + i
+     | Env.TypeInformation.MDEM_Declared_carrier
+     | Env.TypeInformation.MDEM_Declared_computational _
+     | Env.TypeInformation.MDEM_Declared_logical _ ->     i)
+    0 min_dk_env;
 ;;
 
 (** Factorise la genération des abstrations pour un champ défini. Ca colle
@@ -874,8 +892,9 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
                         ai.Env.TypeInformation.ad_dependencies_from_parameters
                         generated_fields)
       in
+      let close_parens = pfdp_parens ai.Env.TypeInformation.ad_min_dk_env in
        Rec_let_dk_gen.generate_recursive_definition
-         new_ctx new_print_ctx env name params scheme body_expr ~abstract:false ~toplevel:false pfdp;
+         new_ctx new_print_ctx env name params scheme body_expr ~abstract:false ~close_parens ~toplevel:false pfdp;
        Format.fprintf ctx.Context.scc_out_fmter ".@\n";
        let compiled = {
          Misc_common.cfm_is_logical = false ;

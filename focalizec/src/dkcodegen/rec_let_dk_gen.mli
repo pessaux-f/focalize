@@ -21,6 +21,7 @@ val generate_recursive_definition :
   Types.type_scheme ->
   Parsetree.expr ->
   abstract:bool ->
+  close_parens:int ->
   toplevel:bool ->
   (?sep:string -> bool -> Format.formatter -> unit) -> unit
 

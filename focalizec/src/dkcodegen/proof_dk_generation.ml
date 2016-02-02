@@ -193,7 +193,7 @@ let generate_defined_method_proto_postlude ctx print_ctx env
                      (Dk_pprint.pp_type_simple_to_dk print_ctx) ending_ty ;
       add_equality_hypothesis_for_rec ctx;
       Rec_let_dk_gen.generate_recursive_definition
-        ctx print_ctx env fun_name params scheme body ~abstract:false ~toplevel:true
+        ctx print_ctx env fun_name params scheme body ~abstract:false ~close_parens:0 ~toplevel:true
         (fun ?sep _ _ -> ignore sep)
    | Env.RC_non_rec ->
       List.iter
@@ -310,7 +310,7 @@ let zenonify_by_recursive_meth_definition ctx print_ctx env
   | Parsetree.BB_computational body ->
      add_equality_hypothesis_for_rec ctx;
      Rec_let_dk_gen.generate_recursive_definition
-       ctx print_ctx env vname params scheme body ~abstract:true ~toplevel:false
+       ctx print_ctx env vname params scheme body ~close_parens:0 ~abstract:true ~toplevel:false
        (fun ?sep _ _ -> ignore sep);
      Format.fprintf ctx.Context.scc_out_fmter ".@\n";;
 
