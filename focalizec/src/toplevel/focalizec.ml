@@ -219,7 +219,7 @@ let compile_dk input_file_name =
   let includes =
     String.concat " -I " ("" :: (Files.get_lib_paths ())) in
   let cmd =
-    Printf.sprintf "%s -e %s %s %s"
+    Printf.sprintf "%s -e -nl %s %s %s"
       Installation.sukerujo_compiler
       for_zenon includes input_file_name
   in
