@@ -1619,6 +1619,17 @@ let generate_collection_generator ctx print_ctx env compiled_species_fields
      coming from our collection parameters we depend on. By the way, recover the
      list of species parameters linked together with their methods we need to
      instanciate in order to apply the collection generator. *)
+  let print_ctx = {
+    Dk_pprint.dpc_current_unit = ctx.Context.scc_current_unit;
+    Dk_pprint.dpc_current_species =
+      Some
+        (Parsetree_utils.type_coll_from_qualified_species
+           ctx.Context.scc_current_species);
+    Dk_pprint.dpc_collections_carrier_mapping =
+      (* Prefix all the "IS" mappings by "_p_" to use the parameters
+                    declared in the collection generator's header. *)
+      make_carrier_mapping_using_lambda_lifts
+        ctx.Context.scc_collections_carrier_mapping } in
   let abstr_params_methods_in_coll_gen =
     dump_collection_generator_arguments_for_params_methods
       ctx print_ctx env out_fmter compiled_species_fields in
@@ -1633,17 +1644,6 @@ let generate_collection_generator ctx print_ctx env compiled_species_fields
               (match field_memory.Misc_common.cfm_method_scheme with
                | Env.MTK_computational s -> s | _ -> assert false) in
              let type_from_scheme = Types.specialize sch in
-             let print_ctx = {
-               Dk_pprint.dpc_current_unit = ctx.Context.scc_current_unit;
-               Dk_pprint.dpc_current_species =
-               Some
-                 (Parsetree_utils.type_coll_from_qualified_species
-                    ctx.Context.scc_current_species);
-               Dk_pprint.dpc_collections_carrier_mapping =
-                 (* Prefix all the "IS" mappings by "_p_" to use the parameters
-                    declared in the collection generator's header. *)
-                 make_carrier_mapping_using_lambda_lifts
-                   ctx.Context.scc_collections_carrier_mapping } in
              Format.fprintf out_fmter "@[<2>(local_rep :=@ %a)@]@\n"
                (Dk_pprint.pp_type_simple_to_dk print_ctx) type_from_scheme
            )
