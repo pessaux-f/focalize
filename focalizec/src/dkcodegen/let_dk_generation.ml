@@ -175,7 +175,10 @@ let rec_let_binding_compile ctx
                       print_cbv_types_as_arrows l
   in
   let rec print_cbv accu out = function
-    | [] -> Parsetree_utils.pp_vname_with_operators_expanded out fun_name
+    | [] -> Parsetree_utils.pp_vname_with_operators_expanded out fun_name;
+           List.iter
+             (Format.fprintf out_fmter "@ %a" Dk_pprint.pp_type_variable_to_dk)
+             generalized_vars
     | (a, Some ty) :: l ->
        Format.fprintf out "@[%a@ %a@ (%a)@ %a@]"
                       (Dk_pprint.pp_for_cbv_type_simple_to_dk print_ctx) ty
