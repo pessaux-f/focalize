@@ -20,6 +20,8 @@ def prop : cc.uT := dk_logic.prop.
 unit : cc.uT.
 tt : cc.eT unit.
 
+weak_poly_var_ty : cc.uT.
+
 (; Float ;)
 float : cc.uT.
 
