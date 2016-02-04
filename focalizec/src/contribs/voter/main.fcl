@@ -39,12 +39,12 @@ species Sp_int_imp_vote_tol =
   inherit
     Imp_vote (Coll_etat_vote, Coll_capteur, Coll_int_imp_value_tol, Coll_diag);
 
-  proof of consistency_rule_is_symmetric = assumed (* type error *)
-    (*ASSUMED by property Coll_int_imp_value_tol!consistency_rule_symmetric, *)
-    (*ASSUMED             Coll_int_imp_value_tol!consistency_rule *);
-  proof of consistency_rule_is_reflexive = assumed (* type error *)
-    (*ASSUMED by property Coll_int_imp_value_tol!consistency_rule_reflexive, *)
-    (*ASSUMED             Coll_int_imp_value_tol!consistency_rule *);
+  proof of consistency_rule_is_symmetric =
+     by property Coll_int_imp_value_tol!consistency_rule_symmetric,
+                 Coll_int_imp_value_tol!consistency_rule ;
+  proof of consistency_rule_is_reflexive =
+     by property Coll_int_imp_value_tol!consistency_rule_reflexive,
+                 Coll_int_imp_value_tol!consistency_rule ;
 
 end
 ;;
@@ -167,12 +167,12 @@ species Sp_int_imp_vote =
   inherit
     Imp_vote (Coll_etat_vote, Coll_capteur, Coll_int_imp_value, Coll_diag);
 
-  proof of consistency_rule_is_symmetric = assumed (* type error *)
-    (*ASSUMED by property Coll_int_imp_value!consistency_rule_symmetric, *)
-    (*ASSUMED             Coll_int_imp_value!consistency_rule *);
-  proof of consistency_rule_is_reflexive = assumed (* type error *)
-    (*ASSUMED by property Coll_int_imp_value!consistency_rule_reflexive, *)
-    (*ASSUMED             Coll_int_imp_value!consistency_rule *);
+  proof of consistency_rule_is_symmetric =
+     by property Coll_int_imp_value!consistency_rule_symmetric,
+                 Coll_int_imp_value!consistency_rule ;
+  proof of consistency_rule_is_reflexive =
+     by property Coll_int_imp_value!consistency_rule_reflexive,
+                 Coll_int_imp_value!consistency_rule ;
 end
 ;;
 
@@ -285,12 +285,12 @@ species Sp_bool_imp_vote =
   inherit
     Imp_vote (Coll_etat_vote, Coll_capteur, Coll_bool_imp_value, Coll_diag);
 
-  proof of consistency_rule_is_symmetric = assumed (* type error *)
-    (*ASSUMED by property Coll_bool_imp_value!consistency_rule_symmetric, *)
-    (*ASSUMED             Coll_bool_imp_value!consistency_rule *);
-  proof of consistency_rule_is_reflexive = assumed (* type error *)
-    (*ASSUMED by property Coll_bool_imp_value!consistency_rule_reflexive, *)
-    (*ASSUMED             Coll_bool_imp_value!consistency_rule *);
+  proof of consistency_rule_is_symmetric =
+     by property Coll_bool_imp_value!consistency_rule_symmetric,
+                 Coll_bool_imp_value!consistency_rule ;
+  proof of consistency_rule_is_reflexive =
+     by property Coll_bool_imp_value!consistency_rule_reflexive,
+                 Coll_bool_imp_value!consistency_rule ;
 end
 ;;
 
@@ -417,12 +417,12 @@ species Sp_int_value_with_value_imp_vote =
   inherit
     Imp_vote (Coll_etat_vote, Coll_capteur, Coll_int_value_with_valid, Coll_diag);
 
-  proof of consistency_rule_is_symmetric = assumed (* type error *)
-    (*ASSUMED by property Coll_int_value_with_valid!consistency_rule_symmetric, *)
-    (*ASSUMED             Coll_int_value_with_valid!consistency_rule *);
-  proof of consistency_rule_is_reflexive = assumed (* type error *)
-    (*ASSUMED by property Coll_int_value_with_valid!consistency_rule_reflexive, *)
-    (*ASSUMED             Coll_int_value_with_valid!consistency_rule *);
+  proof of consistency_rule_is_symmetric =
+     by property Coll_int_value_with_valid!consistency_rule_symmetric,
+                 Coll_int_value_with_valid!consistency_rule ;
+  proof of consistency_rule_is_reflexive =
+     by property Coll_int_value_with_valid!consistency_rule_reflexive,
+                 Coll_int_value_with_valid!consistency_rule ;
 end
 ;;
 

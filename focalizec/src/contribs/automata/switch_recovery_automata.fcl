@@ -203,11 +203,11 @@ species Imp2_switch_recovery_automata =
     assume s : Self, r : Coll_requests,
     hypothesis H1:Coll_ports!equal(tau_p2(tau(s, r)), Coll_ports!port_out1),
     prove Coll_requests!equal(r, Coll_requests!reverse_switched)
-     <2>1 prove  ~ Coll_ports!equal(Coll_ports!port_out2, Coll_ports!port_out1)  assumed (* type error *)
-     (*ASSUMED by property Coll_ports!diff_port_out1_port_out2, Coll_ports!equal_symmetric, *)
-     (*ASSUMED Coll_ports!equal, *)
-     (*ASSUMED Coll_ports!port_out2, *)
-     (*ASSUMED Coll_ports!port_out1 *)
+     <2>1 prove  ~ Coll_ports!equal(Coll_ports!port_out2, Coll_ports!port_out1)
+          by property Coll_ports!diff_port_out1_port_out2, Coll_ports!equal_symmetric,
+             Coll_ports!equal,
+             Coll_ports!port_out2,
+             Coll_ports!port_out1
      <2>0
      qed assumed (* exhausted search space *)
       (* by definition of tau, constr_tau, tau_p2 *)
@@ -223,7 +223,7 @@ species Imp2_switch_recovery_automata =
       (*   Coll_requests!diff_inconsistent_moving_time_out, *)
       (*   Coll_ports!diff_empty_port_out1, *)
       (*   Coll_switch_recovery_reverse_automata!port_out1_is_when_reverse_switch *)
-  <1>0 qed assumed (* type error *) (* ASSUMED by step <1>1 property Coll_requests!equal *)
+  <1>0 qed by step <1>1 property Coll_requests!equal
   ;
 
 

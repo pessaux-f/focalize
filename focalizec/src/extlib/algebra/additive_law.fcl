@@ -573,7 +573,7 @@ species Additive_group =
   theorem opposite_is_unique: all z : Self, all x : Self,
      !equal (!plus (x, z), !zero) -> !equal (z, !opposite (x))
     proof =
-      <1>1 assume z : Self, x : Self, (* ASSUMED (Was assume x : Self; z : Self,) *)
+      <1>1 assume z : Self, x : Self,
            hypothesis H: !equal (!plus(x, z), !zero),
            prove !equal (z, !opposite (x))
            <2>1 prove !equal (!opposite (x), z)

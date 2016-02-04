@@ -326,7 +326,7 @@ species Division_monoid =
     !equal (y, !zero) \/ !equal (!mult (!div (x, y), y), x);
 
   theorem div_left_substitution_rule: all x_1 x_2 y : Self,
-    !equal (x_1, x_2) -> ~ (!equal (y, !zero)) ->
+    !equal (x_1, x_2) -> (~ (!equal (y, !zero))) ->
        !equal (!div (x_1, y), !div (x_2, y))
     proof =
     <1>1 assume x_1 x_2 y : Self,
@@ -342,11 +342,11 @@ species Division_monoid =
                  hypothesis H_x
                  property equal_transitive, equal_symmetric
          <2>f qed by step <2>3 hypothesis H_y property mult_is_regular
-    <1>f qed assumed (* ASSUMED: exhausted search space *)
+    <1>f conclude
    ;
 
   theorem div_right_substitution_rule: all x y_1 y_2 : Self,
-    !equal (y_1, y_2) -> ~(!equal (y_1, !zero)) ->
+    !equal (y_1, y_2) -> (~(!equal (y_1, !zero))) ->
        !equal (!div (x, y_1), !div (x, y_2))
     (* [rr]: to do ! *)
     proof =
@@ -374,7 +374,7 @@ species Division_monoid =
                 by step <2>1, <2>2
                    property equal_symmetric, equal_transitive
             <2>f qed  by step <2>3 hypothesis H_0 property mult_is_regular
-      <1>f qed assumed (* ASSUMED exhausted search space *)
+      <1>f conclude
      ;
 
   theorem div_really_divides: all x y : Self,
@@ -440,10 +440,10 @@ species Division_monoid =
   let inv (x) = Self!div (Self!one, x);
 
   theorem inv_substitution_rule: all x_1 x_2 : Self,
-    !equal (x_1, x_2) -> ~ (!equal (x_1, !zero)) ->
+    !equal (x_1, x_2) -> (~ (!equal (x_1, !zero))) ->
       !equal (!inv (x_1), !inv (x_2))
-    proof = assumed (* ASSUMED (strange scoping error) by property div_right_substitution_rule *)
-              (*ASSUMED definition of inv*);
+    proof = by property div_right_substitution_rule
+               definition of inv;
 
 end
 ;;
