@@ -432,7 +432,12 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
        Format.fprintf out_fmter
          "(; For notation used via \"by definition of %a\". ;)@\n"
          Sourcify.pp_expr_ident by_def_expr_ident;
-       Format.fprintf out_fmter "@[<2>def %s :=" id ;
+       let ty = match body.Parsetree.ast_type with
+         | Parsetree.ANTI_type ty -> ty
+         | _ -> assert false
+       in
+       Format.fprintf out_fmter "@[<2>def %s : cc.eT (%a) :=@ "
+                      id (Dk_pprint.pp_type_simple_to_dk print_ctx) ty;
        Expr_dk_generation.generate_expr
          ctx ~local_idents: [] ~in_recursive_let_section_of: []
          ~self_methods_status:
@@ -1143,15 +1148,15 @@ let zenonify_hyp ctx print_ctx env ~sep hyp =
          ctx env logical_expr ;
        Format.fprintf out_fmter ") %s@ @]@\n" sep
    | Parsetree.H_notation (vname, expr) ->
-       (* Leads to a Definition. *)
-       Format.fprintf out_fmter "@[<2>%a :=@ "
-         Parsetree_utils.pp_vname_with_operators_expanded vname;
-       Expr_dk_generation.generate_expr
-         ctx ~local_idents: [] ~in_recursive_let_section_of: []
-         ~self_methods_status: Expr_dk_generation.SMS_abstracted
-         ~recursive_methods_status: Expr_dk_generation.RMS_regular
-         env expr ;
-       Format.fprintf out_fmter ".@]@\n"
+       (* Leads to a local definition. *)
+      Format.fprintf out_fmter "@[<2>%a :=@ "
+        Parsetree_utils.pp_vname_with_operators_expanded vname;
+      Expr_dk_generation.generate_expr
+        ctx ~local_idents: [] ~in_recursive_let_section_of: []
+        ~self_methods_status: Expr_dk_generation.SMS_abstracted
+        ~recursive_methods_status: Expr_dk_generation.RMS_regular
+        env expr ;
+      Format.fprintf out_fmter " =>@ @]@\n"
 ;;
 
 (* ************************************************************************* *)
