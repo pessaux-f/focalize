@@ -26,6 +26,7 @@ FOCALIZE_COMPILER=$(ROOT_DIR)/src/toplevel/focalizec
 STDLIB_DIR=../../stdlib
 
 FOCALIZEC=../../toplevel/focalizec
+FOCALIZEDEP=../../focalizedep/focalizedep
 
 FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
 
@@ -108,8 +109,13 @@ install:
 clean:
 	$(RM) $(FOCALIZE_FOS) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
 	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS) $(FOCALIZE_DKOS)
-	$(RM) $(FOCALIZE_CMIS) *.annot *.glob *.fcd *.pfc
+	$(RM) $(FOCALIZE_CMIS) *.annot *.glob *.fcd *.pfc .depend
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.vo *.zv
 
-# Currently not handled.
-depend:
+depend: .depend
+
+.depend:
+	$(CAMLDEP) *.mli *.ml > ./.depend
+	$(FOCALIZEDEP) *.fcl >> ./.depend
+
+-include .depend

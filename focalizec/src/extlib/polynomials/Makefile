@@ -36,6 +36,7 @@ FOCALIZE_COMP_FLAGS=\
   -I $(ROOT_DIR)/focalizec/src/extlib/algebra
 
 FOCALIZEC=$(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
+FOCALIZEDEP=../../focalizedep/focalizedep
 
 CAML_FLAGS= -w A -warn-error $(WARN_ERROR) -dtypes
 CAML_INCLUDES=-I $(STDLIB_DIR) -I $(ROOT_DIR)/focalizec/src/extlib/algebra
@@ -196,7 +197,7 @@ clean:
 	$(RM) big_integers.cm* parse_poly.cm* polys_abstract.cm*
 	$(RM) big_integers.o parse_poly.o polys_abstract.o
 	$(RM) *.annot *.glob *.fcd *.zv *.vo *.fo *.pfc *.dko
-	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt .depend
 
 recursive_polys.ml: recursive_polys.fcl
 	$(FOCALIZEC) -no-coq-code -no-dedukti-code $<
@@ -216,4 +217,10 @@ distributed_polys.ml: distributed_polys.fcl
 distributed_polys.fcd: distributed_polys.fcl
 	$(FOCALIZEC) -focalize-doc -no-coq-code -no-dedukti-code $<
 
-depend:
+depend: .depend
+
+.depend:
+	$(CAMLDEP) *.mli *.ml > ./.depend
+	$(FOCALIZEDEP) *.fcl >> ./.depend
+
+-include .depend

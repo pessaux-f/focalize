@@ -27,6 +27,7 @@ ALGEBRALIB_DIR=../../extlib/algebra
 UTILSLIB_DIR=../utils
 
 FOCALIZEC=../../toplevel/focalizec
+FOCALIZEDEP=../../focalizedep/focalizedep
 
 FOCALIZE_COMP_FLAGS=\
  -no-stdlib-path -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR)\
@@ -164,7 +165,12 @@ clean:
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) \
 	$(FOCALIZE_ZDKS) $(FOCALIZE_DKS)
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.zv *.vo
-	$(RM) *.glob *.fcd *.pfc *.fo
+	$(RM) *.glob *.fcd *.pfc *.fo .depend
 
-# Currently not handled.
-depend:
+depend: .depend
+
+.depend:
+	$(CAMLDEP) *.mli *.ml > ./.depend
+	$(FOCALIZEDEP) *.fcl >> ./.depend
+
+-include .depend

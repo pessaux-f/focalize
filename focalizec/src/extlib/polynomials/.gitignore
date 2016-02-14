@@ -5,3 +5,4 @@ polys_abstract.ml
 polys_abstract.v
 recursive_polys.ml
 univariate_polys.ml
+.depend

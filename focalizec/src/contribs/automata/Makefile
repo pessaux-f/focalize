@@ -34,6 +34,7 @@ FOCALIZE_COMPILER=$(SRC_DIR)/toplevel/focalizec
 FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR)
 
 FOCALIZEC=$(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
+FOCALIZEDEP=../../focalizedep/focalizedep
 
 #CAML_FLAGS=-w A -warn-error $(WARN_ERROR) -dtypes -I $(STDLIB_DIR)
 CAML_FLAGS=-dtypes -I $(STDLIB_DIR)
@@ -164,7 +165,7 @@ clean:
 	$(RM) big_integers.ml parse_poly.ml polys_abstract.ml
 	$(RM) big_integers.cm* parse_poly.cm* polys_abstract.cm*
 	$(RM) big_integers.o parse_poly.o polys_abstract.o
-	$(RM) *.annot *.glob *.zv *.pfc
+	$(RM) *.annot *.glob *.zv *.pfc .depend
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
 
 
@@ -189,4 +190,10 @@ build.x: bin
            -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR)\
             $(STD_BIN_OBJS) $(EXTERNAL_BIN_OBJS) $(FOCALIZE_BIN_OBJS)
 
-depend:
+depend: .depend
+
+.depend:
+	$(CAMLDEP) *.mli *.ml > ./.depend
+	$(FOCALIZEDEP) *.fcl >> ./.depend
+
+-include .depend
