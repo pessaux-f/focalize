@@ -96,6 +96,8 @@ FOCALIZE_COMP_FLAGS=-no-stdlib-path $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) \
  -stop-before-coq -stop-before-dk
 FOCALIZEDEP=../focalizedep/focalizedep
 COQ_INCLUDES= -I $(shell zenon -where)
+ZVTOV=zvtov
+ZVTOV_COMP_FLAGS=-new -z '-x induct'
 
 lib: all
 

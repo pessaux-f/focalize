@@ -35,6 +35,8 @@ FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR)
 
 FOCALIZEC=$(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 FOCALIZEDEP=../../focalizedep/focalizedep
+ZVTOV=zvtov
+ZVTOV_COMP_FLAGS=-new -z '-x induct'
 
 #CAML_FLAGS=-w A -warn-error $(WARN_ERROR) -dtypes -I $(STDLIB_DIR)
 CAML_FLAGS=-dtypes -I $(STDLIB_DIR)
@@ -43,6 +45,7 @@ CAML_FLAGS=-dtypes -I $(STDLIB_DIR)
 # Was ZENON_LIB_DIR=$(ROOT_DIR)/../zenon/
 ZENON_LIB_DIR=$(shell zenon -where)
 COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
+DK_INCLUDES=-I $(STDLIB_DIR)
 
 FOCALIZE_SRC=\
  gen_def.fcl\

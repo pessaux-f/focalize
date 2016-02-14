@@ -35,10 +35,14 @@ CAML_INCLUDES=-I $(STDLIB_DIR)
 
 ZENON_LIB_DIR= $(shell zenon -where)
 COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
+DK_INCLUDES=-I $(STDLIB_DIR)
+
+ZVTOV=zvtov
+ZVTOV_COMP_FLAGS=-new -z '-x induct'
 
 include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/focalizec/.install_var
-include $(ROOT_DIR)/focalizec/.config_var
+include $(ROOT_DIR)/.config_var
 
 FOCALIZE_SRC=\
  pair.fcl\

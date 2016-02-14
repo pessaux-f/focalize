@@ -43,13 +43,14 @@ CAML_INCLUDES=-I $(STDLIB_DIR) -I $(ROOT_DIR)/focalizec/src/extlib/algebra
 
 ZENON_LIB_DIR= $(shell zenon -where)
 ZENON_MODULO_LIB_DIR= $(shell zenon_modulo -where)
+ZVTOV=zvtov
 ZVTOV_COMP_FLAGS=-zenon $(ZENON_COMPILER) -new
 
 COQ_INCLUDES=\
  -I $(ZENON_LIB_DIR) -I $(STDLIB_DIR) \
  -I $(ROOT_DIR)/focalizec/src/extlib/algebra
 
-DEDUKTI_INCLUDES=\
+DK_INCLUDES=\
  -I $(ZENON_MODULO_LIB_DIR) -I $(STDLIB_DIR) \
  -I $(ROOT_DIR)/focalizec/src/extlib/algebra
 

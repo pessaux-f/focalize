@@ -102,15 +102,18 @@ EXTERNAL_DKOS=\
 
 include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/focalizec/.install_var
-include $(ROOT_DIR)/focalizec/.config_var
+include $(ROOT_DIR)/.config_var
 
 FOCALIZEC=../../toplevel/focalizec
 FOCALIZE_COMP_FLAGS= -no-stdlib-path -I $(STDLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
 
+CAMLBIN=ocamlopt
+CAMLBYT=ocamlc
 CAML_FLAGS=-w A -warn-error  $(WARN_ERROR) -dtypes -I $(STDLIB_DIR)
 CAML_INCLUDES=-I $(STDLIB_DIR)
 
-ZVTOV_COMP_FLAGS=-script -zenon $(ZENON_COMPILER) -new
+ZVTOV=zvtov
+ZVTOV_COMP_FLAGS=-zenon $(ZENON_COMPILER) -new
 
 ZENON_LIB_DIR=$(shell zenon -where)
 COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)

@@ -43,7 +43,11 @@ COQ_INCLUDES=\
 
 include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/focalizec/.install_var
-include $(ROOT_DIR)/focalizec/.config_var
+include $(ROOT_DIR)/.config_var
+DK_INCLUDES=-I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR)
+
+ZVTOV=zvtov
+ZVTOV_COMP_FLAGS=-new -z '-x induct'
 
 FOCALIZE_SRC=\
  etat_vote.fcl\
