@@ -21,7 +21,8 @@ ROOT_DIR=../../../..
 SRC_DIR=$(ROOT_DIR)/focalizec/src
 
 include $(ROOT_DIR)/Makefile.common
-INSTALL_LIB_DIR=$(LIB_DIR)/automata
+include $(ROOT_DIR)/focalizec/.install_var
+include $(ROOT_DIR)/.config_var
 
 STDLIB_DIR=$(SRC_DIR)/stdlib
 

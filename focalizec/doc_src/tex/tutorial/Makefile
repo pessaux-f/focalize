@@ -46,7 +46,7 @@ DOC_OBJS=tutorial.dvi tutorial.ps tutorial.pdf
 endif
 
 FOCALIZEC=$(ROOT_DIR)/focalizec/src/toplevel/focalizec
-FOCALIZE_COMP_FLAGS=-I $(ROOT_DIR)/focalizec/src/stdlib  $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
+FOCALIZE_COMP_FLAGS=-I $(ROOT_DIR)/focalizec/src/stdlib  $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) -no-dedukti-code
 CAML_INCLUDES=-I $(ROOT_DIR)/focalizec/src/stdlib
 CAML_COMP_FLAGS=-w Ae -dtypes
 
