@@ -76,6 +76,6 @@ uninstall:
 
 
 distrib:
-	$(RM) -f focalize-0.9.1.tgz
+	$(RM) -f focalize-0.9.2.tgz
 	($(CD) .. &&\
-	tar cvzf focalize/focalize-0.9.1.tgz -T focalize/files-for-distrib.lst)
+	tar cvzf focalize/focalize-0.9.2.tgz -T focalize/files-for-distrib.lst)
