@@ -94,8 +94,8 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_space
 let print_types_parameters_with_arrows print_ctx out_fmter tys =
   List.iter
     (fun ty ->
-      Format.fprintf out_fmter "cc.eT %a ->@ "
-        (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
+      Format.fprintf out_fmter "(%a) ->@ "
+        (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) ty)
     tys
 ;;
 
@@ -328,8 +328,8 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
               Parameterized as the inductive. *)
            print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
              print_ctx out_fmter type_def_params;
-           Format.fprintf out_fmter "cc.eT (@[<1>%a@])@]."
-             (Dk_pprint.pp_type_simple_to_dk print_ctx) cstr_ty)
+           Format.fprintf out_fmter "%a@]."
+             (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) cstr_ty)
          sum_constructors_to_print;
        (* And finally, the destructors. *)
        Format.fprintf out_fmter "@\n(; Destructors ;)";
@@ -360,8 +360,8 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                           (fun out ->
                            List.iteri (fun i ty -> Format.fprintf out "x_%d_" i;
                                                  if as_zenon_fact then
-                                                   Format.fprintf out " :@ cc.eT (%a)"
-                                                     (Dk_pprint.pp_type_simple_to_dk print_ctx) ty;
+                                                   Format.fprintf out " :@ %a"
+                                                     (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) ty;
                                                  Format.fprintf out ",@ "))
                           cstr_args
                           (fun out -> if as_zenon_fact then Format.fprintf out " :@ cc.uT")
@@ -387,8 +387,8 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                           (fun out ->
                            List.iteri (fun i ty -> Format.fprintf out "x_%d_" i;
                                                  if as_zenon_fact then
-                                                   Format.fprintf out " :@ cc.eT (%a)"
-                                                     (Dk_pprint.pp_type_simple_to_dk print_ctx) ty;
+                                                   Format.fprintf out " :@ %a"
+                                                     (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) ty;
                                                  Format.fprintf out ",@ "))
                           curr_cstr_args
                           (fun out -> if as_zenon_fact then Format.fprintf out " :@ cc.uT" else ())

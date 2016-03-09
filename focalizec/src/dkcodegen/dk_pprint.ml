@@ -22,7 +22,8 @@ type dk_print_context = {
 exception Can_only_print_type_arguments_of_sum_types of Types.type_simple_view;;
 
 let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
-     purge_type_simple_to_dk_variable_mapping, pp_for_cbv_type_simple_to_dk) =
+     purge_type_simple_to_dk_variable_mapping, pp_for_cbv_type_simple_to_dk,
+     pp_type_simple_to_dk_with_eps, pp_type_simple_to_dk_with_eps_and_prio) =
   (* ************************************************************** *)
   (* ((type_simple * string) list) ref                              *)
   (** {b Descr} : The mapping giving for each variable already seen
@@ -156,6 +157,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
                   (rec_pp_to_dk ctx 0)) arg_tys
         end)
     | Types.ST_prop -> Format.fprintf ppf "prop"
+        (* This must be higher-order, it is used for induction schemes *)
     | Types.ST_self_rep ->
         (begin
         match ctx.dpc_current_species with
@@ -286,6 +288,25 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
                (rec_pp_to_dk ctx 0) ty
   in
 
+  let rec rec_pp_to_dk_with_eps ctx prio ppf ty =
+    match ty with
+    | Types.ST_prop -> Format.fprintf ppf "dk_logic.Prop"
+    | Types.ST_arrow (Types.ST_sum_arguments tys, ty2) ->
+       if prio > 0 then Format.fprintf ppf "@[<1>(";
+       List.iter
+         (Format.fprintf ppf "%a ->@ " (rec_pp_to_dk_with_eps ctx 3))
+         tys;
+       rec_pp_to_dk_with_eps ctx prio ppf ty2;
+       if prio > 0 then Format.fprintf ppf ")@]"
+    | Types.ST_arrow (ty1, ty2) ->
+       if prio > 0 then Format.fprintf ppf "@[<1>(";
+       Format.fprintf ppf "@[<2>%a ->@ %a@]"
+          (rec_pp_to_dk_with_eps ctx 2) ty1
+          (rec_pp_to_dk_with_eps ctx prio) ty2 ;
+       if prio > 0 then Format.fprintf ppf ")@]"
+    | ty -> Format.fprintf ppf "cc.eT %a" (rec_pp_to_dk ctx prio) ty
+  in
+
   (* ************************************************** *)
   (* Now, the real definition of the printing functions *)
   ((* pp_type_simple_to_dk *)
@@ -297,7 +318,11 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
    (* purge_type_simple_to_dk_variable_mapping *)
    (fun () -> reset_type_variables_mapping_to_dk ()),
    (* pp_for_cbv_type_simple_to_dk *)
-   (fun ctx ppf ty -> rec_pp_cbv_to_dk ctx 0 ppf (Types.view_type_simple ty))
+   (fun ctx ppf ty -> rec_pp_cbv_to_dk ctx 0 ppf (Types.view_type_simple ty)),
+   (* pp_type_simple_to_dk_with_eps *)
+   (fun ctx ppf ty -> rec_pp_to_dk_with_eps ctx 0 ppf (Types.view_type_simple ty)),
+   (* pp_type_simple_to_dk_with_eps_and_prio *)
+   (fun ctx ppf ty -> rec_pp_to_dk_with_eps ctx 1 ppf (Types.view_type_simple ty))
   )
 ;;
 
@@ -307,5 +332,5 @@ let pp_type_scheme_to_dk ctx ppf sch =
   List.iter
     (Format.fprintf ppf "%a : cc.uT ->@ " pp_type_variable_to_dk)
     vars;
-  Format.fprintf ppf "cc.eT (%a)" (pp_type_simple_to_dk ctx) ty
+  pp_type_simple_to_dk_with_eps ctx ppf ty
 ;;

@@ -59,7 +59,7 @@ let declare_recursive_function out_fmter print_ctx prefix name ~close_parens
            params_with_type return_ty
            (print_field_definition_prelude : pfdp_type) =
   Format.fprintf out_fmter
-    "@[<2>def %s%a@ : %t%tcc.eT (%a)%t.@]@\n"
+    "@[<2>def %s%a@ : %t%t%a%t.@]@\n"
     prefix
     Parsetree_utils.pp_vname_with_operators_expanded name
     (print_field_definition_prelude ~sep:"->" false)
@@ -69,7 +69,7 @@ let declare_recursive_function out_fmter print_ctx prefix name ~close_parens
         Format.fprintf out_fmter "cc.eT (%a) ->@ "
           (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
        params_with_type)
-    (Dk_pprint.pp_type_simple_to_dk print_ctx) return_ty
+    (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) return_ty
     (fun out -> for _ = 1 to close_parens do Format.fprintf out ")" done);;
 
 let generate_recursive_definition ctx print_ctx env name params scheme body_expr ~abstract ~close_parens ~toplevel
@@ -143,9 +143,9 @@ let generate_recursive_definition ctx print_ctx env name params scheme body_expr
                  (fun out_fmter ->
                   List.iter
                     (fun (a, ty) ->
-                     Format.fprintf out_fmter "%a : cc.eT (%a) =>@ ("
+                     Format.fprintf out_fmter "%a : %a =>@ ("
                                     Parsetree_utils.pp_vname_with_operators_expanded a
-                                    (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
+                                    (Dk_pprint.pp_type_simple_to_dk_with_eps_and_prio print_ctx) ty)
                     params_with_type)
                  (print_cbv print_ctx
                             (fun out ->

@@ -74,9 +74,9 @@ let non_rec_let_binding_compile ctx
     (fun (param_vname, pot_param_ty) ->
       match pot_param_ty with
        | Some param_ty ->
-           Format.fprintf out_fmter "@ (%a : cc.eT %a)"
+           Format.fprintf out_fmter "@ (%a : %a)"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
-             (Dk_pprint.pp_type_simple_to_dk print_ctx) param_ty
+             (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) param_ty
        | None ->
            (* Because we provided a type scheme to the function
               [bind_parameters_to_types_from_type_scheme], MUST get one type
@@ -91,8 +91,8 @@ let non_rec_let_binding_compile ctx
           the result value of the "let". *)
        assert false
    | Some t ->
-       Format.fprintf out_fmter "@ :@ cc.eT %a"
-         (Dk_pprint.pp_type_simple_to_dk print_ctx) t
+       Format.fprintf out_fmter "@ :@ %a"
+         (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) t
   ) ;
   (* Output now the ":=" sign ending the Dk function's "header".
      With a NON-breakable space before to prevent uggly hyphenation ! *)
@@ -146,9 +146,9 @@ let rec_let_binding_compile ctx
     (fun (param_vname, pot_param_ty) ->
       match pot_param_ty with
        | Some param_ty ->
-           Format.fprintf out_fmter "%a : cc.eT (%a) ->@ "
+           Format.fprintf out_fmter "%a : %a ->@ "
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
-             (Dk_pprint.pp_type_simple_to_dk print_ctx) param_ty
+             (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) param_ty
        | None ->
            (* Because we provided a type scheme to the function
               [bind_parameters_to_types_from_type_scheme], MUST get one type
@@ -163,8 +163,8 @@ let rec_let_binding_compile ctx
           the result value of the "let". *)
        assert false
    | Some t -> t) in
-  Format.fprintf out_fmter "@ cc.eT (%a)"
-                 (Dk_pprint.pp_type_simple_to_dk print_ctx) return_ty;
+  Format.fprintf out_fmter "@ %a"
+                 (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) return_ty;
   (* Now, print the result type of the "definition". *)
   Format.fprintf out_fmter ".@\n";
   let rec print_cbv_types_as_arrows out = function
@@ -222,9 +222,9 @@ let rec_let_binding_compile ctx
   List.iter
     (function
       | (param_vname, Some ty) ->
-         Format.fprintf out_fmter "@ (%a : cc.eT (%a) =>@ "
+         Format.fprintf out_fmter "@ (%a : %a =>@ "
            Parsetree_utils.pp_vname_with_operators_expanded param_vname
-           (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
+           (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) ty
       | _, None -> assert false)
     params_with_type ;
   print_cbv [] out_fmter (List.rev params_with_type);

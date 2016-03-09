@@ -23,8 +23,7 @@
 let print_method_type ctx print_ctx env param out_fmter meth_type_kind =
   match meth_type_kind with
   | Parsetree_utils.DETK_computational meth_ty ->
-     Format.fprintf out_fmter "cc.eT (%a)"
-       (Dk_pprint.pp_type_simple_to_dk print_ctx) meth_ty
+     Dk_pprint.pp_type_simple_to_dk_with_eps_and_prio print_ctx out_fmter meth_ty
   | Parsetree_utils.DETK_logical lexpr ->
      Format.fprintf out_fmter "dk_logic.eP (";
      Species_record_type_dk_generation.generate_logical_expr
@@ -462,9 +461,7 @@ let print_field_definition_prelude ?sep ?(without_types = false) ctx print_ctx e
                     prefix
                     Parsetree_utils.pp_vname_with_operators_expanded
                     meth)
-                  (fun out -> Format.fprintf out "cc.eT (%a)"
-                      (Dk_pprint.pp_type_simple_to_dk new_print_ctx)
-                      meth_ty)
+                  (fun out -> Dk_pprint.pp_type_simple_to_dk_with_eps_and_prio new_print_ctx out meth_ty)
                   out_fmter;
             | Parsetree_utils.DETK_logical lexpr ->
                 (* Inside the logical expression of the method of the
@@ -536,8 +533,7 @@ let print_field_definition_prelude ?sep ?(without_types = false) ctx print_ctx e
                print_arg
                  (fun out -> Format.fprintf out "abst_%a"
                             Parsetree_utils.pp_vname_with_operators_expanded n)
-                 (fun out -> Format.fprintf out "cc.eT %a"
-                            (Dk_pprint.pp_type_simple_to_dk new_print_ctx) ty)
+                 (fun out -> Dk_pprint.pp_type_simple_to_dk_with_eps_and_prio new_print_ctx out ty)
                  out_fmter
            | Env.TypeInformation.MDEM_Declared_logical (n, b) ->
                    print_arg

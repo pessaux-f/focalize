@@ -155,21 +155,21 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
               List.iter
                 (fun vn ->
                  Format.fprintf out_fmter
-                                "dk_logic.forall (%a) (%s :@ cc.eT (%a)@ =>@ "
+                                "dk_logic.forall (%a) (%s :@ %a@ =>@ "
                                 (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
                                 (Parsetree_utils.vname_as_string_with_operators_expanded
                                    vn)
-                                (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
+                                (Dk_pprint.pp_type_simple_to_dk_with_eps_and_prio print_ctx) ty)
                 vnames
           | Parsetree.Pr_exists (_, _, _) ->
               List.iter
                 (fun vn ->
                  Format.fprintf out_fmter
-                                "dk_logic.exists (%a) (%s :@ cc.eT (%a)@ =>@ "
+                                "dk_logic.exists (%a) (%s :@ %a@ =>@ "
                                 (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
                                 (Parsetree_utils.vname_as_string_with_operators_expanded
                                    vn)
-                                (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
+                                (Dk_pprint.pp_type_simple_to_dk_with_eps_and_prio print_ctx) ty)
                 vnames
           | _ -> assert false) ;
          (* Here, the bound variables name may mask a "in"-parameter. *)
@@ -390,9 +390,9 @@ let generate_record_type_parameters ctx env species_descr
             (Parsetree_utils.vname_as_string_with_operators_expanded meth) in
           match meth_ty_kind with
            | Parsetree_utils.DETK_computational ty ->
-               Format.fprintf ppf "(%s : cc.eT %a)@ "
+               Format.fprintf ppf "(%s : %a)@ "
                               llift_name
-                              (Dk_pprint.pp_type_simple_to_dk print_ctx)
+                              (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx)
                               ty
            | Parsetree_utils.DETK_logical lexpr ->
                Format.fprintf ppf "(%s : cc.eP " llift_name ;
@@ -497,10 +497,10 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
           Format.fprintf out_fmter "(; From species %a. ;)@\n"
             Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
           (* Field is prefixed by the species name for sake of unicity. *)
-          Format.fprintf out_fmter "@[<2>%a__rf_%a :@ cc.eT (%a)"
+          Format.fprintf out_fmter "@[<2>%a__rf_%a :@ %a"
             Sourcify.pp_vname species_name
             Parsetree_utils.pp_vname_with_operators_expanded n
-            (Dk_pprint.pp_type_simple_to_dk print_ctx) ty ;
+            (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) ty ;
           if semi then Format.fprintf out_fmter "," ;
           Format.fprintf out_fmter "@]@\n"
           end)
@@ -512,10 +512,10 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
             Format.fprintf out_fmter "(; From species %a. ;)@\n"
               Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
             (* Field is prefixed by the species name for sake of unicity. *)
-            Format.fprintf out_fmter "@[<2>%a__rf_%a : cc.eT (%a)"
+            Format.fprintf out_fmter "@[<2>%a__rf_%a : %a"
               Sourcify.pp_vname species_name
               Parsetree_utils.pp_vname_with_operators_expanded n
-              (Dk_pprint.pp_type_simple_to_dk print_ctx) ty ;
+              (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) ty ;
             if semi then Format.fprintf out_fmter "," ;
             Format.fprintf out_fmter "@]@\n")
           l

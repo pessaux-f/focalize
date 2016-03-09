@@ -684,9 +684,7 @@ let generate_expr_ident_type ctx print_ctx env ident =
       Env.Unbound_identifier (_, _) -> None
   in
   match id_type_scheme with
-  | None ->
-     Format.fprintf out_fmter "cc.eT (%a)"
-       (Dk_pprint.pp_type_simple_to_dk print_ctx) id_type_simple
+  | None -> Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx out_fmter id_type_simple
   | Some sch ->
      Dk_pprint.pp_type_scheme_to_dk print_ctx out_fmter sch
 ;;
@@ -808,9 +806,9 @@ let generate_expr ctx ~in_recursive_let_section_of ~local_idents
                   Types.extract_fun_ty_arg ~self_manifest: None accu_ty in
                 let res_ty =
                   Types.extract_fun_ty_result ~self_manifest: None accu_ty in
-                Format.fprintf out_fmter "(%a :@ cc.eT %a)@ "
+                Format.fprintf out_fmter "(%a :@ %a)@ "
                   Parsetree_utils.pp_vname_with_operators_expanded arg_name
-                  (Dk_pprint.pp_type_simple_to_dk print_ctx) arg_ty ;
+                  (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) arg_ty ;
                 (* Return the remainder of the type to continue. *)
                 res_ty)
               fun_ty
@@ -937,10 +935,10 @@ let generate_expr ctx ~in_recursive_let_section_of ~local_idents
             fst_pre_comp_info :: next_pre_comp_info) ->
             (* Simply translate by a beta redex,
                this only works for non-recursive local lets *)
-            Format.fprintf out_fmter "@[<2>((%a : cc.eT %a =>@ %a)@ %a)@]"
+            Format.fprintf out_fmter "@[<2>((%a : %a =>@ %a)@ %a)@]"
               Parsetree_utils.pp_vname_with_operators_expanded
               fst_bnd.Parsetree.ast_desc.Parsetree.b_name
-              (Dk_pprint.pp_type_simple_to_dk print_ctx)
+              (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx)
               (match fst_pre_comp_info.lbpc_result_ty with
                | None -> assert false
                | Some t -> t)
