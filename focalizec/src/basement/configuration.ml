@@ -33,10 +33,25 @@ let print_focalize_short_version () =
   print_focalize_version focalize_short_version
 ;;
 
+(** Until the Dedukti backend is fully working, we disable by default the
+    Dedukti code generation. The ONLY way to active it is to use the
+    --experimental option which now simply trigger Dedukti code generation.
+    Later, we will remove this and also the function set_generate_dk. *)
+let (get_generate_dk, unset_generate_dk, set_generate_dk) =
+  let generate_dk = ref false in  (* !!!!!!!! Read above comment !!! *)
+  (fun () -> !generate_dk),
+  (fun () -> generate_dk := false),
+  (fun () -> generate_dk := true)
+;;
+
+(** Until the Dedukti backend is fully working, set_experimental triggers
+    Dedukti code generation. Later, we will remove this. *)
 let (get_experimental, set_experimental) =
   let experimental = ref false in
    (fun () -> !experimental),
-   (fun () -> experimental := true)
+  (fun () ->
+    experimental := true ;
+    set_generate_dk ())        (* !!!!!!!! Read above comment !!! *)
 ;;
 
 let (get_impose_termination_proof, set_impose_termination_proof) =
@@ -117,12 +132,6 @@ let (get_generate_coq, unset_generate_coq) =
   let generate_coq = ref true in
   (fun () -> !generate_coq),
   (fun () -> generate_coq := false)
-;;
-
-let (get_generate_dk, unset_generate_dk) =
-  let generate_dk = ref true in
-  (fun () -> !generate_dk),
-  (fun () -> generate_dk := false)
 ;;
 
 let (get_fancy_ansi, unset_fancy_ansi) =
