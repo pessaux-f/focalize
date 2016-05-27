@@ -330,8 +330,12 @@ let main () =
   Arg.parse
    [ ("-coq-version",
       Arg.String Configuration.set_coq_version,
-       "  <version> Generate Coq code for a specific version.\n\
-     \    By default, the most recent version of Coq is assumed.");
+       "<version>  Generate Coq code for a specific version.\n\
+     \    By default, the layest version of Coq supported by FoCaLiZe\
+     \ is assumed (at\n\
+     \    least 8.5pl1). Since Coq version 8.5, the -I option is replaced\
+     \ by the -Q\n\
+     \    one to specify the loadpath.");
      ("-dot-non-rec-dependencies",
        Arg.String Configuration.set_dotty_dependencies,
        "  Dump species non-let-rec dependencies as dotty\n\

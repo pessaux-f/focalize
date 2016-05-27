@@ -57,12 +57,15 @@ Hence, the generation process is the following:
 .SH OPTIONS
 Options are :
 .TP
-.B -coq_older_8_4
+.B -coq-version \<version\>
 Enables
 .B Coq
-code generation for versions of
+code generation for a specific version. By default, the latest version of
 .B Coq
-< 8.4.
+supported by FoCaLiZe
+is assumed (at least 8.5pl1). Since
+.B Coq
+version 8.5, the -I option is replaced by the -Q one to specify the loadpath.
 .TP
 .B -dot-non-rec-dependencies \<dirname\>
 Dump non-let-rec dependencies of the species present in the compiled
