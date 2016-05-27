@@ -56,7 +56,8 @@ species FromMesureToWF (MI is MeasureInterf) =
     apply wf_incl with (R2 := (fun x y : Z => 0 <= y /\ x < y)).
     unfold inclusion, R.
     unfold basics.int__t, basics._amper__amper_, basics._lt__equal_,
-      basics._lt_, bi__and_b, bi__int_leq, bi__int_lt.
+      basics._lt_, coq_builtins.bi__and_b, coq_builtins.bi__int_leq,
+      coq_builtins.bi__int_lt.
     intros x y.
     elim (Z_le_dec 0 y);intro; elim (Z_lt_dec x y); simpl; intros ; intuition.
     apply (Zwf_well_founded 0).
@@ -77,7 +78,8 @@ proof =
   coq proof
     {*
     unfold pos_int_order, basics.int__t, basics._amper__amper_,
-      basics._lt__equal_, basics._lt_, bi__and_b, bi__int_leq, bi__int_lt,
+      basics._lt__equal_, basics._lt_, coq_builtins.bi__and_b,
+      coq_builtins.bi__int_leq, coq_builtins.bi__int_lt,
       basics.is_well_founded.
     apply wf_incl with (R2 := fun x y : Z => 0 <= y /\ x < y).
     unfold inclusion.

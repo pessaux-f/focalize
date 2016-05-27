@@ -103,7 +103,8 @@ EXTERNAL_VOS=\
 include $(ROOT_DIR)/Makefile.common
 
 FOCALIZEC=../../toplevel/focalizec
-FOCALIZE_COMP_FLAGS= -no-stdlib-path -I $(STDLIB_DIR) -no-dedukti-code
+FOCALIZE_COMP_FLAGS= -no-stdlib-path -I $(STDLIB_DIR) -no-dedukti-code \
+	-coq-version $(COQ_VERSION)
 
 CAML_FLAGS=-w A -warn-error  $(WARN_ERROR) -dtypes -I $(STDLIB_DIR)
 CAML_INCLUDES=-I $(STDLIB_DIR)
@@ -111,7 +112,13 @@ CAML_INCLUDES=-I $(STDLIB_DIR)
 ZVTOV_COMP_FLAGS=-script -zenon $(ZENON_COMPILER) -new
 
 ZENON_LIB_DIR=$(shell zenon -where)
-COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
+
+ifeq ($(shell test "$(COQ_VERSION)" != "" -a "$(COQ_VERSION)" \< "8.5"; echo $$?),0)
+	COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
+else
+	COQ_INCLUDES=-Q $(ZENON_LIB_DIR) "" -Q $(STDLIB_DIR) ""
+endif
+
 #DK_INCLUDES=-I $(shell zenon_modulo -where) -I $(STDLIB_DIR)
 
 lib: all

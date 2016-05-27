@@ -91,9 +91,15 @@ include $(ROOT_DIR)/Makefile.common
 
 FOCALIZEC=../toplevel/focalizec
 FOCALIZE_COMP_FLAGS=-no-stdlib-path \
- -stop-before-coq -stop-before-dk -no-dedukti-code
+ -stop-before-coq -stop-before-dk -no-dedukti-code \
+ -coq-version $(COQ_VERSION)
 FOCALIZEDEP=../focalizedep/focalizedep
-COQ_INCLUDES= -I $(shell zenon -where)
+
+ifeq ($(shell test "$(COQ_VERSION)" != "" -a "$(COQ_VERSION)" \< "8.5"; echo $$?),0)
+	COQ_INCLUDES= -I $(shell zenon -where)
+else
+	COQ_INCLUDES= -Q $(shell zenon -where) ""
+endif
 
 lib: all
 

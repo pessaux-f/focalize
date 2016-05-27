@@ -33,6 +33,12 @@ let print_focalize_short_version () =
   print_focalize_version focalize_short_version
 ;;
 
+let (get_coq_version, set_coq_version) =
+  let coq_version = ref "" in
+  (fun () -> !coq_version),
+  (fun v -> coq_version := v)
+;;
+
 (** Until the Dedukti backend is fully working, we disable by default the
     Dedukti code generation. The ONLY way to active it is to use the
     --experimental option which now simply trigger Dedukti code generation.

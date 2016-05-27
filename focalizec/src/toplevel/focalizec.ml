@@ -178,16 +178,48 @@ let compile_zv input_file_name =
 
 
 
+(** Build the loadpath options for Coq.
+    In versions < 5.1, we use the -I option.
+    In versions >= 5.1 the -I option changed and must be replaced by -Q. We
+    want -Q to map a path onto the root of the Coq workspace. Hence, we must
+    use it as: coqc -Q thepath ""
+    By default, if no specific version of Coq is specified, we assumed that
+    it is the most recent supported by FoCaLiZe. *)
+let make_coq_loadpath_string lib_paths =
+  let coq_v = Configuration.get_coq_version () in
+  if coq_v <> "" && coq_v < "8.5" then (
+    (* Same remark about the order of path than below for -Q. But here
+       really need to reverse the list. *)
+    String.concat " -I " ("" :: (List.rev (Files.get_lib_paths ())))
+   )
+  else (
+    (* [Files.get_lib_paths] returns the paths in the order they were given
+       in the options, but Coq searches first in the last -Q paths. Since our
+       semantics of the search path is not like this (we behave like OCaml
+       and GCC), we should reverse this list for Coq. But instead, we save the
+       reversing and recurse so that the first path of the list will be at the
+       end of the result string.
+       This is pretty cool because this also allows to alway catenate strings
+       shortest to longuest. Hence, this avoids walking an alway longer string
+       several times. *)
+    let rec concat = function
+      | [] -> ""
+      | h :: q -> " -Q " ^ h ^ " \"\"" ^ concat q in
+    concat lib_paths
+   )
+;;
+
+
+
 let compile_coq input_file_name =
   (* Coq always requires Zenon .v files. *)
-  let for_zenon = " -I " ^ Installation.zenon_libdir in
-  (* We include the library search paths for OCaml. [Files.get_lib_paths]
-     returns the paths in the order they were given in the options, but
-     Coq searches first in the last -I paths. Since our semantics of the search
-     path is not like this (we behave like OCaml and GCC), we must reverse
-     this list for Coq.*)
+  let for_zenon =
+    let coq_v = Configuration.get_coq_version () in
+    if coq_v <> "" && coq_v < "8.5" then
+      " -I " ^ Installation.zenon_libdir
+    else " -Q " ^ Installation.zenon_libdir ^ " \"\"" in
   let includes =
-    String.concat " -I " ("" :: (List.rev (Files.get_lib_paths ()))) in
+    make_coq_loadpath_string (Files.get_lib_paths ()) in
   let cmd =
     Printf.sprintf "%s %s %s %s"
       Installation.coq_compiler includes for_zenon input_file_name in
@@ -296,7 +328,11 @@ let dispatch_compilation files =
 (* The main procedure. *)
 let main () =
   Arg.parse
-    [ ("-dot-non-rec-dependencies",
+   [ ("-coq-version",
+      Arg.String Configuration.set_coq_version,
+       "  <version> Generate Coq code for a specific version.\n\
+     \    By default, the most recent version of Coq is assumed.");
+     ("-dot-non-rec-dependencies",
        Arg.String Configuration.set_dotty_dependencies,
        "  Dump species non-let-rec dependencies as dotty\n\
      \    files into the argument directory.");

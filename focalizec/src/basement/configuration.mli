@@ -27,6 +27,9 @@ val focalize_version_number : (int * int * int)
 val focalize_short_version : string
 val print_focalize_version : string -> 'a
 
+val get_coq_version : unit -> string
+val set_coq_version : string -> unit
+
 val get_experimental : unit -> bool
 val set_experimental : unit -> unit
 
@@ -42,7 +45,7 @@ val set_focalize_doc : unit -> unit
 val get_pretty_print : unit -> string option
 val set_pretty_print : string -> unit
 
-val get_input_file_names : unit -> string list 
+val get_input_file_names : unit -> string list
 val add_input_file_name : string -> unit
 
 val get_do_interface_output : unit -> bool

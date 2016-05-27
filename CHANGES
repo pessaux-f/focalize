@@ -16,7 +16,10 @@
 - Don't require Zenon source code to be present in a zenon subfolder
 - Fixed bug in the parser causing collision between documentation comments
   and delimited identifiers.
-- New Dedukti back-end as logical target language (in development).
+- New Dedukti back-end as logical target language (in development). Only
+  active using the --experimental option.
+- Adapt to Coq >= 8.5.
+
 
 # Focalize 0.9.0
 ################

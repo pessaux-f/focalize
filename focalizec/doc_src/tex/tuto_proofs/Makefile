@@ -35,7 +35,8 @@ DOC_OBJS=tuto_proofs.dvi tuto_proofs.ps tuto_proofs.pdf
 endif
 
 FOCALIZEC=$(ROOT_DIR)/focalizec/src/toplevel/focalizec
-FOCALIZE_COMP_FLAGS= -I $(ROOT_DIR)/focalizec/src/stdlib
+FOCALIZE_COMP_FLAGS= -I $(ROOT_DIR)/focalizec/src/stdlib \
+	-coq-version $(COQ_VERSION)
 CAML_INCLUDES=-I $(ROOT_DIR)/focalizec/src/stdlib
 CAML_COMP_FLAGS=-w Ae -dtypes
 

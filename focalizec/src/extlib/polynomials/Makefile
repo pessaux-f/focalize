@@ -33,7 +33,8 @@ FOCALIZEC=$(ROOT_DIR)/focalizec/src/toplevel/focalizec
 FOCALIZE_COMP_FLAGS=\
   -no-stdlib-path -no-dedukti-code \
   -I $(STDLIB_DIR) \
-  -I $(ROOT_DIR)/focalizec/src/extlib/algebra -zvtovopt -script
+  -I $(ROOT_DIR)/focalizec/src/extlib/algebra -zvtovopt -script \
+	-coq-version $(COQ_VERSION)
 
 CAML_FLAGS= -w A -warn-error $(WARN_ERROR) -dtypes
 CAML_INCLUDES=-I $(STDLIB_DIR) -I $(ROOT_DIR)/focalizec/src/extlib/algebra
@@ -44,6 +45,16 @@ ZVTOV_COMP_FLAGS=-zenon $(ZENON_COMPILER) -new
 COQ_INCLUDES=\
  -I $(ZENON_LIB_DIR) -I $(STDLIB_DIR) \
  -I $(ROOT_DIR)/focalizec/src/extlib/algebra
+
+ifeq ($(shell test "$(COQ_VERSION)" != "" -a "$(COQ_VERSION)" \< "8.5"; echo $$?),0)
+	COQ_INCLUDES=\
+		-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR) \
+		-I $(ROOT_DIR)/focalizec/src/extlib/algebra
+else
+	COQ_INCLUDES=-Q $(ZENON_LIB_DIR) "" -Q $(STDLIB_DIR) "" \
+    -Q $(ROOT_DIR)/focalizec/src/extlib/algebra ""
+endif
+
 
 include $(ROOT_DIR)/Makefile.common
 

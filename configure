@@ -433,6 +433,7 @@ INSTALL_DOC_DIR=${INSTALL_PREFIX}/share/focalize
 
 # Check if installation directories are writable, if so do not use sudo
 # otherwise, use it.
+echo "Checking if destination directories are writable..."
 SUDO=
 mkdir $INSTALL_BIN_DIR || true
 touch $INSTALL_BIN_DIR/writable_p
@@ -479,6 +480,13 @@ then
     fi
 fi
 
+if [ "$SUDO" = "" ] ;
+then
+    echo "No need to sudo for installation."
+else
+    echo "Need to sudo for installation."
+fi
+
 
 
 # #############################################################################
@@ -513,6 +521,16 @@ else
     echo "echo git log not available" >> gitlastsha.sh
 fi
 chmod +x gitlastsha.sh
+
+
+
+# #############################################################################
+# Misc administrativia
+
+# If Coq version is < 8.5, then we must call focalizec with the
+# -coq_version option set to ensure that the loadpath mechanism uses -I instead
+# of the -Q option.
+COQ_VERSION=`$COQC -v | grep version | cut -d ' ' -f 6`
 
 
 
@@ -554,6 +572,7 @@ echo "CAMLDOC=$CAMLDOC" >> $CONFIGURATION_VARS_FILE
 echo "CAMLDEP=$CAMLDEP" >> $CONFIGURATION_VARS_FILE
 echo "COQC=$COQC" >> $CONFIGURATION_VARS_FILE
 echo "COQDEP=$COQDEP" >> $CONFIGURATION_VARS_FILE
+echo "COQ_VERSION=$COQ_VERSION" >> $CONFIGURATION_VARS_FILE
 echo "DKCHECK=$DKCHECK" >> $CONFIGURATION_VARS_FILE
 echo "SKDEP=$SKDEP" >> $CONFIGURATION_VARS_FILE
 echo "SKCHECK=$SKCHECK" >> $CONFIGURATION_VARS_FILE
@@ -605,6 +624,7 @@ echo "  ocamlyacc = $CAMLYACC"
 echo "  ocamldoc = $CAMLDOC"
 echo "  ocamldep = $CAMLDEP"
 echo "  coqc = $COQC"
+echo "  Coq version: $COQ_VERSION"
 echo "  zenon = $ZENON"
 echo "  zvtov = $INSTALL_BIN_DIR/zvtov"
 echo "  coqdep = $COQDEP"
@@ -630,6 +650,11 @@ then
     echo "  Hevea DVI to HTML utility found, HTML docs will be generated."
 else
     echo "  Hevea DVI to HTML utility NOT found, HTML docs won't be generated."
+fi
+if [ "$COQ_VERSION" \< "8.5" ] ;
+then
+    echo $BOLDTAG"ATTENTION:$NORMALTAG you are using a version of Coq < 8.5. FoCaliZeC must be called with"
+    echo "the $BOLDTAG$$COQ_VERSION_OPTION$NORMALTAG option."
 fi
 
 echo "Done. Now, please invoke: 'make all'"

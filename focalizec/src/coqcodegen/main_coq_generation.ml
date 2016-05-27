@@ -395,7 +395,7 @@ let root_compile ~current_unit ~out_file_name stuff =
      carry their arguments corresponding to types. To return to the previous
      syntax, we must unset the right option. *)
   Format.fprintf out_fmter
-    "(* Coq >= 8.6: allow sum constructors without explicit types in patterns. *)\n\
+    "(* Coq >= 8.5: allow sum constructors without explicit types in patterns. *)\n\
     Global Set Asymmetric Patterns.@\n" ;
   (* Always import Coq booleans and integers and floats. Alias int notation to
      Z. *)
