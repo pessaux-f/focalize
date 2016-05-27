@@ -1,5 +1,5 @@
-\def\month{May}
-\def\year{2015}
+\def\month{June}
+\def\year{2016}
 \def\focalizeversion{\sf 0.9.1}
 
 \def\focalizeversiondate{\sf {\month} {\year}}
