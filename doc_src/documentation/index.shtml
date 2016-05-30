@@ -19,43 +19,28 @@ Documentation
 <h3>The manual for the lastest release<h3>
 <p>The reference manual for the $(focal) language and system:
 <ul>
- <li><a href="refman.ps">refman.ps</a>,
- size
-<!--#fsize file="refman.ps" sizefmt="abbrev"-->, (in PS format).
- </li>
- <li><a href="refman.pdf">refman.pdf</a>,
- size
-<!--#fsize file="refman.pdf" sizefmt="abbrev"-->, (in PDF format).
- </li>
- <li><a href="refman.dvi">refman.dvi</a>,
- size
-<!--#fsize file="refman.dvi" sizefmt="abbrev"-->, (in DVI format).
- </li>
+ <li><a href="refman.ps">refman.ps</a>, (in PS format).</li>
+ <li><a href="refman.pdf">refman.pdf</a>, (in PDF format).</li>
+ <li><a href="refman.dvi">refman.dvi</a>, (in DVI format).</li>
+ <li><a href="refman.html">refman.html</a>, (in HTML format).</li>
 </ul>
 </p>
 
 <h3>Programming and Proving: Practice with FoCaLiZe<h3>
 <p>A course in $(focal) given in May 2014 at Ecole des Jeunes Chercheurs en Programmation (EJCP, doctoral summer school) :
 <ul>
- <li><a href="ejcp2014fclslides.pdf">Slides in PDF</a>.
- </li>
- <li><a href="ejcp2014notes.pdf">Lecture notes in PDF</a>.
- </li>
+ <li><a href="ejcp2014fclslides.pdf">Slides in PDF</a>.</li>
+ <li><a href="ejcp2014notes.pdf">Lecture notes in PDF</a>.</li>
 </ul>
 </p>
 
 <h3>Tutorial: Implementing Sets<h3>
 <p>A tutorial for the $(focal) language and system:
 <ul>
- <li><a href="tutorial.ps">tutorial.ps</a>,
- size <!--#fsize file="tutorial.ps" sizefmt="abbrev"-->, (in PS format).
- </li>
- <li><a href="tutorial.pdf">tutorial.pdf</a>,
- size <!--#fsize file="tutorial.pdf" sizefmt="abbrev"-->, (in PDF format).
- </li>
- <li><a href="tutorial.dvi">tutorial.dvi</a>,
- size <!--#fsize file="tutorial.dvi" sizefmt="abbrev"-->, (in DVI format).
- </li>
+ <li><a href="tutorial.ps">tutorial.ps</a>, (in PS format).</li>
+ <li><a href="tutorial.pdf">tutorial.pdf</a>, (in PDF format).</li>
+ <li><a href="tutorial.dvi">tutorial.dvi</a>, (in DVI format).</li>
+ <li><a href="tutorial.html">tutorial.html</a>, (in HTML format).</li>
 </ul>
 </p>
 
@@ -66,15 +51,10 @@ Documentation
 writing (these online versions are more recent than those of the
 distribution):
 <ul>
- <li><a href="tuto_proofs.ps">tuto_proofs.ps</a>,
- size <!--#fsize file="tuto_proofs.ps" sizefmt="abbrev"-->, (in PS format).
- </li>
- <li><a href="tuto_proofs.pdf">tuto_proofs.pdf</a>,
- size <!--#fsize file="tuto_proofs.pdf" sizefmt="abbrev"-->, (in PDF format).
- </li>
- <li><a href="tuto_proofs.dvi">tuto_proofs.dvi</a>,
- size <!--#fsize file="tuto_proofs.dvi" sizefmt="abbrev"-->, (in DVI format).
- </li>
+ <li><a href="tuto_proofs.ps">tuto_proofs.ps</a>, (in PS format).</li>
+ <li><a href="tuto_proofs.pdf">tuto_proofs.pdf</a>, (in PDF format).</li>
+ <li><a href="tuto_proofs.dvi">tuto_proofs.dvi</a>, (in DVI format).</li>
+  <li><a href="tuto_proofs.html">tuto_proofs.html</a>, (in HTML format).</li>
 </ul>
 </p>
 
