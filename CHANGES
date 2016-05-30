@@ -19,6 +19,7 @@
 - New Dedukti back-end as logical target language (in development). Only
   active using the --experimental option.
 - Adapt to Coq >= 8.5.
+- Misc buf fixes (68, 69, 70, 71, 72, 73, 74, 75, 76).
 
 
 # Focalize 0.9.0

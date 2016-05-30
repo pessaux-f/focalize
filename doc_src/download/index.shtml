@@ -54,7 +54,7 @@ or from the alternate (and experimental) mirror:
 
 
 <div id="main">
-<h3>The latest release (as of 2014-10-14)<h3>
+<h3>The latest release (as of 2016-05-30)<h3>
 <p>
 <a href="$(project_archive_name)">$(project_archive_name)</a> (tar-gzip).
 <br />
