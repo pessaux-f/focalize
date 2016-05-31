@@ -111,6 +111,18 @@ $(focal)
 <div class="spacer"></div>
 
 <div id="main">
+<h3>Zenon (0.8.1) available (2016-05-31)</h3><h3>
+<p>
+  A minor change in <code>Zenon</code> installation process allowing to
+  handle Coq 8.5 has been made. This version is available from its GIT
+  repository or <a href="http://zenon.inria.fr/">Zenon website</a>.
+</p>
+</h3>
+</div>
+
+<div class="spacer"></div>
+
+<div id="main">
 <h3>New release (0.9.1) of the $(focal) environment (2016-05-30)</h3><h3>
 <p>
   The new release of the $(focal) environment,
@@ -121,6 +133,9 @@ $(focal)
   The generated code is slightly lighter. Termination proofs for recursive
   functions, in addition to the previously available structural way, can be now
   written using a measure or a well-founded relation.
+  The generated Coq code is now compatible with Coq 8.5, but whoever requires
+  <code>Zenon</code> 8.0.1 (or to configure its installation to store the
+  libraries in a dedicated directory).
   A complete description of changes / new features can in found in the CHANGES
   file of the distribution.
 </p>
@@ -262,7 +277,7 @@ and Th&eacute;o for the example.</font>
 <div id="main">
 <h3>Fix of the Zenon GIT repository (2014-01-17)</h3><h3>
 <p>
-  <a href="http://focal.inria.fr/zenon/">Zenon</a> GIT repository got corrupted
+  <a href="http://zenon.inria.fr/">Zenon</a> GIT repository got corrupted
   causing an incorrect
   <code>git clone</code> when used as anynymous user via the http link
   provided in the <a href="download/">Download</a> page. The version that was

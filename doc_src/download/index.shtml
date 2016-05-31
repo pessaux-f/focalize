@@ -38,7 +38,8 @@ modifications done in the sources tree.
 
 <p>
 Since Zenon is now in a separate GIT repository, it must be cloned apart
-by invoking:
+(or installed from the sources available at
+<a href="http://zenon.inria.fr/">http://zenon.inria.fr/</a>) by invoking:
 <br />
 <code>   git clone http://focalize.inria.fr/zenon.git</code>
 <br />
