@@ -2,44 +2,45 @@
 % No page numbers.
 \renewcommand\thepage{}
 
+
 \input{macros}
 
 
 \begin{document}
 
+\begin{center}
+{\Huge \textbf{\focal} FAQ}
+\end{center}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{faqitem}
 \noindent {\bf $\bullet$ Q:}
-\begin{adjustwidth}{2em}{0em}
 I get the error message:\\
   \verb+Error: The reference basics.int__t was not found in the current+\\
   \verb+environment+\\
 when \coq\ compiles.
-\end{adjustwidth}
 
 %%%%%%%%%%%%%%%
 \medskip
 \noindent {\bf $\bullet$ A:}
-\begin{adjustwidth}{2em}{0em}
 You probably forgot to open the module {\tt basics} in you \focal\ program.
 Add the directive \lstinline{open "basics" ;;} at the top of your source
- file.
- \end{adjustwidth}
-
+file.
+\end{faqitem}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bigskip
+\begin{faqitem}
 \noindent {\bf $\bullet$ Q:}
-\begin{adjustwidth}{2em}{0em}
 I get the error message:\\
   \verb+Error: Types Self and ... are not compatible.+\\
 when \focalizec\ compiles.
-\end{adjustwidth}
 
 %%%%%%%%%%%%%%%
 \medskip
 \noindent {\bf $\bullet$ A:}
-\begin{adjustwidth}{2em}{0em}
 You probably have created a def-dedendency on the
 representation in the statement of a property or a theorem, like in:
 {\small
@@ -56,54 +57,48 @@ have \lstinline"x + 0" well-typed, {\tt Self} must exactly be {\tt int}. This
 makes the interface of the species impossible to be typed as a collection
 since the representation will be abstracted. You may need to add extra methods
 hidding the dependency on representation.
-\end{adjustwidth}
+\end{faqitem}
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bigskip
+\begin{faqitem}
 \noindent {\bf $\bullet$ Q:}
-\begin{adjustwidth}{2em}{0em}
 How to I make a function taking a tuple in argument ?
-\end{adjustwidth}
 
 %%%%%%%%%%%%%%%
 \medskip
 \noindent {\bf $\bullet$ A:}
-\begin{adjustwidth}{2em}{0em}
 \lstinline"let f ( (x, y) ) = ... ;;"
-\end{adjustwidth}
+\end{faqitem}
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bigskip
+\begin{faqitem}
 \noindent {\bf $\bullet$ Q:}
-\begin{adjustwidth}{2em}{0em}
 How to I make a function taking {\tt unit} in argument ?
-\end{adjustwidth}
 
 %%%%%%%%%%%%%%%
 \medskip
 \noindent {\bf $\bullet$ A:}
-\begin{adjustwidth}{2em}{0em}
 \lstinline"let f (_x : unit) = ... ;;"
-\end{adjustwidth}
+\end{faqitem}
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bigskip
+\begin{faqitem}
 \noindent {\bf $\bullet$ Q:}
-\begin{adjustwidth}{2em}{0em}
 What is the difference between a constructor having several
 arguments and a constructor having one argument being a tuple ?
-\end{adjustwidth}
 
 %%%%%%%%%%%%%%%
 \medskip
 \noindent {\bf $\bullet$ A:}
-\begin{adjustwidth}{2em}{0em}
 A constructor with one argument being a tuple is defined using the ``tupling''
 type constructor \lstinline{*}:
 {\small
@@ -165,21 +160,19 @@ let ko = B ( (1, false, "") ) ;;
 {\tt int * bool * string} are not compatible. In effect, we try to pass to
 {\tt B} one unique argument that is a tuple. And a tuple is incompatible with
 the first expected argument of {\tt B}, that is {\tt int}.
-\end{adjustwidth}
+\end{faqitem}
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bigskip
+\begin{faqitem}
 \noindent {\bf $\bullet$ Q:}
-\begin{adjustwidth}{2em}{0em}
 I get a syntax error on a sum type definition or a pattern-matching.
-\end{adjustwidth}
 
 %%%%%%%%%%%%%%%
 \medskip
 \noindent {\bf $\bullet$ A:}
-\begin{adjustwidth}{2em}{0em}
 Beware that conversely to \ocaml, the first bar is not optional in \focal.
 
 \begin{minipage}{6.2cm}
@@ -208,43 +201,39 @@ match x with
   | S (y) ...
 \end{lstlisting}}
 \end{minipage}
-\end{adjustwidth}
+\end{faqitem}
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bigskip
+\begin{faqitem}
 \noindent {\bf $\bullet$ Q:}
-\begin{adjustwidth}{2em}{0em}
 I get the error message:\\
   \verb+Zenon error: uncaught exception File "coqterm.ml", line +\\
   \verb+325, characters 6-12: Assertion failed+
-\end{adjustwidth}
 
 %%%%%%%%%%%%%%%
 \medskip
 \noindent {\bf $\bullet$ A:}
-\begin{adjustwidth}{2em}{0em}
 This is a current issue in \zenon. Compile your program
 adding the option \verb+-zvtovopt -script+ to \focalizec. This asks
 \zenon\ to output proofs as a \coq\ script instead of a \coq\ term. This should
 be fixed in the future.
-\end{adjustwidth}
+\end{faqitem}
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bigskip
+\begin{faqitem}
 \noindent {\bf $\bullet$ Q:}
-\begin{adjustwidth}{2em}{0em}
 I get the error message:\\
   \verb+Error: Types coq_builtins#prop and basics#bool are not compatible.+
-\end{adjustwidth}
 
 %%%%%%%%%%%%%%%
 \medskip
 \noindent {\bf $\bullet$ A:}
-\begin{adjustwidth}{2em}{0em}
 You confused the ``not'' operators \lstinline"~" and \lstinline"~~" or
 probably used a \lstinline"logical let" definition in a \lstinline"let"
 definition like in the following example.
@@ -276,7 +265,7 @@ end ;;
 
 \noindent where \lstinline"~" is the ``not'' on booleans, whereas
 \lstinline"~~" is the ``not'' on logical propositions.
-\end{adjustwidth}
+\end{faqitem}
 \end{document}
 
 

@@ -2,9 +2,10 @@
 \usepackage{listings}
 \usepackage{times}   %% Don't know why, but required to have listings beautified
 \usepackage{changepage}
+\usepackage{framed}
 
 \newcommand{\ocaml}{{\sf OCaml}}
-\newcommand{\focal}{{\sf Fo\-Ca\-Li\-ze}}
+\newcommand{\focal}{{\sf Fo\-Ca\-Li\-Ze}}
 \newcommand{\focalizec}{{\sf focalizec}}
 \newcommand{\zenon}{{\sf Zenon}}
 \newcommand{\coq}{{\sf Coq}}
@@ -34,3 +35,6 @@
 }
 %% By default, use FoCaLize as default listing language.
 \setlangfocalize
+
+
+\newenvironment{faqitem}[0]{\begin{framed}\begin{adjustwidth}{2em}{0em}}{\end{adjustwidth}\end{framed}}
