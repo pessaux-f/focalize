@@ -2967,7 +2967,8 @@ let generate_measure_term_proof_for_Function
         unfold inclusion,@ R.@\n\
         unfold basics.int__t,@ basics._amper__amper_,@ \
         basics._lt__equal_,@\n\
-        basics._lt_,@ bi__and_b,@ bi__int_leq,@ bi__int_lt.@\n\
+        basics._lt_,@ coq_builtins.bi__and_b,@ coq_builtins.bi__int_leq,@ \
+        coq_builtins.bi__int_lt.@\n\
         intros x y.@\n\
         elim@ (Z_le_dec@ 0@ y);@ intro;@ elim@ (Z_lt_dec@ x@ y);@ \
         simpl;@ intros;@ intuition.@\n\
