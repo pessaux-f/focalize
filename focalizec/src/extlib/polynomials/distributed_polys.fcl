@@ -46,8 +46,8 @@ open "constants" ;;
    nor if it has some sense in the literature.
    This is a kind of finite support functions from I to E.
  *)
-species Indexed_set (I is Ordered_set_with_zero,
-         E is Setoid_with_zero) =
+species Indexed_set (D is Ordered_set_with_zero,
+         C is Setoid_with_zero) =
   inherit Setoid_with_zero;
   (**
      [rr]:
@@ -60,60 +60,60 @@ species Indexed_set (I is Ordered_set_with_zero,
         then #Cons ((t*d), y) is a valid rep
 
    *)
-  representation = distributed_representation (E, I);
+  representation = distributed_representation (C, D);
 
   (** the zero polynomial *)
   let zero = Null ;
 
-  (** a family of embeddings from E to Self *)
-  let monomial (x : E, d : I) : Self =
-    if E!is_zero (x) then zero else NonNull (x, d, Null) ;
+  (** a family of embeddings from C to Self *)
+  let monomial (x : C, d : D) : Self =
+    if C!is_zero (x) then zero else NonNull (x, d, Null) ;
 
   (** the leading coefficient of a polynomial is 0 on 0 *)
   let leading_coefficient (x : Self) = match x with
-    | Null -> E!zero
+    | Null -> C!zero
     | NonNull (m, _, _) -> m ;
 
   (** Usually degree is not specified on 0 *)
   let degree (x : Self) = match x with
-    | Null -> I!zero
+    | Null -> D!zero
     | NonNull (_, d, _) -> d ;
 
-  let to_rep(x: Self): distributed_representation(E, I) = x;
+  let to_rep(x: Self): distributed_representation(C, D) = x;
 
   let rec correct_cons(c, d, pp)= match pp with
-    | Null -> ((I!geq(d, I!zero) && E!different(c, E!zero)))
+    | Null -> ((D!geq(d, D!zero) && C!different(c, C!zero)))
     | NonNull(cc, dd, qq) ->
-      (I!gt(d, dd) &&
-        E!different(c, E!zero) &&
+      (D!gt(d, dd) &&
+        C!different(c, C!zero) &&
           correct_cons(cc, dd, qq))
   termination proof = structural pp ;
 
-  let correct_rep(p: distributed_representation(E, I)) =
+  let correct_rep(p: distributed_representation(C, D)) =
      match p with
      | Null -> true
      | NonNull(c, d, pp) ->
         correct_cons(c, d, pp) ;
 
-  theorem my_zero_is_mim: all d: I, I!geq(d, I!zero)
-    proof = assumed ; (* by property I!zero_minimal, I!geq_is_leq; *)
+  theorem my_zero_is_mim: all d: D, D!geq(d, D!zero)
+    proof = assumed ; (* by property D!zero_minimal, D!geq_is_leq; *)
 
-  theorem monomial_correct: all c: E, all d: I,
+  theorem monomial_correct: all c: C, all d: D,
     correct_rep(to_rep(monomial(c, d)))
     proof =
-      <1>1 assume c: E, assume d: I,
+      <1>1 assume c: C, assume d: D,
            prove correct_rep(to_rep(monomial(c, d)))
-           <2>1 hypothesis H_0: E!is_zero(c),
+           <2>1 hypothesis H_0: C!is_zero(c),
                 prove correct_rep(zero)
                 by hypothesis H_0
                    definition of correct_rep, to_rep, zero
                    type distributed_representation
-           <2>2 hypothesis H_1: ~ (E!is_zero(c)),
+           <2>2 hypothesis H_1: ~ (C!is_zero(c)),
                 prove correct_rep(NonNull(c, d, Null))
-                <2>1 prove E!different(c, E!zero)
-                     by property E!is_zero_spec, E!same_is_not_different
+                <2>1 prove C!different(c, C!zero)
+                     by property C!is_zero_spec, C!same_is_not_different
                         hypothesis H_1
-                <2>2 prove I!geq(d, I!zero)
+                <2>2 prove D!geq(d, D!zero)
                      by property my_zero_is_mim
                 <2>f qed by step <2>1, <2>2
                             definition of correct_rep, to_rep, correct_cons
@@ -122,7 +122,7 @@ species Indexed_set (I is Ordered_set_with_zero,
                        definition of monomial, correct_rep, to_rep
      <1>f conclude ;
 
-  (** Equality is recursion of equalities in E and I *)
+  (** Equality is recursion of equalities in C and D *)
   let rec equal (x, y) =
     match x with
     | Null -> (
@@ -134,19 +134,19 @@ species Indexed_set (I is Ordered_set_with_zero,
         | Null -> false
         | NonNull (cy, dy, yy) ->
           (* Check degrees first for efficiency reasons. *)
-          I!equal (dx, dy) && E!equal (cx, cy) && equal (xx, yy)
+          D!equal (dx, dy) && C!equal (cx, cy) && equal (xx, yy)
         )
   termination proof = structural x ;
 
   proof of equal_reflexive =
     <1>1 prove equal(Null, Null)
         by type distributed_representation definition of equal
-    <1>2 prove all x: Self, all cx: E, all dx: I,
+    <1>2 prove all x: Self, all cx: C, all dx: D,
             equal (x, x) -> equal (NonNull (cx, dx, x), NonNull (cx, dx, x))
          by definition of equal
             type distributed_representation
-            property E!equal_reflexive, I!equal_reflexive
-    <1>3 prove all x: distributed_representation (E, I), !equal(x, x)
+            property C!equal_reflexive, D!equal_reflexive
+    <1>3 prove all x: distributed_representation (C, D), !equal(x, x)
          by step <1>1, <1>2 type distributed_representation
     <1>f conclude ;
 
@@ -163,13 +163,13 @@ species Indexed_set (I is Ordered_set_with_zero,
                  property equal_reflexive
      hypothesis H
           <2>f qed by step <2>1 definition of equal_symmetry_prop
-    <1>2 prove all x: Self, all cx: E, all dx: I,
+    <1>2 prove all x: Self, all cx: C, all dx: D,
          equal_symmetry_prop (x) -> equal_symmetry_prop (NonNull (cx, dx, x))
-         <2>1 assume x: distributed_representation (E, I),
-              assume cx: E, assume dx: I,
+         <2>1 assume x: distributed_representation (C, D),
+              assume cx: C, assume dx: D,
         hypothesis Ind: equal_symmetry_prop (x),
         prove equal_symmetry_prop (NonNull (cx, dx, x))
-               <3>1 prove all y: distributed_representation (E, I),
+               <3>1 prove all y: distributed_representation (C, D),
                    equal (NonNull(cx, dx, x), y) -> equal(y, NonNull(cx, dx, x))
                    <4>1 prove equal (NonNull (cx, dx, x), Null) ->
                           equal (Null, NonNull (cx, dx, x))
@@ -177,27 +177,27 @@ species Indexed_set (I is Ordered_set_with_zero,
                              by definition of equal
                                 type distributed_representation
                         <5>f conclude
-                   <4>2 prove all cy: E, all dy: I,
-                              all y: distributed_representation(E, I),
+                   <4>2 prove all cy: C, all dy: D,
+                              all y: distributed_representation(C, D),
                         equal (NonNull (cx, dx, x), NonNull (cy, dy, y)) ->
                          equal (NonNull (cy, dy, y), NonNull (cx, dx, x))
-                        <5>1 assume cy: E, dy: I, y: Self,
+                        <5>1 assume cy: C, dy: D, y: Self,
                              hypothesis H: equal(NonNull (cx, dx, x),
                                                  NonNull (cy, dy, y)),
                              prove equal(NonNull(cy, dy, y), NonNull(cx, dx, x))
-                             <6>1 prove E!equal (cx, cy)
+                             <6>1 prove C!equal (cx, cy)
                                   by hypothesis H definition of equal
                                      type distributed_representation
-                             <6>2 prove I!equal (dx, dy)
+                             <6>2 prove D!equal (dx, dy)
                                   by hypothesis H definition of equal
                                      type distributed_representation
                              <6>3 prove equal (x, y)
                                   by hypothesis H definition of equal
                                      type distributed_representation
-                             <6>11 prove E!equal (cy, cx)
-                                   by step <6>1 property E!equal_symmetric
-                             <6>22 prove I!equal (dy, dx)
-                                   by step <6>2 property I!equal_symmetric
+                             <6>11 prove C!equal (cy, cx)
+                                   by step <6>1 property C!equal_symmetric
+                             <6>22 prove D!equal (dy, dx)
+                                   by step <6>2 property D!equal_symmetric
                              <6>33 prove equal (y, x)
                                    by step <6>3 hypothesis Ind
                                       definition of equal_symmetry_prop
@@ -208,13 +208,13 @@ species Indexed_set (I is Ordered_set_with_zero,
                    <4>f qed by step <4>1, <4>2 type distributed_representation
               <3>f qed by step <3>1 definition of equal_symmetry_prop
          <2>f conclude
-    <1>3 prove all x: distributed_representation(E, I), equal_symmetry_prop(x)
+    <1>3 prove all x: distributed_representation(C, D), equal_symmetry_prop(x)
    by step<1>1, <1>2 type distributed_representation
     <1>f qed by step <1>3
          definition of equal_symmetry_prop ;
 
   proof of equal_transitive =
-    property I!equal_transitive, E!equal_transitive
+    property D!equal_transitive, C!equal_transitive
     assumed (* type distributed_representation; should soon work with Zenon*);
 
   let reductum (p: Self) : Self =
@@ -230,11 +230,11 @@ species Indexed_set (I is Ordered_set_with_zero,
   (*     assumed; *)
       (* <1>B prove corect_rep(Nulll) -> corect_rep(reductum(Null)) *)
       (*     assumed *)
-      (* <1>I prove all c: E, all d: I, all x: Self, *)
+      (* <1>I prove all c: C, all d: D, all x: Self, *)
       (*      correct_rep(x) -> correct_rep(reductum(x)) -> *)
       (*        correct_rep(NonNull(c, d, x)) ->  *)
       (*          correct_rep(reductum(NonNull(c, d, x))) *)
-      (*      assume c: E, assume d: I, assume x: Self, *)
+      (*      assume c: C, assume d: D, assume x: Self, *)
       (*      assume I: correct_rep(x) -> correct_rep(reductum(x)), *)
       (*      assume H: correct_rep(NonNull(c, d, x) *)
       (*      prove correct_rep(reductum(NonNull(c, d, x))) *)
@@ -250,9 +250,9 @@ species Indexed_set (I is Ordered_set_with_zero,
   let output =
     let rec my_out(p, c, d, v) =
       match p with
-      | Null -> E!print (c) ^ "*" ^ v ^ "**" ^ I!print (d)
+      | Null -> C!print (c) ^ "*" ^ v ^ "**" ^ D!print (d)
       | NonNull (cc, dd, pp) ->
-          E!print (c) ^ "*" ^ v ^ "**" ^ I!print (d) ^ "+"  ^
+          C!print (c) ^ "*" ^ v ^ "**" ^ D!print (d) ^ "+"  ^
           my_out (pp, cc, dd, v)
     termination proof = structural p
     in function p -> function v -> match p with
@@ -266,8 +266,8 @@ end ;;
 open "rings_fields" ;;
 
 (** The free commutative monoid generated my monomials (m, i) *)
-species Indexed_sum (I is Monomial_ordering, M is Additive_group) =
-  inherit Formal_indexed_sum (M, I), Indexed_set (I, M);
+species Indexed_sum (D is Monomial_ordering, M is Additive_group) =
+  inherit Formal_indexed_sum (M, D), Indexed_set (D, M);
 
   proof of monomial_is_non_null =
     by property zero_checks_to_zero definition of monomial ;
@@ -309,11 +309,11 @@ species Indexed_sum (I is Monomial_ordering, M is Additive_group) =
   | NonNull (m1, d1, ss_1) -> match s_2 with
     | Null -> s_1
     | NonNull (m2, d2, ss_2) ->
-      if I!lt (d1, d2)
+      if D!lt (d1, d2)
       then (* d1 < d2*)
         NonNull (m2, d2, !plus (s_1, ss_2))
       else
-        if I!lt (d2, d1)
+        if D!lt (d2, d1)
         then (* d2 < d1 *)
           NonNull (m1, d1, !plus (ss_1, s_2))
         else (* d2 = d1 total order *)
@@ -327,8 +327,8 @@ species Indexed_sum (I is Monomial_ordering, M is Additive_group) =
      correct_rep(to_rep(p)) -> correct_rep(to_rep(q)) ->
        correct_rep(to_rep(plus(p, q)));
 
-  theorem my_total_order: all x: I, all y: I,
-    I!lt (x, y) \/ I!gt (x, y) \/ I!equal (x, y)
+  theorem my_total_order: all x: D, all y: D,
+    D!lt (x, y) \/ D!gt (x, y) \/ D!equal (x, y)
     proof = assumed;
 
   theorem plus_preserve_invariant: all p_1: Self, plus_invariant_property(p_1)
@@ -337,22 +337,22 @@ species Indexed_sum (I is Monomial_ordering, M is Additive_group) =
            <2>1 prove correct_rep(to_rep (Null))
                 by definition of correct_rep, to_rep
                    type distributed_representation
-           <2>2 assume q: distributed_representation(M, I),
+           <2>2 assume q: distributed_representation(M, D),
                 hypothesis H: correct_rep (to_rep (q)),
                 prove correct_rep(to_rep (plus (Null, q)))
                 by hypothesis H
                    definition of correct_rep, to_rep, plus
                    type distributed_representation
            <2>f qed by step <2>1, <2>2 definition of plus_invariant_property
-      <1>2 prove all p: distributed_representation (M, I),
-                 all cp: M, all dp: I,
+      <1>2 prove all p: distributed_representation (M, D),
+                 all cp: M, all dp: D,
                    plus_invariant_property (p) ->
                      plus_invariant_property (NonNull (cp, dp, p))
-           <2>1 assume p: distributed_representation (M, I),
-                assume cp: M, assume dp: I,
+           <2>1 assume p: distributed_representation (M, D),
+                assume cp: M, assume dp: D,
                 hypothesis H_pip: plus_invariant_property (p),
                 prove plus_invariant_property (NonNull (cp, dp, p))
-                <3>1 prove all q: distributed_representation(M, I),
+                <3>1 prove all q: distributed_representation(M, D),
                              correct_rep(to_rep (NonNull (cp, dp, p))) ->
                              correct_rep (to_rep (q)) ->
                              correct_rep(to_rep(plus(NonNull(cp, dp, p), q)))
@@ -371,15 +371,15 @@ species Indexed_sum (I is Monomial_ordering, M is Additive_group) =
                                   type distributed_representation
                           <5>f qed by step <5>1, <5>2
                                       type distributed_representation
-                     <4>2 prove all q: distributed_representation(M, I),
-                                all cq: M, all dq: I,
+                     <4>2 prove all q: distributed_representation(M, D),
+                                all cq: M, all dq: D,
                                 correct_rep(to_rep(NonNull(cp, dp, p))) ->
                                 correct_rep(to_rep(NonNull(cq, dq, q))) ->
                                 correct_rep(to_rep(plus(NonNull(cp, dp, p),
                                                         NonNull(cq, dq, q))))
-                          <5>1 assume q: distributed_representation(M, I),
-                               assume s: distributed_representation(M, I),
-                                assume cq: M, assume dq: I,
+                          <5>1 assume q: distributed_representation(M, D),
+                               assume s: distributed_representation(M, D),
+                                assume cq: M, assume dq: D,
                                 hypothesis H_qcr:
                                   correct_rep(to_rep(NonNull(cq, dq, q))),
                                hypothesis H_pcr:
@@ -397,7 +397,7 @@ species Indexed_sum (I is Monomial_ordering, M is Additive_group) =
                                       by hypothesis H_qcr
                                          definition of correct_rep, to_rep
                                          type distributed_representation
-                               <6>1 hypothesis H_pltq: I!lt(dp, dq),
+                               <6>1 hypothesis H_pltq: D!lt(dp, dq),
                                     prove correct_rep(to_rep(s))
                                     <7>1 prove
              correct_rep(to_rep(NonNull(cq, dq, plus(NonNull(cp, dp, p), q))))
@@ -412,10 +412,10 @@ species Indexed_sum (I is Monomial_ordering, M is Additive_group) =
                                                  hypothesis H_pltq, H_s
                                                  definition of plus
                                                  type distributed_representation
-                               <6>2 hypothesis H_pgtq: I!gt(dp, dq),
+                               <6>2 hypothesis H_pgtq: D!gt(dp, dq),
                                     prove correct_rep(to_rep(s))
-                                    <7>0 prove ~ (I!lt(dp, dq) ) assumed
-                                    <7>00 prove I!lt(dq, dp) assumed
+                                    <7>0 prove ~ (D!lt(dp, dq) ) assumed
+                                    <7>00 prove D!lt(dq, dp) assumed
                                     <7>1 prove
                              correct_cons(cp, dp, plus(p, NonNull(cp, dp, q)))
                                          assumed
@@ -426,7 +426,7 @@ species Indexed_sum (I is Monomial_ordering, M is Additive_group) =
                                     (*                        to_rep, *)
                                     (*                        plus *)
                                     (*          type distributed_representation  *)
-                               <6>3 hypothesis H_peqq: I!equal(dp, dq),
+                               <6>3 hypothesis H_peqq: D!equal(dp, dq),
                                     prove correct_rep(to_rep(s))
                                     assumed
                                <6>f qed by step <6>1, <6>2, <6>3
@@ -439,7 +439,7 @@ species Indexed_sum (I is Monomial_ordering, M is Additive_group) =
                             definition of plus_invariant_property
                             type distributed_representation
            <2>f conclude
-      <1>3 prove all p: distributed_representation(M, I),
+      <1>3 prove all p: distributed_representation(M, D),
      plus_invariant_property(p)
            by step <1>1, <1>2 type distributed_representation
       <1>f conclude
