@@ -134,10 +134,9 @@ species Indexed_set (I is Ordered_set_with_zero,
         | Null -> false
         | NonNull (cy, dy, yy) ->
           (* Check degrees first for efficiency reasons. *)
-          if I!equal (dx, dy) then
-            if E!equal (cx, cy) then !equal (xx, yy)
-            else false
-          else false) termination proof = structural x ;
+          I!equal (dx, dy) && E!equal (cx, cy) && equal (xx, yy)
+        )
+  termination proof = structural x ;
 
   proof of equal_reflexive =
     <1>1 prove equal(Null, Null)
