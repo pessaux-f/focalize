@@ -849,7 +849,12 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   (match bd.Parsetree.ast_desc.Parsetree.b_body with
   | Parsetree.BB_computational e ->
       let in_recursive_let_section_of =
-        if rec_status <> Env.RC_non_rec then  (* Is rec. *)
+        if rec_status <> Env.RC_non_rec && binder <> "let fix"
+        then  (* Is rec and not a local one, hence in a section, hence extra
+                 polymorphic arguments must NOT be applied
+                 This was bug #78. Indeed, for local recursive functions we
+                 generate "let fix" not in a section, hence the extra arguments
+                 are not "masked". *)
           bd.Parsetree.ast_desc.Parsetree.b_name ::
           in_recursive_let_section_of
         else in_recursive_let_section_of in
