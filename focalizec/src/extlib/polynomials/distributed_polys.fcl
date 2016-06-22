@@ -92,7 +92,7 @@ species Indexed_set (D is Ordered_set_with_zero,
                  definition of termination_order;
 
   theorem well_founded_polys: is_well_founded(termination_order)
-    proof = coq proof {* admitted. *};
+    proof = coq proof {* Admitted. *};
 
   let lex_order(c1, c2) =
     if equal(fst(c1), fst(c2)) then 
@@ -101,7 +101,7 @@ species Indexed_set (D is Ordered_set_with_zero,
     ;
 
   theorem lex_well_founded: is_well_founded(lex_order)
-    proof = coq proof {* admitted. *};
+    proof = coq proof {* Admitted. *};
 
   let to_rep(x: Self): distributed_representation(C, D) = x;
 
