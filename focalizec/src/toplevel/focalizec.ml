@@ -331,7 +331,7 @@ let main () =
    [ ("-coq-version",
       Arg.String Configuration.set_coq_version,
        "<version>  Generate Coq code for a specific version.\n\
-     \    By default, the layest version of Coq supported by FoCaLiZe\
+     \    By default, the latest version of Coq supported by FoCaLiZe\
      \ is assumed (at\n\
      \    least 8.5pl1). Since Coq version 8.5, the -I option is replaced\
      \ by the -Q\n\
