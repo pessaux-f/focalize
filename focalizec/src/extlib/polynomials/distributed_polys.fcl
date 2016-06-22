@@ -79,6 +79,30 @@ species Indexed_set (D is Ordered_set_with_zero,
     | Null -> D!zero
     | NonNull (_, d, _) -> d ;
 
+  let termination_order(p1, p2) = D!leq(degree(p1), degree(p2));
+  theorem termination_order_refl: all p: Self,
+     termination_order(p, p)
+     proof = by property D!leq_reflexive
+                definition of termination_order;
+
+  theorem termination_order_trans: all p1 p2 p3: Self,
+      termination_order(p1, p2) -> termination_order(p2, p3)
+        -> termination_order(p1, p3)
+      proof = by property D!leq_transitive
+                 definition of termination_order;
+
+  theorem well_founded_polys: is_well_founded(termination_order)
+    proof = coq proof {* admitted. *};
+
+  let lex_order(c1, c2) =
+    if equal(fst(c1), fst(c2)) then 
+       termination_order(snd(c1), snd(c2))
+    else termination_order(fst(c1), fst(c2))
+    ;
+
+  theorem lex_well_founded: is_well_founded(lex_order)
+    proof = coq proof {* admitted. *};
+
   let to_rep(x: Self): distributed_representation(C, D) = x;
 
   let rec correct_cons(c, d, pp)= match pp with
@@ -94,6 +118,15 @@ species Indexed_set (D is Ordered_set_with_zero,
      | Null -> true
      | NonNull(c, d, pp) ->
         correct_cons(c, d, pp) ;
+
+  theorem invariant_representation: all p: Self,
+    correct_rep(to_rep(p))
+    proof = assumed;
+
+  theorem my_total_order: all x: D, all y: D,
+    D!lt (x, y) \/ D!gt (x, y) \/ D!equal (x, y)
+    proof = assumed;
+
 
   theorem my_zero_is_mim: all d: D, D!geq(d, D!zero)
     proof = assumed ; (* by property D!zero_minimal, D!geq_is_leq; *)
@@ -303,33 +336,90 @@ species Indexed_sum (D is Monomial_ordering, M is Additive_group) =
 (*     end; *)
 (*   let print (a) = self!p (a); *)
 
-  (** Addition is structural *)
-  let rec plus (s_1: Self, s_2: Self): Self = match s_1 with
+  let rec my_plus(c:(Self * Self)) = match c with
+  | (s_1, s_2) ->
+  match s_1 with
   | Null -> s_2
   | NonNull (m1, d1, ss_1) -> match s_2 with
     | Null -> s_1
     | NonNull (m2, d2, ss_2) ->
       if D!lt (d1, d2)
       then (* d1 < d2*)
-        NonNull (m2, d2, !plus (s_1, ss_2))
+        NonNull (m2, d2, !my_plus ((s_1, ss_2)))
       else
         if D!lt (d2, d1)
         then (* d2 < d1 *)
-          NonNull (m1, d1, !plus (ss_1, s_2))
+          NonNull (m1, d1, !my_plus ((ss_1, s_2)))
         else (* d2 = d1 total order *)
           let m = M!plus (m1, m2) in
           if M!is_zero (m)
-          then !plus (ss_1, ss_2)
-          else NonNull (m, d1, !plus (ss_1, ss_2))
+          then !my_plus ((ss_1, ss_2))
+          else NonNull (m, d1, !my_plus ((ss_1, ss_2)))
+    termination proof = order lex_order on c
+    <1>1 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
+               all d1 d2: D, all ss_1 ss_2: Self,
+               ((s_1, s_2) = c) -> NonNull (m1, d1, ss_1) = s_1 ->
+                  (NonNull (m2, d2, ss_2) = s_2) -> 
+                   D!lt (d1, d2) -> !lex_order ((s_1, ss_2), c)
+         by definition of lex_order, termination_order, correct_rep, to_rep
+            property equal_reflexive, invariant_representation, my_total_order
+            type distributed_representation
+   <1>2 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
+               all d1 d2: D, all ss_1 ss_2: Self,
+               ((s_1, s_2) = c) -> NonNull (m1, d1, ss_1) = s_1 ->
+                  (NonNull (m2, d2, ss_2) = s_2) -> 
+                    (D!lt (d1, d2) = false) ->
+                      D!lt (d2, d1) -> !lex_order ((s_1, ss_2), c)
+         by definition of lex_order, termination_order, correct_rep, to_rep
+            property equal_reflexive, invariant_representation, my_total_order
+            type distributed_representation
+    <1>3 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
+               all d1 d2: D, all ss_1 ss_2: Self,
+               ((s_1, s_2) = c) -> NonNull (m1, d1, ss_1) = s_1 ->
+                  (NonNull (m2, d2, ss_2) = s_2) -> 
+                    (D!lt (d1, d2) = false) ->
+                      (D!lt (d2, d1) = false) -> 
+                        !lex_order ((ss_1, ss_2), c)
+         by definition of lex_order, termination_order, correct_rep, to_rep
+            property equal_reflexive, invariant_representation, my_total_order
+            type distributed_representation
+    <1>4 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
+               all d1 d2: D, all ss_1 ss_2: Self,
+               all m: M,
+               ((s_1, s_2) = c) -> NonNull (m1, d1, ss_1) = s_1 ->
+                  (NonNull (m2, d2, ss_2) = s_2) -> 
+                    (D!lt (d1, d2) = false) ->
+                      (D!lt (d2, d1) = false) -> 
+                        M!plus (m1, m2)= m ->
+                         M!is_zero (m) ->
+                           !lex_order ((ss_1, ss_2), c)
+         by definition of lex_order, termination_order, correct_rep, to_rep
+            property equal_reflexive, invariant_representation, my_total_order
+            type distributed_representation
+    <1>5 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
+               all d1 d2: D, all ss_1 ss_2: Self,
+               all m: M,
+               ((s_1, s_2) = c) -> NonNull (m1, d1, ss_1) = s_1 ->
+                  (NonNull (m2, d2, ss_2) = s_2) -> 
+                    (D!lt (d1, d2) = false) ->
+                      (D!lt (d2, d1) = false) -> 
+                        (M!plus (m1, m2)= m) ->
+                         (M!is_zero (m)= false) ->
+                           !lex_order ((ss_1, ss_2), c)
+         by definition of lex_order, termination_order, correct_rep, to_rep
+            property equal_reflexive, invariant_representation, my_total_order
+            type distributed_representation
+     <1>6 prove is_well_founded(lex_order)
+         by property lex_well_founded
+    <1>e qed coq proof {* wf_qed *} 
     ;
+  let plus (s_1: Self, s_2: Self): Self = my_plus((s_1, s_2))
+  ;
+
 
   logical let plus_invariant_property(p) = all q: Self,
      correct_rep(to_rep(p)) -> correct_rep(to_rep(q)) ->
        correct_rep(to_rep(plus(p, q)));
-
-  theorem my_total_order: all x: D, all y: D,
-    D!lt (x, y) \/ D!gt (x, y) \/ D!equal (x, y)
-    proof = assumed;
 
   theorem plus_preserve_invariant: all p_1: Self, plus_invariant_property(p_1)
     proof =
@@ -341,7 +431,7 @@ species Indexed_sum (D is Monomial_ordering, M is Additive_group) =
                 hypothesis H: correct_rep (to_rep (q)),
                 prove correct_rep(to_rep (plus (Null, q)))
                 by hypothesis H
-                   definition of correct_rep, to_rep, plus
+                   definition of correct_rep, to_rep, plus, my_plus
                    type distributed_representation
            <2>f qed by step <2>1, <2>2 definition of plus_invariant_property
       <1>2 prove all p: distributed_representation (M, D),
@@ -367,7 +457,7 @@ species Indexed_sum (D is Monomial_ordering, M is Additive_group) =
                                prove correct_rep(to_rep(plus(NonNull(cp, dp, p),
                                                              Null)))
                                by hypothesis H_pcr
-                                  definition of plus, correct_rep, to_rep
+                                  definition of plus, my_plus, correct_rep, to_rep
                                   type distributed_representation
                           <5>f qed by step <5>1, <5>2
                                       type distributed_representation
@@ -410,7 +500,7 @@ species Indexed_sum (D is Monomial_ordering, M is Additive_group) =
                                                 type distributed_representation
                                      <7>f qed by step <7>1
                                                  hypothesis H_pltq, H_s
-                                                 definition of plus
+                                                 definition of plus, my_plus
                                                  type distributed_representation
                                <6>2 hypothesis H_pgtq: D!gt(dp, dq),
                                     prove correct_rep(to_rep(s))
@@ -450,7 +540,7 @@ species Indexed_sum (D is Monomial_ordering, M is Additive_group) =
   proof of plus_right_substitution_rule = assumed;
   proof of zero_is_neutral =
    <1>1 prove all x: Self, !equal(!plus(!zero, x), x)
-        by definition of zero, plus
+        by definition of zero, plus, my_plus
            property equal_reflexive
            type distributed_representation
    <1>2 prove all x: Self, !equal(!plus(x, !zero), x)
