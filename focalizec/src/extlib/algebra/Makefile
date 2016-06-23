@@ -36,7 +36,9 @@ FOCALIZE_SRC=\
  integers.fcl\
  arrays.fcl\
  product_structures.fcl\
- quotient_structures.fcl
+ quotient_structures.fcl\
+ small_integers.fcl\
+ iterators.fcl
 
 # FOCALIZE_SRC_UNSAFE are compiled not using the implicit rules. They have
 # their own rules at the end of this Makefile.
@@ -194,10 +196,6 @@ clean:
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.vo *.zv *.dko *.glob *.pfc *~ .*~ *.fo
 
 # Do not yet compile in Coq
-iterators.ml: iterators.fcl
-	$(FOCALIZEC) -no-stdlib-path -I $(STDLIB_DIR) -no-coq-code -no-dedukti-code $<
-small_integers.ml: small_integers.fcl
-	$(FOCALIZEC) -no-stdlib-path -I $(STDLIB_DIR) -no-coq-code -no-dedukti-code $<
 big_integers.ml: big_integers.fcl
 	$(FOCALIZEC) -no-stdlib-path -I $(STDLIB_DIR) -no-coq-code -no-dedukti-code $<
 #End temporary
