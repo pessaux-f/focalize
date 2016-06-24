@@ -505,6 +505,10 @@ species Monomial_ordering =
           Regular_additive_monoid,
           Ordered_additive_monoid;
 
+  (* to do inside collections *)
+  theorem well_founded_leq: is_well_founded(leq)
+    proof = assumed;
+
   (** adding always increase order *)
   theorem leq_absorbes_add: all x y : Self,
     !leq (x, !plus (x, y))
