@@ -147,16 +147,21 @@ species Indexed_set (D is Ordered_set_with_zero,
      <1>f conclude
 ;
 
-   theorem length_pair_left_right_lt: 
+theorem int_lt_trans: all n m p : int, 
+    n < m -> m < p -> n < p
+proof = 
+ assumed
+;
+ 
+  theorem length_pair_left_right_lt: 
      all p1 p2: distributed_representation(C, D),
        all c1  c2: C, all d1 d2: D,
          length_pair((p1, p2)) < length_pair((NonNull(c1, d1, p1), NonNull(c2, d2, p2)))
      proof = 
-       assumed;
-       (* by definition of length_pair, length_poly *)
-       (*    property int_succ_lt, int_add_lt *)
-       (*    type distributed_representation *)
-  
+     by property length_pair_right_lt, length_pair_left_lt, int_lt_trans
+     ;
+
+
   (* theorem length_poly_decreases: all p: distributed_representation(C, D), *)
   (*   all c: C, all d: D, *)
   (*    length_poly(p) < length_poly(NonNull(c, d, p) ) *)
