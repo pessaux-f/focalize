@@ -132,7 +132,20 @@ species Indexed_set (D is Ordered_set_with_zero,
      all c2: C, all d2: D,
        length_pair((p1, p2)) < length_pair((p1, NonNull(c2, d2, p2)))
      proof = 
-       assumed;
+       <1>1  assume  p1 p2 : distributed_representation(C, D),
+             assume c2: C, assume d2: D,
+             prove 
+               length_pair((p1, p2)) < length_pair((p1, NonNull(c2, d2, p2)))
+              <2>1 prove 
+              length_pair((p2, p1)) < length_pair((NonNull(c2, d2, p2), p1))
+                  by property length_pair_left_lt
+              <2>2 prove length_pair((p1, p2)) = length_pair((p2, p1))
+                  by definition of length_pair property int_plus_commute
+              <2>3 prove length_pair((NonNull(c2, d2, p2), p1)) = length_pair((p1, NonNull(c2, d2, p2)))
+                   by definition of length_pair property int_plus_commute
+              <2>f qed by step <2>1, <2>2, <2>3
+     <1>f conclude
+;
 
    theorem length_pair_left_right_lt: 
      all p1 p2: distributed_representation(C, D),
