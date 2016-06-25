@@ -79,29 +79,113 @@ species Indexed_set (D is Ordered_set_with_zero,
     | Null -> D!zero
     | NonNull (_, d, _) -> d ;
 
-  let termination_order(p1, p2) = D!leq(degree(p1), degree(p2));
-  theorem termination_order_refl: all p: Self,
-     termination_order(p, p)
-     proof = by property D!leq_reflexive
-                definition of termination_order;
+  let rec length_poly (p) = 
+     match p with
+     | Null -> 0
+     | NonNull(_, _, pp) ->
+        length_poly(pp) + 1
+  termination proof = structural p ;
 
-  theorem termination_order_trans: all p1 p2 p3: Self,
-      termination_order(p1, p2) -> termination_order(p2, p3)
-        -> termination_order(p1, p3)
-      proof = by property D!leq_transitive
-                 definition of termination_order;
+  let length_pair 
+   ( c : distributed_representation(C, D) * distributed_representation(C, D) ) 
+     = match c with
+       | (p1, p2) -> length_poly (p1) + length_poly (p2)
+  ;
 
-  theorem well_founded_polys: is_well_founded(termination_order)
-    proof = coq proof {* Admitted. *};
-
-  let lex_order(c1, c2) =
-    if equal(fst(c1), fst(c2)) then 
-       termination_order(snd(c1), snd(c2))
-    else termination_order(fst(c1), fst(c2))
+  theorem int_succ_lt: all a: int, a < a + 1
+    proof = 
+     assumed
+     (* by property int_lt_le_S, int_plus_commute *)
     ;
+  theorem int_add_lt: all a b c: int,
+    a < b -> (a + c < b + c) 
+    proof = assumed
+    ;
+    
+   theorem length_pair_left_lt: all p1 p2: distributed_representation(C, D),
+     all c1: C, all d1: D,
+       length_pair((p1, p2)) < length_pair((NonNull(c1, d1, p1), p2))
+     proof = 
+       <1>1  assume p1 p2: distributed_representation(C, D),
+             assume c1: C, assume d1: D,
+             prove 
+               length_pair((p1, p2)) < length_pair((NonNull(c1, d1, p1), p2))
+            <2>0 prove length_poly(NonNull(c1, d1, p1)) = length_poly(p1) + 1 
+                 by definition of length_poly
+                    type distributed_representation
+            <2>1 prove length_poly(p1) < length_poly(NonNull(c1, d1, p1))
+                   by definition of length_poly
+                      property int_succ_lt 
+                     type distributed_representation
+                  
+            <2>2 prove 
+                    (length_poly(p1) + length_poly(p2))
+                    <
+                    (length_poly(NonNull(c1, d1, p1)) + length_poly(p2))
+                 by property int_add_lt
+                    step <2>1
+             <2>f qed by step <2>2 definition of length_pair
+       <1>f conclude
+     ;
 
-  theorem lex_well_founded: is_well_founded(lex_order)
-    proof = coq proof {* Admitted. *};
+   theorem length_pair_right_lt: all p1 p2: distributed_representation(C, D),
+     all c2: C, all d2: D,
+       length_pair((p1, p2)) < length_pair((p1, NonNull(c2, d2, p2)))
+     proof = 
+       assumed;
+
+   theorem length_pair_left_right_lt: 
+     all p1 p2: distributed_representation(C, D),
+       all c1  c2: C, all d1 d2: D,
+         length_pair((p1, p2)) < length_pair((NonNull(c1, d1, p1), NonNull(c2, d2, p2)))
+     proof = 
+       assumed;
+       (* by definition of length_pair, length_poly *)
+       (*    property int_succ_lt, int_add_lt *)
+       (*    type distributed_representation *)
+  
+  (* theorem length_poly_decreases: all p: distributed_representation(C, D), *)
+  (*   all c: C, all d: D, *)
+  (*    length_poly(p) < length_poly(NonNull(c, d, p) ) *)
+  (*    proof = assumed *)
+  (*   ; *)
+
+theorem add_pos :  all n m : int, 0 <= n -> 0  <= m ->  0 <= n + m
+proof = assumed
+;
+
+theorem one_pos : 0 <= 1
+proof = assumed
+;
+
+theorem length_poly_pos: all p : distributed_representation(C, D), 
+    0 <= length_poly (p)
+proof = 
+<1>1 prove  0 <= length_poly (Null)
+by definition of length_poly 
+   property int_le_refl
+   type distributed_representation
+<1>2 assume pp :  distributed_representation(C, D), 
+(* Induction hypothesis. *)
+hypothesis Hind: 0 <= length_poly (pp) ,
+assume c : C,
+assume d : D, 
+(* Recursive case. *)
+prove 0 <= length_poly(NonNull(c, d, pp)) 
+by definition of length_poly 
+   property add_pos, one_pos hypothesis Hind 
+   type distributed_representation
+<1>3 qed by step <1>1, <1>2 type distributed_representation
+; 
+
+
+theorem length_pair_measure: 
+all s1 s2 : distributed_representation(C, D), 
+0 <= !length_pair ((s1, s2))
+proof = by definition of length_pair
+           property  add_pos, length_poly_pos
+;
+
 
   let to_rep(x: Self): distributed_representation(C, D) = x;
 
@@ -119,9 +203,6 @@ species Indexed_set (D is Ordered_set_with_zero,
      | NonNull(c, d, pp) ->
         correct_cons(c, d, pp) ;
 
-  theorem invariant_representation: all p: Self,
-    correct_rep(to_rep(p))
-    proof = assumed;
 
   theorem my_total_order: all x: D, all y: D,
     D!lt (x, y) \/ D!gt (x, y) \/ D!equal (x, y)
@@ -355,35 +436,28 @@ species Indexed_sum (D is Monomial_ordering, M is Additive_group) =
           if M!is_zero (m)
           then !my_plus ((ss_1, ss_2))
           else NonNull (m, d1, !my_plus ((ss_1, ss_2)))
-    termination proof = order lex_order on c
+    termination proof = measure length_pair on c
     <1>1 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
                all d1 d2: D, all ss_1 ss_2: Self,
                ((s_1, s_2) = c) -> NonNull (m1, d1, ss_1) = s_1 ->
                   (NonNull (m2, d2, ss_2) = s_2) -> 
-                   D!lt (d1, d2) -> !lex_order ((s_1, ss_2), c)
-         by definition of lex_order, termination_order, correct_rep, to_rep
-            property equal_reflexive, invariant_representation, my_total_order
-            type distributed_representation
+                   D!lt (d1, d2) -> 
+                     !length_pair ((s_1, ss_2)) < !length_pair (c)
+             by property length_pair_right_lt
+(*by definition of length_pair, length_poly
+             type distributed_representation*)
    <1>2 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
                all d1 d2: D, all ss_1 ss_2: Self,
                ((s_1, s_2) = c) -> NonNull (m1, d1, ss_1) = s_1 ->
                   (NonNull (m2, d2, ss_2) = s_2) -> 
                     (D!lt (d1, d2) = false) ->
-                      D!lt (d2, d1) -> !lex_order ((s_1, ss_2), c)
-         by definition of lex_order, termination_order, correct_rep, to_rep
-            property equal_reflexive, invariant_representation, my_total_order
-            type distributed_representation
+                      D!lt (d2, d1) -> 
+                         !length_pair ((ss_1, s_2)) < !length_pair (c)          
+             by property length_pair_left_lt
+(*           by definition of length_pair, length_poly *)
+             (* property int_add_lt, int_succ_lt *)
+             (* type distributed_representation *)
     <1>3 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
-               all d1 d2: D, all ss_1 ss_2: Self,
-               ((s_1, s_2) = c) -> NonNull (m1, d1, ss_1) = s_1 ->
-                  (NonNull (m2, d2, ss_2) = s_2) -> 
-                    (D!lt (d1, d2) = false) ->
-                      (D!lt (d2, d1) = false) -> 
-                        !lex_order ((ss_1, ss_2), c)
-         by definition of lex_order, termination_order, correct_rep, to_rep
-            property equal_reflexive, invariant_representation, my_total_order
-            type distributed_representation
-    <1>4 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
                all d1 d2: D, all ss_1 ss_2: Self,
                all m: M,
                ((s_1, s_2) = c) -> NonNull (m1, d1, ss_1) = s_1 ->
@@ -392,11 +466,9 @@ species Indexed_sum (D is Monomial_ordering, M is Additive_group) =
                       (D!lt (d2, d1) = false) -> 
                         M!plus (m1, m2)= m ->
                          M!is_zero (m) ->
-                           !lex_order ((ss_1, ss_2), c)
-         by definition of lex_order, termination_order, correct_rep, to_rep
-            property equal_reflexive, invariant_representation, my_total_order
-            type distributed_representation
-    <1>5 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
+                          !length_pair ((ss_1, ss_2)) < !length_pair (c)        
+         by property length_pair_left_right_lt
+    <1>4 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
                all d1 d2: D, all ss_1 ss_2: Self,
                all m: M,
                ((s_1, s_2) = c) -> NonNull (m1, d1, ss_1) = s_1 ->
@@ -405,13 +477,13 @@ species Indexed_sum (D is Monomial_ordering, M is Additive_group) =
                       (D!lt (d2, d1) = false) -> 
                         (M!plus (m1, m2)= m) ->
                          (M!is_zero (m)= false) ->
-                           !lex_order ((ss_1, ss_2), c)
-         by definition of lex_order, termination_order, correct_rep, to_rep
-            property equal_reflexive, invariant_representation, my_total_order
-            type distributed_representation
-     <1>6 prove is_well_founded(lex_order)
-         by property lex_well_founded
-    <1>e qed coq proof {* wf_qed *} 
+                         !length_pair ((ss_1, ss_2)) < !length_pair (c)        
+          by property length_pair_left_right_lt
+     <1>5 prove all c : Self * Self, 0 <= !length_pair (c)
+         assumed (*by  property length_pair_measure*)
+     <1>e qed coq proof {* wf_qed *} 
+
+
     ;
   let plus (s_1: Self, s_2: Self): Self = my_plus((s_1, s_2))
   ;
