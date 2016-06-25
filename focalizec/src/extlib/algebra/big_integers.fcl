@@ -353,7 +353,10 @@ species Base_big_int =
   let zero = #zero_big_int;
   let is_zero (m) = #eq_big_int (m, #zero_big_int);
 
-  proof of is_zero_spec = by definition of is_zero, zero, equal;
+  proof of is_zero_spec = assumed (* Because todo. is_zero uses eq_big_int
+                                     which is an external. We need an assumed
+                                     property on this external to do the
+                                     current proof. *);
 
   let plus (m, n) = #add_big_int (m, n);
 
