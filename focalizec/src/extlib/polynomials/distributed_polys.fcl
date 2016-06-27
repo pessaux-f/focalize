@@ -404,15 +404,23 @@ species Indexed_sum (D is Monomial_ordering, M is Additive_group) =
   proof of monomial_is_non_null =
     by property zero_checks_to_zero definition of monomial ;
 
- (*all x y : M, all i : I,
-     !equal (!plus (!monomial (x, i), !monomial (y, i)),
-            !monomial (M!plus (x, y), i));
-*)
-property  monomial_left_substitution_rule : all x y : M , all i : D, 
+
+
+theorem  monomial_left_substitution_rule : all x y : M , all i : D, 
     M!equal (x, y) -> (!equal (!monomial (x, i), !monomial (y, i)))
- ;
-
-
+proof =
+           <1>1 assume x y: M, assume i: D ,
+                hypothesis H :  M!equal (x, y), 
+                prove !equal (!monomial (x, i), !monomial (y, i))
+             <2>1 hypothesis H_0: M!is_zero(x),
+                   prove !equal (!monomial (x, i), !monomial (y, i))
+                assumed
+             <2>2 hypothesis H_1: ~ (M!is_zero(x)),
+                    prove !equal (!monomial (x, i), !monomial (y, i))
+             assumed
+             <2>f qed by step <2>1, <2>2
+           <1>f conclude
+; 
 
   proof of leading_coefficient_is_non_null = assumed ;
   proof of degree_is_additive = assumed ;
@@ -443,6 +451,7 @@ property  monomial_left_substitution_rule : all x y : M , all i : D,
 (*     end; *)
 (*   let print (a) = self!p (a); *)
 
+
   let rec my_plus(c:(Self * Self)) = match c with
   | (s_1, s_2) ->
   match s_1 with
@@ -462,7 +471,7 @@ property  monomial_left_substitution_rule : all x y : M , all i : D,
           if M!is_zero (m)
           then !my_plus ((ss_1, ss_2))
           else NonNull (m, d1, !my_plus ((ss_1, ss_2)))
-    termination proof = measure length_pair on c
+    termination proof =  measure length_pair on c
     <1>1 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
                all d1 d2: D, all ss_1 ss_2: Self,
                ((s_1, s_2) = c) -> NonNull (m1, d1, ss_1) = s_1 ->
@@ -509,10 +518,12 @@ property  monomial_left_substitution_rule : all x y : M , all i : D,
          assumed (*by  property length_pair_measure*)
      <1>e qed coq proof {* wf_qed *} 
 
-
     ;
   let plus (s_1: Self, s_2: Self): Self = my_plus((s_1, s_2))
   ;
+
+
+
 
   proof of monomial_is_additive = 
            <1>1 assume x y: M, assume i: D ,
