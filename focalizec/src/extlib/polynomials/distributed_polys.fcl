@@ -422,17 +422,26 @@ proof =
            <1>f conclude
 ; 
 
-  proof of leading_coefficient_is_non_null = assumed ;
+  proof of leading_coefficient_is_non_null = 
+  assumed  ;
   proof of degree_is_additive = assumed ;
   proof of reductum_has_smaller_degree = assumed ;
   proof of reductum_of_zero_is_zero =
     by definition of zero, reductum
        type distributed_representation
        property equal_reflexive ;
-  proof of monomial_has_degree = assumed ;
+  proof of monomial_has_degree = 
+    by definition of monomial, degree
+    type distributed_representation
+    property D!equal_reflexive ;
   proof of reductum_is_reductum = assumed ;
-  proof of monomial_has_coefficient = assumed ;
+  proof of monomial_has_coefficient = 
+    by definition of monomial, leading_coefficient
+    type distributed_representation
+    property M!equal_reflexive ;
 
+
+ 
 
 
 (*   local let rec p (a) = *)
