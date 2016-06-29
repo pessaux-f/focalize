@@ -47,7 +47,7 @@ open "constants" ;;
    This is a kind of finite support functions from I to E.
  *)
 species Indexed_set (D is Ordered_set_with_zero,
-         C is Setoid_with_zero) =
+         C is Zero_check_set) =
   inherit Setoid_with_zero;
   (**
      [rr]:
@@ -408,19 +408,35 @@ species Indexed_sum (D is Monomial_ordering, M is Additive_group) =
 
 theorem  monomial_left_substitution_rule : all x y : M , all i : D, 
     M!equal (x, y) -> (!equal (!monomial (x, i), !monomial (y, i)))
-proof =
+proof = 
            <1>1 assume x y: M, assume i: D ,
                 hypothesis H :  M!equal (x, y), 
                 prove !equal (!monomial (x, i), !monomial (y, i))
              <2>1 hypothesis H_0: M!is_zero(x),
-                   prove !equal (!monomial (x, i), !monomial (y, i))
-                assumed
+                  prove !equal (!monomial (x, i), !monomial (y, i))
+                  by definition of monomial 
+                     hypothesis H, H_0
+                     property M!is_zero_substitution_rule, equal_reflexive
              <2>2 hypothesis H_1: ~ (M!is_zero(x)),
-                    prove !equal (!monomial (x, i), !monomial (y, i))
-             assumed
-             <2>f qed by step <2>1, <2>2
+                  prove !equal (!monomial (x, i), !monomial (y, i))
+                  <3>1 hypothesis H_2:  M!is_zero(y),
+                   prove !equal (!monomial (x, i), !monomial (y, i))
+                     <4>1 prove M!is_zero(x)
+                          by property M!is_zero_substitution_rule
+                             hypothesis H_2, H
+                      <4>f qed by step <4>1 hypothesis H_1
+                  <3>2 hypothesis H_3: ~ ( M!is_zero(y)),
+                   prove !equal (!monomial (x, i), !monomial (y, i))
+                   by definition of monomial, equal 
+                     property equal_reflexive, M!equal_reflexive, 
+                     D!equal_reflexive
+                     hypothesis H_1, H_3, H
+                     type distributed_representation
+                   <3>f conclude
+              <2>f conclude
            <1>f conclude
 ; 
+
 
   proof of leading_coefficient_is_non_null = 
   assumed  ;
@@ -440,8 +456,6 @@ proof =
     type distributed_representation
     property M!equal_reflexive ;
 
-
- 
 
 
 (*   local let rec p (a) = *)
@@ -487,7 +501,7 @@ proof =
                   (NonNull (m2, d2, ss_2) = s_2) -> 
                    D!lt (d1, d2) -> 
                      !length_pair ((s_1, ss_2)) < !length_pair (c)
-             by property length_pair_right_lt
+           assumed (*  by property length_pair_right_lt*)
 (*by definition of length_pair, length_poly
              type distributed_representation*)
    <1>2 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
@@ -497,7 +511,7 @@ proof =
                     (D!lt (d1, d2) = false) ->
                       D!lt (d2, d1) -> 
                          !length_pair ((ss_1, s_2)) < !length_pair (c)          
-             by property length_pair_left_lt
+           assumed (*  by property length_pair_left_lt *)
 (*           by definition of length_pair, length_poly *)
              (* property int_add_lt, int_succ_lt *)
              (* type distributed_representation *)
@@ -511,7 +525,7 @@ proof =
                         M!plus (m1, m2)= m ->
                          M!is_zero (m) ->
                           !length_pair ((ss_1, ss_2)) < !length_pair (c)        
-         by property length_pair_left_right_lt
+         assumed (*by property length_pair_left_right_lt*)
     <1>4 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
                all d1 d2: D, all ss_1 ss_2: Self,
                all m: M,
@@ -522,9 +536,19 @@ proof =
                         (M!plus (m1, m2)= m) ->
                          (M!is_zero (m)= false) ->
                          !length_pair ((ss_1, ss_2)) < !length_pair (c)        
-          by property length_pair_left_right_lt
+          assumed (*by property length_pair_left_right_lt*)
      <1>5 prove all c : Self * Self, 0 <= !length_pair (c)
-         assumed (*by  property length_pair_measure*)
+          <2>5 assume c : Self * Self, 
+               (*prove   0 <= !length_pair (c)*)
+               notation s1 = fst(c), 
+               notation s2 = snd(c),
+               prove 0 <= !length_pair (c)
+               <3>1 prove 0 <= !length_pair ((s1, s2))
+                by property length_pair_measure
+               <3>2 prove c = (s1, s2)
+                assumed
+               <3>f conclude
+         <2>f conclude 
      <1>e qed coq proof {* wf_qed *} 
     ;
 
