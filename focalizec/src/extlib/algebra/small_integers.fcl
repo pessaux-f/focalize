@@ -211,6 +211,9 @@ species Small_integers =
   let to_int (n : Self) : int = n;
   let of_int (n : int) : Self = n;
 
+  proof of zero_simplifies = assumed;
+  proof of is_zero_defines_neutral = assumed;
+
   proof of is_zero_spec = by definition of zero, is_zero, equal;
   proof of is_one_spec = by definition of one, is_one, equal;
   proof of leq_reflexive = assumed (* Because toto *);

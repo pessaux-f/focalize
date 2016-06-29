@@ -529,7 +529,7 @@ end
 (** an additive group is an additive monoid with total substraction *)
 species Additive_group =
 
-  inherit Cancellative_additive_monoid;
+  inherit Zero_check_additive_monoid;
 
 (*   let is_zero (x) = !equal (x, !zero); *)
 (*   proof of is_zero_spec = *)
