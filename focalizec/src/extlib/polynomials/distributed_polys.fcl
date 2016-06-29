@@ -526,8 +526,9 @@ proof =
      <1>5 prove all c : Self * Self, 0 <= !length_pair (c)
          assumed (*by  property length_pair_measure*)
      <1>e qed coq proof {* wf_qed *} 
-
     ;
+
+
   let plus (s_1: Self, s_2: Self): Self = my_plus((s_1, s_2))
   ;
 
@@ -542,7 +543,7 @@ proof =
                 prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
                          !monomial (M!plus (x, y), i))
                <3>0 prove M!equal(x, M!zero)
-               assumed (*by property M!is_zero_checks_to_zero hypothesis H_0 *)
+               by property M!is_zero_spec, M!equal_symmetric hypothesis H_0 
                <3>1 prove equal(monomial(x, i), zero)
                by definition of monomial property equal_reflexive 
                   hypothesis H_0 
@@ -561,8 +562,7 @@ proof =
                 prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
                          !monomial (M!plus (x, y), i))
                     <4>0 prove M!equal(y, M!zero)
-                    assumed (*by property M!is_zero_checks_to_zero hypothesis H_0 *)
-                   <4>1 prove equal(monomial(y, i), zero)
+                    by property M!is_zero_spec, M!equal_symmetric hypothesis H_2                   <4>1 prove equal(monomial(y, i), zero)
                    by definition of monomial property equal_reflexive 
                       hypothesis H_2 
                    <4>2 prove 
