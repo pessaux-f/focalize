@@ -501,9 +501,7 @@ proof =
                   (NonNull (m2, d2, ss_2) = s_2) -> 
                    D!lt (d1, d2) -> 
                      !length_pair ((s_1, ss_2)) < !length_pair (c)
-           assumed (*  by property length_pair_right_lt*)
-(*by definition of length_pair, length_poly
-             type distributed_representation*)
+            by property length_pair_right_lt
    <1>2 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
                all d1 d2: D, all ss_1 ss_2: Self,
                ((s_1, s_2) = c) -> NonNull (m1, d1, ss_1) = s_1 ->
@@ -511,10 +509,7 @@ proof =
                     (D!lt (d1, d2) = false) ->
                       D!lt (d2, d1) -> 
                          !length_pair ((ss_1, s_2)) < !length_pair (c)          
-           assumed (*  by property length_pair_left_lt *)
-(*           by definition of length_pair, length_poly *)
-             (* property int_add_lt, int_succ_lt *)
-             (* type distributed_representation *)
+             by property length_pair_left_lt 
     <1>3 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
                all d1 d2: D, all ss_1 ss_2: Self,
                all m: M,
@@ -525,7 +520,7 @@ proof =
                         M!plus (m1, m2)= m ->
                          M!is_zero (m) ->
                           !length_pair ((ss_1, ss_2)) < !length_pair (c)        
-         assumed (*by property length_pair_left_right_lt*)
+         by property length_pair_left_right_lt
     <1>4 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
                all d1 d2: D, all ss_1 ss_2: Self,
                all m: M,
@@ -536,7 +531,7 @@ proof =
                         (M!plus (m1, m2)= m) ->
                          (M!is_zero (m)= false) ->
                          !length_pair ((ss_1, ss_2)) < !length_pair (c)        
-          assumed (*by property length_pair_left_right_lt*)
+           by property length_pair_left_right_lt
      <1>5 prove all c : Self * Self, 0 <= !length_pair (c)
           <2>5 assume c : Self * Self, 
                (*prove   0 <= !length_pair (c)*)
