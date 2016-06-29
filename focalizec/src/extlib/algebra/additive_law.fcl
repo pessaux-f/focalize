@@ -49,8 +49,10 @@ species Zero_check_set =
   (**
      An element satisfying the check should be equal to 0
    *)
-  property is_zero_checks_to_zero: all x : Self,
-   (!is_zero (x)) -> ( !equal (x, Self!zero) /\ !equal (Self!zero, x));
+  theorem is_zero_checks_to_zero: all x : Self,
+   (!is_zero (x)) -> ( !equal (x, Self!zero) /\ !equal (Self!zero, x))
+   proof = by property is_zero_spec, equal_symmetric
+   ;
 
   property is_zero_substitution_rule: all x y : Self,
     !is_zero (x) -> (!equal (x, y) \/ !equal (y, x)) -> !is_zero (y);
