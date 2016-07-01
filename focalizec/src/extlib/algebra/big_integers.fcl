@@ -402,7 +402,9 @@ species Integers_big_int =
   proof of mult_left_distributes_on_plus = assumed (* Because todo *);
   (*[rr]: needs check *)
   proof of mult_right_distributes_on_plus = assumed (* Because toto *);
-  proof of mult_left_substitution_rule = assumed (* Because todo *);
+  proof of mult_left_substitution_rule = assumed (* Because toto *);
+  proof of zero_simplifies = assumed (* Because todo *);
+  proof of is_zero_defines_neutral = assumed (* Because todo *);
 
   let sign (x) = #sign_big_int (x);
 
