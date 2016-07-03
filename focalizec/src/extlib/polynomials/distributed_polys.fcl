@@ -62,6 +62,7 @@ species Indexed_set (D is Ordered_set_with_zero,
    *)
   representation = distributed_representation (C, D);
 
+
   (** the zero polynomial *)
   let zero = Null ;
 
@@ -221,6 +222,9 @@ proof = by definition of length_pair
      | NonNull(c, d, pp) ->
         correct_cons(c, d, pp) ;
 
+theorem rep_invariant : all p: Self, correct_rep (to_rep(p))
+proof = assumed
+; 
 
   theorem my_total_order: all x: D, all y: D,
     D!lt (x, y) \/ D!gt (x, y) \/ D!equal (x, y)
@@ -437,20 +441,74 @@ proof =
            <1>f conclude
 ; 
 
-
   proof of leading_coefficient_is_non_null = 
-  assumed  ;
+  <1>1 assume p: Self, 
+  hypothesis H : ~(!is_zero (p)), 
+  notation c1 = leading_coefficient(p),
+  notation d1 = degree(p), 
+  notation p1 = reductum(p), 
+  prove ~(M!is_zero (!leading_coefficient (p)))
+     <2>0 prove correct_rep(p)
+          by property rep_invariant definition of to_rep 
+     <2>2 prove p = NonNull(c1, d1, p1) 
+          assumed
+     <2>3 prove ~ (M!is_zero (c1)) 
+        by definition of correct_rep, correct_cons, to_rep
+        property M!same_is_not_different, M!is_zero_spec, M!equal_symmetric
+        step <2>0, <2>2
+        type distributed_representation
+     <2>f qed by step <2>3 definition of c1
+  <1>f conclude
+;
+
+
   proof of degree_is_additive = assumed ;
-  proof of reductum_has_smaller_degree = assumed ;
+
+
+
+  proof of reductum_has_smaller_degree = 
+  <1>1 assume p: Self, 
+  hypothesis H1 : ~ is_zero(p),
+  hypothesis H2 : ~ is_zero(reductum(p)), 
+  notation c1 = leading_coefficient(p),
+  notation c2 = leading_coefficient((reductum(p))), 
+  notation d1 = degree(p),
+  notation d2 = degree(reductum(p)),
+  notation p2 = reductum(reductum(p)), 
+  prove  D!lt( degree(reductum(p)), degree(p))
+    <2>0 prove NonNull(c1, d1, reductum(p)) = p
+      assumed (*by definition of is_zero, zero, equal, reductum, degree, leading_coefficient, c1, d1
+      hypothesis H1
+      type distributed_representation*)
+    <2>1 prove reductum(p) = NonNull(c2, d2, p2)
+      assumed (*by definition of  is_zero, zero, equal, reductum, degree, leading_coefficient, c2, d2, p2
+      hypothesis H2 
+      type distributed_representation*)
+     <2>3 prove correct_rep(p)
+      by property rep_invariant definition of to_rep  
+     <2>2 prove D!lt(d2, d1)
+        by property D!gt_is_lt
+        definition of correct_rep, correct_cons, to_rep
+        step <2>0, <2>1, <2>3
+        type distributed_representation
+     <2>f qed by definition of c1, d1, c2, d2, p2
+              step <2>2
+  <1>f conclude
+;
+ 
+
   proof of reductum_of_zero_is_zero =
     by definition of zero, reductum
        type distributed_representation
        property equal_reflexive ;
+
   proof of monomial_has_degree = 
     by definition of monomial, degree
     type distributed_representation
     property D!equal_reflexive ;
+  
   proof of reductum_is_reductum = assumed ;
+
   proof of monomial_has_coefficient = 
     by definition of monomial, leading_coefficient
     type distributed_representation
@@ -502,6 +560,8 @@ proof =
                    D!lt (d1, d2) -> 
                      !length_pair ((s_1, ss_2)) < !length_pair (c)
             by property length_pair_right_lt
+(*by definition of length_pair, length_poly
+             type distributed_representation*)
    <1>2 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
                all d1 d2: D, all ss_1 ss_2: Self,
                ((s_1, s_2) = c) -> NonNull (m1, d1, ss_1) = s_1 ->
@@ -509,7 +569,10 @@ proof =
                     (D!lt (d1, d2) = false) ->
                       D!lt (d2, d1) -> 
                          !length_pair ((ss_1, s_2)) < !length_pair (c)          
-             by property length_pair_left_lt 
+           by property length_pair_left_lt 
+(*           by definition of length_pair, length_poly *)
+             (* property int_add_lt, int_succ_lt *)
+             (* type distributed_representation *)
     <1>3 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
                all d1 d2: D, all ss_1 ss_2: Self,
                all m: M,
@@ -531,7 +594,7 @@ proof =
                         (M!plus (m1, m2)= m) ->
                          (M!is_zero (m)= false) ->
                          !length_pair ((ss_1, ss_2)) < !length_pair (c)        
-           by property length_pair_left_right_lt
+          by property length_pair_left_right_lt
      <1>5 prove all c : Self * Self, 0 <= !length_pair (c)
           <2>5 assume c : Self * Self, 
                (*prove   0 <= !length_pair (c)*)
@@ -756,9 +819,7 @@ species Distributed_polynomials_commutative_ring
          else NonNull (r, D!plus (d, dp), monomial_multiply (c, d, pp))
    termination proof = structural p ;
 
-
    let module_mult (c, p) = !monomial_multiply (c, D!zero, p);
-   proof of module_mult_compat = assumed;
 
    let rec mult (p, q) = match p with
      | Null -> zero
@@ -766,6 +827,12 @@ species Distributed_polynomials_commutative_ring
          !plus (!monomial_multiply (cp, dp, q),
                !mult (pp, q))
    termination proof = structural p ;
+
+  
+   
+   proof of module_mult_compat = 
+   assumed ; 
+
 
    proof of mult_left_substitution_rule = assumed;
    proof of mult_commutes = assumed;
