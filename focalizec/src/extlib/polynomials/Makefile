@@ -186,13 +186,13 @@ clean:
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
 
 recursive_polys.ml: recursive_polys.fcl
-	$(FOCALIZEC) -no-coq-code $<
+	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) -no-coq-code $<
 
 recursive_polys.fcd: recursive_polys.fcl
-	$(FOCALIZEC) -focalize-doc -no-coq-code $<
+	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS)  -focalize-doc -no-coq-code $<
 
 univariate_polys.ml: univariate_polys.fcl
-	$(FOCALIZEC) -no-coq-code $<
+	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS)  -no-coq-code $<
 
 univariate_polys.fcd: univariate_polys.fcl
-	$(FOCALIZEC) -focalize-doc -no-coq-code $<
+	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS)  -focalize-doc -no-coq-code $<
