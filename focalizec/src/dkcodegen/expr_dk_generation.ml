@@ -794,7 +794,7 @@ let generate_expr ctx ~in_recursive_let_section_of ~local_idents
             | Parsetree.ANTI_none | Parsetree.ANTI_irrelevant
             | Parsetree.ANTI_scheme _ -> assert false
             | Parsetree.ANTI_type t -> t) in
-         Format.fprintf out_fmter "@[<2>(fun " ;
+         Format.fprintf out_fmter "@[<2>(" ;
          (* Now, print each parameter with it's type until we arrive to the
             return type of the function. DO NOT fold_right ! *)
          ignore
@@ -806,14 +806,14 @@ let generate_expr ctx ~in_recursive_let_section_of ~local_idents
                   Types.extract_fun_ty_arg ~self_manifest: None accu_ty in
                 let res_ty =
                   Types.extract_fun_ty_result ~self_manifest: None accu_ty in
-                Format.fprintf out_fmter "(%a :@ %a)@ "
+                Format.fprintf out_fmter "%a :@ %a =>@ "
                   Parsetree_utils.pp_vname_with_operators_expanded arg_name
                   (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) arg_ty ;
                 (* Return the remainder of the type to continue. *)
                 res_ty)
               fun_ty
               vnames) ;
-         Format.fprintf out_fmter "=>@ (" ;
+         Format.fprintf out_fmter "(" ;
          rec_generate_expr (vnames @ loc_idents) env body ;
          Format.fprintf out_fmter "))@]" ;
      | Parsetree.E_var ident -> (
