@@ -825,7 +825,142 @@ proof =
       <1>f conclude
     ;
 
-  proof of plus_commutes = assumed ;
+
+  let swap (c: distributed_representation (M,D) * distributed_representation (M, D)) : distributed_representation (M,D) * distributed_representation (M,D) = 
+  match c with
+   | (x, y) ->  (y, x)
+  ; 
+
+  logical let my_plus_commutes_prop (c: distributed_representation (M,D) * distributed_representation (M,D)) : prop =
+  equal(my_plus(c), my_plus(swap(c)));
+
+
+
+(** an induction principle *)
+theorem inductive_measure_my_plus: 
+  (all c: distributed_representation (M,D) * distributed_representation (M,D),
+    (all c2: distributed_representation (M,D) * distributed_representation (M,D), length_pair(c2) < length_pair(c) ->
+                my_plus_commutes_prop(c2)) -> my_plus_commutes_prop(c))
+   <->
+   all c: distributed_representation (M,D) * distributed_representation (M,D), my_plus_commutes_prop(c)
+proof = assumed ;
+
+theorem my_plus_swap : all c: distributed_representation (M,D) * distributed_representation (M,D)  , my_plus_commutes_prop(c)
+  proof = 
+  <0>1 assume c : distributed_representation (M,D) *  distributed_representation (M,D), 
+       hypothesis Hrec : 
+       all cc : distributed_representation (M,D) * distributed_representation (M,D),   
+       length_pair(cc) < length_pair(c)
+       -> my_plus_commutes_prop(cc),
+       prove  my_plus_commutes_prop(c)
+  <1>1 prove my_plus_commutes_prop((Null, Null))
+       by definition of my_plus_commutes_prop, swap property equal_reflexive
+  <1>2 assume c1 : M, 
+       assume d1 : D, 
+       assume p1 : distributed_representation (M,D),
+       prove my_plus_commutes_prop((Null, NonNull(c1,d1,p1)))
+       by definition of my_plus_commutes_prop, swap, my_plus
+           type distributed_representation property equal_reflexive
+  <1>3 assume c1 : M, 
+       assume d1 : D, 
+       assume p1 : distributed_representation (M,D),
+       prove my_plus_commutes_prop((NonNull(c1,d1,p1), Null))
+       by definition of my_plus_commutes_prop, swap property equal_symmetric step <1>2
+  <1>4 assume c1  c2 : M, 
+       assume d1  d2 : D, 
+       assume pp1  pp2 : distributed_representation (M,D),
+       hypothesis Hrec14 : 
+       all cc : distributed_representation (M,D) * distributed_representation (M,D),   
+       length_pair(cc) < length_pair((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2)))
+       -> my_plus_commutes_prop(cc),
+       prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
+       <2>1 hypothesis H1 : D!lt (d1, d2), 
+       prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
+         <3>1 prove  D!gt(d2, d1)
+              by property D!gt_is_lt hypothesis H1
+         <3>2 prove my_plus((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))) =
+              NonNull(c2, d2, my_plus((NonNull(c1,d1,pp1), pp2)))
+              assumed
+         <3>3 prove my_plus(swap( (NonNull(c1,d1,pp1), NonNull(c2,d2,pp2)))) = NonNull(c2, d2, my_plus((pp2, NonNull(c1,d1,pp1))))
+              assumed (* by step <3>1 definition of my_plus, swap*) 
+         <3>4 prove my_plus_commutes_prop((NonNull(c1,d1,pp1),pp2))
+             by definition of my_plus_commutes_prop, swap
+             property length_pair_right_lt hypothesis Hrec14
+         <3>5 prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
+              by definition of swap,  my_plus_commutes_prop, equal
+              step <3>2, <3>3, <3>4 property M!equal_reflexive, D!equal_reflexive type distributed_representation
+         <3>f conclude
+
+       <2>2 hypothesis H2 : D!gt (d1, d2), 
+       prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) )) 
+         <3>1 prove  D!lt(d2, d1)
+              by property D!gt_is_lt hypothesis H2
+         <3>2 prove my_plus((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))) =
+              NonNull(c1, d1, my_plus((pp1, NonNull(c2,d2,pp2))))
+              assumed
+         <3>3 prove my_plus(swap((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2)))) = NonNull(c1, d1, my_plus((NonNull(c2,d2,pp2), pp1)))
+              assumed (* by step <3>1 definition of my_plus, swap*) 
+         <3>4 prove my_plus_commutes_prop((pp1, NonNull(c2,d2,pp2)))
+             by definition of my_plus_commutes_prop, swap
+             property length_pair_left_lt hypothesis Hrec14
+         <3>5 prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
+              by definition of swap,  my_plus_commutes_prop, equal
+              step <3>2, <3>3, <3>4 property M!equal_reflexive, D!equal_reflexive type distributed_representation
+         <3>f conclude
+
+       <2>3 hypothesis H3 : D!equal (d1, d2), 
+       prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
+         <3>0  prove D!equal (d2, d1)
+                 by hypothesis H3 property D!equal_symmetric
+         <3>1 hypothesis Hyp1 :  M!is_zero (M!plus (c1, c2)),
+          prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
+            <4>1 prove my_plus((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) )) = my_plus((pp1, pp2)) assumed
+                (*by definition of my_plus type distributed_representation hypothesis H3, Hyp1*)
+            <4>5 prove  M!is_zero (M!plus (c2, c1))
+                 by hypothesis Hyp1 property M!plus_commutes, M!is_zero_substitution_rule
+            <4>2 prove my_plus(swap((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))))= my_plus((pp2, pp1)) assumed
+                (*by definition of my_plus, swap 
+                   type distributed_representation step <3>0, <4>5*)
+          <4>3 prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
+             by definition of my_plus_commutes_prop, swap
+             step <4>1,<4>2  property length_pair_left_right_lt hypothesis Hrec14
+             <4>f conclude
+         <3>2 hypothesis Hyp2 : ~ ( M!is_zero (M!plus (c1, c2))),
+         prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
+            <4>1 prove my_plus((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) )) = NonNull(M!plus(c1, c2), d1, my_plus((pp1, pp2)))
+            assumed (*by definition of my_plus
+            type distributed_representation hypothesis H3, Hyp2*)
+            <4>2 prove my_plus(swap((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))) = NonNull(M!plus(c2, c1), d2, my_plus((pp2, pp1)))
+            assumed
+            <4>3 prove M!equal(M!plus(c1, c2), M!plus(c2, c1))
+            by property M!plus_commutes
+            <4>4 prove my_plus_commutes_prop((pp1, pp2))
+            by  property length_pair_left_right_lt hypothesis Hrec14
+                definition of swap,  my_plus_commutes_prop
+            <4>5 prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
+            by step <4>1, <4>2, <4>3, <4>4 definition of swap,  my_plus_commutes_prop, equal hypothesis H3 type distributed_representation
+            <4>f conclude
+         <3>f conclude
+       <2>f qed by property my_total_order  step <2>1, <2>2, <2>3 
+   <1>f qed assumed  (*by step <1>1, <1>2 , <1>3, <1>4 
+            type distributed_representation hypothesis Hrec*)
+   <0>f qed by step <0>1 property inductive_measure_my_plus
+;
+ 
+proof of plus_commutes = 
+        <1>1 assume p1 : Self,
+             assume p2 : Self,
+             prove equal(plus(p1, p2), plus(p2,p1))
+             <2>1 prove my_plus_commutes_prop((p1,p2))
+             by property my_plus_swap
+             <2>f qed 
+              by definition of plus, swap, my_plus_commutes_prop 
+              step <2>1
+        <1>f conclude
+; 
+
+
+
   proof of plus_is_associative = assumed;
   proof of plus_right_substitution_rule = assumed;
   proof of zero_is_neutral =
