@@ -61,11 +61,13 @@ include $(ROOT_DIR)/Makefile.common
 FOCALIZE_SRC=\
  parse_poly.fcl\
  polys_abstract.fcl\
- distributed_polys.fcl
+
+
 
 # FOCALIZE_SRC_UNSAFE are compiled not using the implicit rules. They have
 # their own rules at the end of this Makefile.
 FOCALIZE_SRC_UNSAFE=\
+ distributed_polys.fcl\
  univariate_polys.fcl\
  recursive_polys.fcl
 
@@ -184,6 +186,12 @@ clean:
 	$(RM) big_integers.o parse_poly.o polys_abstract.o
 	$(RM) *.annot *.glob *.fcd *.zv *.vo *.fo *.pfc
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
+
+distributed_polys.ml: distributed_polys.fcl
+	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) -stop-before-coq $<
+
+distributed_polys.fcd: distributed_polys.fcl
+	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) -focalize-doc -stop-before-coq $<
 
 recursive_polys.ml: recursive_polys.fcl
 	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) -no-coq-code $<
