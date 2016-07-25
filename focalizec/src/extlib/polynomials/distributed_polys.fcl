@@ -846,8 +846,8 @@ theorem inductive_measure_my_plus:
 proof = assumed ;
 
 theorem my_plus_swap : all c: distributed_representation (M,D) * distributed_representation (M,D)  , my_plus_commutes_prop(c)
-  proof = 
-  <0>1 assume c : distributed_representation (M,D) *  distributed_representation (M,D), 
+proof = 
+<0>1 assume c : distributed_representation (M,D) *  distributed_representation (M,D), 
        hypothesis Hrec : 
        all cc : distributed_representation (M,D) * distributed_representation (M,D),   
        length_pair(cc) < length_pair(c)
@@ -944,7 +944,7 @@ theorem my_plus_swap : all c: distributed_representation (M,D) * distributed_rep
        <2>f qed by property my_total_order  step <2>1, <2>2, <2>3 
    <1>f qed assumed  (*by step <1>1, <1>2 , <1>3, <1>4 
             type distributed_representation hypothesis Hrec*)
-   <0>f qed by step <0>1 property inductive_measure_my_plus
+<0>f qed by step <0>1 property inductive_measure_my_plus
 ;
  
 proof of plus_commutes = 
