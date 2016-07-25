@@ -54,6 +54,8 @@ species Formal_univariate_polynomials_commutative_ring
 (*     in *)
 (*       aux (self!zero); *)
 
+proof of zero_simplifies = assumed;
+proof of is_zero_defines_neutral = assumed;
 end
 ;;
 

@@ -34,6 +34,10 @@ type recursive_representation('r, 'd) =
        distributed_representation
          (recursive_representation ('r, 'd), 'd))
 ;;
+(* let rec inv_rep(d_non_const, p) = match p with *)
+(* | Base (_) -> true *)
+(* | Composed (_v, _p_d) ->  false *)
+(* ; *)
 
 (** Unfolding of polynomial equality *)
 let distr_eq (i_eq, e_eq) =
@@ -282,6 +286,8 @@ species Recursive_indexed_sum (M is Additive_group,
     in function x -> function y -> r_plus(x, y);
 
   proof of zero_is_neutral = assumed;
+  proof of zero_simplifies = assumed;
+  proof of is_zero_defines_neutral = assumed;
   proof of plus_commutes = assumed;
   proof of plus_is_associative = assumed;
   proof of plus_right_substitution_rule = assumed;
