@@ -100,7 +100,16 @@ species Indexed_set (D is Ordered_set_with_zero,
     ;
   theorem int_add_lt: all a b c: int,
     a < b -> (a + c < b + c)
-    proof = assumed
+    proof =
+      coq proof {*
+      unfold basics._lt_, basics._plus_.
+      unfold coq_builtins.bi__int_lt, coq_builtins.bi__int_plus.
+      intros a b c.
+      case (Z_lt_dec a b). intros H1 H2. auto with zarith. elim Z_lt_dec.
+      simpl. auto. intros. simpl. auto with zarith. elim Z_lt_dec.
+      intros. auto with zarith.  simpl.  auto with zarith. intros.
+      simpl. auto with zarith. Qed.
+      *}
     ;
 
    theorem length_pair_left_lt: all p1 p2: distributed_representation(C, D),
