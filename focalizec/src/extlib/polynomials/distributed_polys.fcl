@@ -80,33 +80,33 @@ species Indexed_set (D is Ordered_set_with_zero,
     | Null -> D!zero
     | NonNull (_, d, _) -> d ;
 
-  let rec length_poly (p) = 
+  let rec length_poly (p) =
      match p with
      | Null -> 0
      | NonNull(_, _, pp) ->
         length_poly(pp) + 1
   termination proof = structural p ;
 
-  let length_pair 
-   ( c : distributed_representation(C, D) * distributed_representation(C, D) ) 
+  let length_pair
+   ( c : distributed_representation(C, D) * distributed_representation(C, D) )
      = match c with
        | (p1, p2) -> length_poly (p1) + length_poly (p2)
   ;
 
   theorem int_succ_lt: all a: int, a < a + 1
-    proof = 
+    proof =
      assumed
      (* by property int_lt_le_S, int_plus_commute *)
     ;
   theorem int_add_lt: all a b c: int,
-    a < b -> (a + c < b + c) 
+    a < b -> (a + c < b + c)
     proof = assumed
     ;
-    
+
    theorem length_pair_left_lt: all p1 p2: distributed_representation(C, D),
      all c1: C, all d1: D,
        length_pair((p1, p2)) < length_pair((NonNull(c1, d1, p1), p2))
-     proof = 
+     proof =
        <1>1  assume p1 p2: distributed_representation(C, D),
              assume c1: C, assume d1: D,
              prove
@@ -174,9 +174,9 @@ species Indexed_set (D is Ordered_set_with_zero,
      proof =
        <1>1  assume  p1 p2 : distributed_representation(C, D),
              assume c2: C, assume d2: D,
-             prove 
+             prove
                length_pair((p1, p2)) < length_pair((p1, NonNull(c2, d2, p2)))
-              <2>1 prove 
+              <2>1 prove
               length_pair((p2, p1)) < length_pair((NonNull(c2, d2, p2), p1))
                   by property length_pair_left_lt
               <2>2 prove length_pair((p1, p2)) = length_pair((p2, p1))
@@ -187,17 +187,17 @@ species Indexed_set (D is Ordered_set_with_zero,
      <1>f conclude
 ;
 
-theorem int_lt_trans: all n m p : int, 
+theorem int_lt_trans: all n m p : int,
     n < m -> m < p -> n < p
-proof = 
+proof =
  assumed
 ;
- 
-  theorem length_pair_left_right_lt: 
+
+  theorem length_pair_left_right_lt:
      all p1 p2: distributed_representation(C, D),
        all c1  c2: C, all d1 d2: D,
          length_pair((p1, p2)) < length_pair((NonNull(c1, d1, p1), NonNull(c2, d2, p2)))
-     proof = 
+     proof =
      by property length_pair_right_lt, length_pair_left_lt, int_lt_trans
      ;
 
@@ -216,29 +216,29 @@ theorem one_pos : 0 <= 1
 proof = assumed
 ;
 
-theorem length_poly_pos: all p : distributed_representation(C, D), 
+theorem length_poly_pos: all p : distributed_representation(C, D),
     0 <= length_poly (p)
-proof = 
+proof =
 <1>1 prove  0 <= length_poly (Null)
-by definition of length_poly 
+by definition of length_poly
    property int_le_refl
    type distributed_representation
-<1>2 assume pp :  distributed_representation(C, D), 
+<1>2 assume pp :  distributed_representation(C, D),
 (* Induction hypothesis. *)
 hypothesis Hind: 0 <= length_poly (pp) ,
 assume c : C,
-assume d : D, 
+assume d : D,
 (* Recursive case. *)
-prove 0 <= length_poly(NonNull(c, d, pp)) 
-by definition of length_poly 
-   property add_pos, one_pos hypothesis Hind 
+prove 0 <= length_poly(NonNull(c, d, pp))
+by definition of length_poly
+   property add_pos, one_pos hypothesis Hind
    type distributed_representation
 <1>3 qed by step <1>1, <1>2 type distributed_representation
-; 
+;
 
 
-theorem length_pair_measure: 
-all s1 s2 : distributed_representation(C, D), 
+theorem length_pair_measure:
+all s1 s2 : distributed_representation(C, D),
 0 <= !length_pair ((s1, s2))
 proof = by definition of length_pair
            property  add_pos, length_poly_pos
@@ -263,7 +263,7 @@ proof = by definition of length_pair
 
 theorem rep_invariant : all p: Self, correct_rep (to_rep(p))
 proof = assumed
-; 
+;
 
   theorem my_total_order: all x: D, all y: D,
     D!lt (x, y) \/ D!gt (x, y) \/ D!equal (x, y)
@@ -449,15 +449,15 @@ species Indexed_sum (D is Monomial_ordering, M is Additive_group) =
 
 
 
-theorem  monomial_left_substitution_rule : all x y : M , all i : D, 
+theorem  monomial_left_substitution_rule : all x y : M , all i : D,
     M!equal (x, y) -> (!equal (!monomial (x, i), !monomial (y, i)))
-proof = 
+proof =
            <1>1 assume x y: M, assume i: D ,
-                hypothesis H :  M!equal (x, y), 
+                hypothesis H :  M!equal (x, y),
                 prove !equal (!monomial (x, i), !monomial (y, i))
              <2>1 hypothesis H_0: M!is_zero(x),
                   prove !equal (!monomial (x, i), !monomial (y, i))
-                  by definition of monomial 
+                  by definition of monomial
                      hypothesis H, H_0
                      property M!is_zero_substitution_rule, equal_reflexive
              <2>2 hypothesis H_1: ~ (M!is_zero(x)),
@@ -470,28 +470,28 @@ proof =
                       <4>f qed by step <4>1 hypothesis H_1
                   <3>2 hypothesis H_3: ~ ( M!is_zero(y)),
                    prove !equal (!monomial (x, i), !monomial (y, i))
-                   by definition of monomial, equal 
-                     property equal_reflexive, M!equal_reflexive, 
+                   by definition of monomial, equal
+                     property equal_reflexive, M!equal_reflexive,
                      D!equal_reflexive
                      hypothesis H_1, H_3, H
                      type distributed_representation
                    <3>f conclude
               <2>f conclude
            <1>f conclude
-; 
+;
 
-  proof of leading_coefficient_is_non_null = 
-  <1>1 assume p: Self, 
-  hypothesis H : ~(!is_zero (p)), 
+  proof of leading_coefficient_is_non_null =
+  <1>1 assume p: Self,
+  hypothesis H : ~(!is_zero (p)),
   notation c1 = leading_coefficient(p),
-  notation d1 = degree(p), 
-  notation p1 = reductum(p), 
+  notation d1 = degree(p),
+  notation p1 = reductum(p),
   prove ~(M!is_zero (!leading_coefficient (p)))
      <2>0 prove correct_rep(p)
-          by property rep_invariant definition of to_rep 
-     <2>2 prove p = NonNull(c1, d1, p1) 
+          by property rep_invariant definition of to_rep
+     <2>2 prove p = NonNull(c1, d1, p1)
           assumed
-     <2>3 prove ~ (M!is_zero (c1)) 
+     <2>3 prove ~ (M!is_zero (c1))
         by definition of correct_rep, correct_cons, to_rep
         property M!same_is_not_different, M!is_zero_spec, M!equal_symmetric
         step <2>0, <2>2
@@ -505,15 +505,15 @@ proof =
 
 
 
-  proof of reductum_has_smaller_degree = 
-  <1>1 assume p: Self, 
+  proof of reductum_has_smaller_degree =
+  <1>1 assume p: Self,
   hypothesis H1 : ~ is_zero(p),
-  hypothesis H2 : ~ is_zero(reductum(p)), 
+  hypothesis H2 : ~ is_zero(reductum(p)),
   notation c1 = leading_coefficient(p),
-  notation c2 = leading_coefficient((reductum(p))), 
+  notation c2 = leading_coefficient((reductum(p))),
   notation d1 = degree(p),
   notation d2 = degree(reductum(p)),
-  notation p2 = reductum(reductum(p)), 
+  notation p2 = reductum(reductum(p)),
   prove  D!lt( degree(reductum(p)), degree(p))
     <2>0 prove NonNull(c1, d1, reductum(p)) = p
       assumed (*by definition of is_zero, zero, equal, reductum, degree, leading_coefficient, c1, d1
@@ -521,10 +521,10 @@ proof =
       type distributed_representation*)
     <2>1 prove reductum(p) = NonNull(c2, d2, p2)
       assumed (*by definition of  is_zero, zero, equal, reductum, degree, leading_coefficient, c2, d2, p2
-      hypothesis H2 
+      hypothesis H2
       type distributed_representation*)
      <2>3 prove correct_rep(p)
-      by property rep_invariant definition of to_rep  
+      by property rep_invariant definition of to_rep
      <2>2 prove D!lt(d2, d1)
         by property D!gt_is_lt
         definition of correct_rep, correct_cons, to_rep
@@ -541,7 +541,7 @@ proof =
      <1>1 assume cp: M, assume dp: D, assume p: distributed_representation(M, D),
           hypothesis H: correct_rep(NonNull(cp, dp, p)),
           prove correct_rep(p)
-          <2>1 prove correct_cons(cp, dp, p) 
+          <2>1 prove correct_cons(cp, dp, p)
                by hypothesis H definition of correct_rep
                   type distributed_representation
           <2>2 prove all q: distributed_representation(M, D),
@@ -566,7 +566,7 @@ proof =
 
   theorem reductum_correct: all p: Self,
     correct_rep(to_rep(p)) -> correct_rep(to_rep(reductum(p)))
-  proof = 
+  proof =
   <1>1 prove correct_rep(Null) -> correct_rep(reductum(Null))
        by definition of correct_rep, reductum, zero
           type distributed_representation
@@ -590,14 +590,14 @@ proof =
        type distributed_representation
        property equal_reflexive ;
 
-  proof of monomial_has_degree = 
+  proof of monomial_has_degree =
     by definition of monomial, degree
     type distributed_representation
     property D!equal_reflexive ;
-  
+
   proof of reductum_is_reductum = assumed ;
 
-  proof of monomial_has_coefficient = 
+  proof of monomial_has_coefficient =
     by definition of monomial, leading_coefficient
     type distributed_representation
     property M!equal_reflexive ;
@@ -644,53 +644,43 @@ proof =
     <1>1 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
                all d1 d2: D, all ss_1 ss_2: Self,
                ((s_1, s_2) = c) -> NonNull (m1, d1, ss_1) = s_1 ->
-                  (NonNull (m2, d2, ss_2) = s_2) -> 
-                   D!lt (d1, d2) -> 
+                  (NonNull (m2, d2, ss_2) = s_2) ->
+                   D!lt (d1, d2) ->
                      !length_pair ((s_1, ss_2)) < !length_pair (c)
          by property length_pair_right_lt
    <1>2 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
                all d1 d2: D, all ss_1 ss_2: Self,
                ((s_1, s_2) = c) -> NonNull (m1, d1, ss_1) = s_1 ->
-                  (NonNull (m2, d2, ss_2) = s_2) -> 
+                  (NonNull (m2, d2, ss_2) = s_2) ->
                     (D!lt (d1, d2) = false) ->
-                      D!lt (d2, d1) -> 
-                         !length_pair ((ss_1, s_2)) < !length_pair (c)          
-         by property length_pair_left_lt  
+                      D!lt (d2, d1) ->
+                         !length_pair ((ss_1, s_2)) < !length_pair (c)
+         by property length_pair_left_lt
     <1>3 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
                all d1 d2: D, all ss_1 ss_2: Self,
                all m: M,
                ((s_1, s_2) = c) -> NonNull (m1, d1, ss_1) = s_1 ->
-                  (NonNull (m2, d2, ss_2) = s_2) -> 
+                  (NonNull (m2, d2, ss_2) = s_2) ->
                     (D!lt (d1, d2) = false) ->
-                      (D!lt (d2, d1) = false) -> 
+                      (D!lt (d2, d1) = false) ->
                         M!plus (m1, m2)= m ->
                          M!is_zero (m) ->
-                          !length_pair ((ss_1, ss_2)) < !length_pair (c)        
-         by property length_pair_left_right_lt 
+                          !length_pair ((ss_1, ss_2)) < !length_pair (c)
+         by property length_pair_left_right_lt
     <1>4 prove all c: (Self * Self), all s_1 s_2: Self, all m1 m2: M,
                all d1 d2: D, all ss_1 ss_2: Self,
                all m: M,
                ((s_1, s_2) = c) -> NonNull (m1, d1, ss_1) = s_1 ->
-                  (NonNull (m2, d2, ss_2) = s_2) -> 
+                  (NonNull (m2, d2, ss_2) = s_2) ->
                     (D!lt (d1, d2) = false) ->
-                      (D!lt (d2, d1) = false) -> 
+                      (D!lt (d2, d1) = false) ->
                         (M!plus (m1, m2)= m) ->
                          (M!is_zero (m)= false) ->
-                         !length_pair ((ss_1, ss_2)) < !length_pair (c)        
-         by property length_pair_left_right_lt 
+                         !length_pair ((ss_1, ss_2)) < !length_pair (c)
+         by property length_pair_left_right_lt
      <1>5 prove all c : Self * Self, 0 <= !length_pair (c)
-          <2>5 assume c : Self * Self, 
-               (*prove   0 <= !length_pair (c)*)
-               notation s1 = fst(c), 
-               notation s2 = snd(c),
-               prove 0 <= !length_pair (c)
-               <3>1 prove 0 <= !length_pair ((s1, s2))
-                by property length_pair_measure
-               <3>2 prove c = (s1, s2)
-                assumed
-               <3>f conclude
-         <2>f conclude 
-     <1>e qed coq proof {* wf_qed *} 
+          by property length_pair_measure
+     <1>e qed coq proof {* wf_qed *}
     ;
 
 
@@ -700,55 +690,55 @@ proof =
 
 
 
-  proof of monomial_is_additive = 
-           <1>1 assume x y: M, assume i: D ,
-           prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
-                         !monomial (M!plus (x, y), i))
-           <2>1 hypothesis H_0: M!is_zero(x),
-                prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
-                         !monomial (M!plus (x, y), i))
-               <3>0 prove M!equal(x, M!zero)
-               by property M!is_zero_spec, M!equal_symmetric hypothesis H_0 
-               <3>1 prove equal(monomial(x, i), zero)
-               by definition of monomial property equal_reflexive 
-                  hypothesis H_0 
-               <3>2 prove 
-           !equal (!plus (!monomial (x, i), !monomial (y, i)),!monomial (y, i))
-                by property equal_transitive, zero_is_neutral, plus_left_substitution_rule step <3>1
-                <3>3 prove 
-           !equal (!monomial (M!plus (x, y), i), !monomial (y, i))
-                by property equal_transitive, M!zero_is_neutral, M!plus_left_substitution_rule,  monomial_left_substitution_rule step <3>0
-                <3>f qed by property equal_symmetric, equal_transitive
-                            step <3>2, <3>3
-      <2>2 hypothesis H_1: ~ (M!is_zero(x)),
-                prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
-                         !monomial (M!plus (x, y), i))
-                <3>1 hypothesis H_2: M!is_zero(y),
-                prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
-                         !monomial (M!plus (x, y), i))
-                    <4>0 prove M!equal(y, M!zero)
-                    by property M!is_zero_spec, M!equal_symmetric hypothesis H_2                   <4>1 prove equal(monomial(y, i), zero)
-                   by definition of monomial property equal_reflexive 
-                      hypothesis H_2 
-                   <4>2 prove 
-           !equal (!plus (!monomial (x, i), !monomial (y, i)),!monomial (x, i))
-                   by property equal_transitive, zero_is_neutral, plus_right_substitution_rule step <4>1
-                  <4>3 prove 
-              !equal (!monomial (M!plus (x, y), i), !monomial (x, i))
-                      by property equal_transitive, M!zero_is_neutral, M!plus_right_substitution_rule,  monomial_left_substitution_rule step <4>0
-                  <4>f qed by property equal_symmetric, equal_transitive
-                            step <4>2, <4>3
-                <3>2 hypothesis H_3: ~( M!is_zero(y)),
-                     hypothesis Hyp: ~ (D!lt(i, i)),
-                prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
-                         !monomial (M!plus (x, y), i))
-                   by definition of monomial, plus, my_plus, zero  
-                      property equal_reflexive
-                      hypothesis H_1, H_3,  Hyp
-                      type distributed_representation
-               <3>f qed by step <3>1, <3>2 property D!lt_is_irreflexive
-       <2>f qed by step <2>1, <2>2
-           <1>f conclude
+  proof of monomial_is_additive =
+     <1>1 assume x y: M, assume i: D ,
+     prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
+                   !monomial (M!plus (x, y), i))
+     <2>1 hypothesis H_0: M!is_zero(x),
+          prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
+                   !monomial (M!plus (x, y), i))
+         <3>0 prove M!equal(x, M!zero)
+         by property M!is_zero_spec, M!equal_symmetric hypothesis H_0
+         <3>1 prove equal(monomial(x, i), zero)
+         by definition of monomial property equal_reflexive
+            hypothesis H_0
+         <3>2 prove
+     !equal (!plus (!monomial (x, i), !monomial (y, i)),!monomial (y, i))
+          by property equal_transitive, zero_is_neutral, plus_left_substitution_rule step <3>1
+          <3>3 prove
+     !equal (!monomial (M!plus (x, y), i), !monomial (y, i))
+          by property equal_transitive, M!zero_is_neutral, M!plus_left_substitution_rule,  monomial_left_substitution_rule step <3>0
+          <3>f qed by property equal_symmetric, equal_transitive
+                      step <3>2, <3>3
+<2>2 hypothesis H_1: ~ (M!is_zero(x)),
+          prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
+                   !monomial (M!plus (x, y), i))
+          <3>1 hypothesis H_2: M!is_zero(y),
+          prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
+                   !monomial (M!plus (x, y), i))
+              <4>0 prove M!equal(y, M!zero)
+              by property M!is_zero_spec, M!equal_symmetric hypothesis H_2                   <4>1 prove equal(monomial(y, i), zero)
+             by definition of monomial property equal_reflexive
+                hypothesis H_2
+             <4>2 prove
+     !equal (!plus (!monomial (x, i), !monomial (y, i)),!monomial (x, i))
+             by property equal_transitive, zero_is_neutral, plus_right_substitution_rule step <4>1
+            <4>3 prove
+        !equal (!monomial (M!plus (x, y), i), !monomial (x, i))
+                by property equal_transitive, M!zero_is_neutral, M!plus_right_substitution_rule,  monomial_left_substitution_rule step <4>0
+            <4>f qed by property equal_symmetric, equal_transitive
+                      step <4>2, <4>3
+          <3>2 hypothesis H_3: ~( M!is_zero(y)),
+               hypothesis Hyp: ~ (D!lt(i, i)),
+          prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
+                   !monomial (M!plus (x, y), i))
+             by definition of monomial, plus, my_plus, zero
+                property equal_reflexive
+                hypothesis H_1, H_3,  Hyp
+                type distributed_representation
+         <3>f qed by step <3>1, <3>2 property D!lt_is_irreflexive
+ <2>f qed by step <2>1, <2>2
+     <1>f conclude
  ;
 
   logical let plus_invariant_property(p) = all q: Self,
@@ -780,7 +770,7 @@ proof =
                              correct_rep(to_rep (NonNull (cp, dp, p))) ->
                              correct_rep (to_rep (q)) ->
                              correct_rep(to_rep(plus(NonNull(cp, dp, p), q)))
-                     <4>1 hypothesis H_pcr: 
+                     <4>1 hypothesis H_pcr:
                                 correct_rep(to_rep(NonNull(cp, dp, p))),
                           prove all q: distributed_representation(M, D),
                             correct_rep(to_rep(q)) ->
@@ -790,7 +780,7 @@ proof =
                                <6>1 prove correct_rep(to_rep(Null))
                                     by definition of correct_rep, to_rep
                                     type distributed_representation
-                               <6>2 prove 
+                               <6>2 prove
                                      correct_rep(to_rep(plus(NonNull(cp, dp, p),
                                                              Null)))
                                      by hypothesis H_pcr
@@ -806,7 +796,7 @@ proof =
                                 correct_rep(to_rep(plus(NonNull(cp, dp, p),
                                                         NonNull(cq, dq, q)))))
                                  <6>1 assume q: distributed_representation(M, D),
-                                      hypothesis H_ind_q: 
+                                      hypothesis H_ind_q:
                             correct_rep(to_rep(q)) ->
                               correct_rep(to_rep(plus(NonNull(cp, dp, p), q))),
                                       prove all cq: M, all dq: D,
@@ -814,9 +804,9 @@ proof =
                                            correct_rep(to_rep(plus(NonNull(cp, dp, p),
                                                                    NonNull(cq, dq, q))))
                                       <7>1 assume cq: M, assume dq: D,
-                                           hypothesis H_nqcr: 
+                                           hypothesis H_nqcr:
                                                correct_rep(to_rep(NonNull(cq, dq, q))),
-                                           notation s = 
+                                           notation s =
                                                   plus(NonNull(cp, dp, p),
                                                        NonNull(cq, dq, q)),
                                            prove correct_rep(to_rep(
@@ -861,14 +851,14 @@ proof =
                                                             definition of s, plus, my_plus
                                                             type distributed_representation
                                                  <9>2 hypothesis Dqp: ~ D!lt(dq, dp),
-                                                       prove correct_rep(s) 
+                                                       prove correct_rep(s)
                                                       assumed
                                                   <9>f conclude
                                              <8>f qed by step <8>1, <8>2
                                                       definition of s, to_rep
                                       <7>f conclude
                                   <6>f conclude
-                                         
+
                            <5>f qed by step <5>1, <5>2
                                     type distributed_representation
                      <4>f conclude
@@ -883,78 +873,78 @@ proof =
     ;
 
 
-  let swap (c: distributed_representation (M,D) * distributed_representation (M, D)) : distributed_representation (M,D) * distributed_representation (M,D) = 
+  let swap (c: distributed_representation (M,D) * distributed_representation (M, D)) : distributed_representation (M,D) * distributed_representation (M,D) =
   match c with
    | (x, y) ->  (y, x)
-  ; 
+  ;
 
   logical let my_plus_commutes_prop (c: distributed_representation (M,D) * distributed_representation (M,D)) : prop =
   equal(my_plus(c), my_plus(swap(c)));
 
 
 (*
-theorem functional_induction_my_plus_derived: 
-all pred : distributed_representation (M,D) * distributed_representation (M,D) -> bool, 
+theorem functional_induction_my_plus_derived:
+all pred : distributed_representation (M,D) * distributed_representation (M,D) -> bool,
   ((pred((Null, Null))) /\
   (all c1 : M, all d1 : D, all p1 : distributed_representation (M,D),
     pred((Null, NonNull(c1,d1,p1)))) /\
   (all c1 : M, all d1 : D, all p1 : distributed_representation (M,D),
     pred((NonNull(c1,d1,p1), Null))) /\
-  (all c1  c2 : M, all d1  d2 : D, 
+  (all c1  c2 : M, all d1  d2 : D,
    all pp1  pp2 : distributed_representation (M,D),
    D!lt (d1, d2) -> pred((NonNull(c1,d1,pp1),pp2)) ->
        pred((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2)))) /\
-  (all c1  c2 : M, all d1  d2 : D, 
+  (all c1  c2 : M, all d1  d2 : D,
    all pp1  pp2 : distributed_representation (M,D),
    D!gt(d1,d2) -> pred((pp1, NonNull(c2,d2,pp2))) ->
        pred((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2)))) /\
-  (all c1  c2 : M, all d1  d2 : D, 
+  (all c1  c2 : M, all d1  d2 : D,
    all pp1  pp2 : distributed_representation (M,D),
    D!equal(d1,d2) -> M!is_zero (M!plus (c1, c2)) -> pred((pp1, pp2)) ->
        pred((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2)))) /\
-  (all c1  c2 : M, all d1  d2 : D, 
+  (all c1  c2 : M, all d1  d2 : D,
    all pp1  pp2 : distributed_representation (M,D),
    D!equal(d1,d2) -> ~ (M!is_zero (M!plus (c1, c2))) -> pred((pp1, pp2)) ->
        pred((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))))
-   ) 
+   )
    ->
-   all c: distributed_representation (M,D) * distributed_representation (M,D), 
+   all c: distributed_representation (M,D) * distributed_representation (M,D),
    pred(c)
 proof = assumed
 ;
 *)
 
-theorem functional_induction_my_plus_inst1: 
+theorem functional_induction_my_plus_inst1:
   ((my_plus_commutes_prop((Null, Null))) /\
   (all c1 : M, all d1 : D, all p1 : distributed_representation (M,D),
     my_plus_commutes_prop((Null, NonNull(c1,d1,p1)))) /\
   (all c1 : M, all d1 : D, all p1 : distributed_representation (M,D),
    my_plus_commutes_prop((NonNull(c1,d1,p1), Null))) /\
-  (all c1  c2 : M, all d1  d2 : D, 
+  (all c1  c2 : M, all d1  d2 : D,
    all pp1  pp2 : distributed_representation (M,D),
    D!lt (d1, d2) -> my_plus_commutes_prop((NonNull(c1,d1,pp1),pp2)) ->
        my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2)))) /\
-  (all c1  c2 : M, all d1  d2 : D, 
+  (all c1  c2 : M, all d1  d2 : D,
    all pp1  pp2 : distributed_representation (M,D),
    ~ D!lt (d1, d2) -> D!lt(d2,d1) -> my_plus_commutes_prop((pp1, NonNull(c2,d2,pp2))) ->
        my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2)))) /\
-  (all c1  c2 : M, all d1  d2 : D, 
+  (all c1  c2 : M, all d1  d2 : D,
    all pp1  pp2 : distributed_representation (M,D),
-   ~ D!lt (d1, d2) -> ~ D!lt(d2,d1) -> 
+   ~ D!lt (d1, d2) -> ~ D!lt(d2,d1) ->
    M!is_zero (M!plus (c1, c2)) -> my_plus_commutes_prop((pp1, pp2)) ->
        my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2)))) /\
-  (all c1  c2 : M, all d1  d2 : D, 
+  (all c1  c2 : M, all d1  d2 : D,
    all pp1  pp2 : distributed_representation (M,D),
-   ~ D!lt (d1, d2) -> ~ D!lt(d2,d1) -> 
+   ~ D!lt (d1, d2) -> ~ D!lt(d2,d1) ->
    ~ (M!is_zero (M!plus (c1, c2))) -> my_plus_commutes_prop((pp1, pp2)) ->
        my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))))
-   ) 
+   )
    ->
-   all c: distributed_representation (M,D) * distributed_representation (M,D), 
+   all c: distributed_representation (M,D) * distributed_representation (M,D),
    my_plus_commutes_prop(c)
-proof 
+proof
  = coq proof definition of my_plus, swap, my_plus_commutes_prop
-       {* 
+       {*
 Proof.
 unfold my_plus_commutes_prop; unfold my_plus; unfold Termination_my_plus_namespace.Indexed_sum__my_plus.
 intros.
@@ -976,7 +966,7 @@ apply Termination_my_plus_namespace.my_plus_ind.
               (Null _p_M_T _p_D_T, NonNull _p_M_T _p_D_T m1 d1 d)))))
 with
    (Is_true
-     (abst_equal 
+     (abst_equal
      (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
            _p_M_plus _p_M_is_zero abst_length_pair abst_length_pair_measure
               (Null _p_M_T _p_D_T, NonNull _p_M_T _p_D_T m1 d1 d))
@@ -988,16 +978,16 @@ with
   rewrite Termination_my_plus_namespace.my_plus_equation; auto.
 
   intros; rewrite e1.
-   replace 
+   replace
    (Is_true
      (abst_equal (NonNull _p_M_T _p_D_T m1 d1 ss_1)
         (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
            _p_M_plus _p_M_is_zero abst_length_pair abst_length_pair_measure
            (swap _p_D_T _p_M_T
-              (NonNull _p_M_T _p_D_T m1 d1 ss_1, Null _p_M_T _p_D_T))))) 
+              (NonNull _p_M_T _p_D_T m1 d1 ss_1, Null _p_M_T _p_D_T)))))
   with
   ( Is_true
-     (abst_equal 
+     (abst_equal
        (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
            _p_M_plus _p_M_is_zero abst_length_pair abst_length_pair_measure
              (NonNull _p_M_T _p_D_T m1 d1 ss_1, Null _p_M_T _p_D_T))
@@ -1013,14 +1003,14 @@ with
  replace
   (NonNull _p_M_T _p_D_T m2 d2
      (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt _p_M_plus
-        _p_M_is_zero abst_length_pair abst_length_pair_measure 
+        _p_M_is_zero abst_length_pair abst_length_pair_measure
         (s_1, ss_2))) with
   (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt _p_M_plus
      _p_M_is_zero abst_length_pair abst_length_pair_measure
      (NonNull _p_M_T _p_D_T m1 d1 ss_1, NonNull _p_M_T _p_D_T m2 d2 ss_2)) .
   apply H3.
   exact (EqTrue_is_true _ e3).
-  
+
    rewrite e1 in H6;  assumption.
 
   rewrite Termination_my_plus_namespace.my_plus_equation; rewrite e3.
@@ -1030,7 +1020,7 @@ with
  replace
   (NonNull _p_M_T _p_D_T m1 d1
      (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt _p_M_plus
-        _p_M_is_zero abst_length_pair abst_length_pair_measure 
+        _p_M_is_zero abst_length_pair abst_length_pair_measure
         (ss_1, s_2))) with
   (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt _p_M_plus
      _p_M_is_zero abst_length_pair abst_length_pair_measure
@@ -1072,7 +1062,7 @@ with
   rewrite e3; rewrite e4.
   replace (_p_M_plus m1 m2) with m  by auto.
   rewrite e5;   auto.
- 
+
  intros.
  replace
         (NonNull _p_M_T _p_D_T m d1
@@ -1085,7 +1075,7 @@ with
               (NonNull _p_M_T _p_D_T m1 d1 ss_1,
               NonNull _p_M_T _p_D_T m2 d2 ss_2)).
   simpl; apply H7.
- 
+
   apply (IsTrue_eq_false2 _ e3).
   apply (IsTrue_eq_false2 _ e4).
   apply (IsTrue_eq_false2 _ e5).
@@ -1099,30 +1089,30 @@ with
 
 
 theorem my_plus_swap : all c: distributed_representation (M,D) * distributed_representation (M,D)  , my_plus_commutes_prop(c)
-  proof = 
+  proof =
   <1>1 prove my_plus_commutes_prop((Null, Null))
        by definition of my_plus_commutes_prop, swap property equal_reflexive
-  <1>2 assume c1 : M, 
-       assume d1 : D, 
+  <1>2 assume c1 : M,
+       assume d1 : D,
        assume p1 : distributed_representation (M,D),
        prove my_plus_commutes_prop((Null, NonNull(c1,d1,p1)))
        by definition of my_plus_commutes_prop, swap, my_plus
            type distributed_representation property equal_reflexive
-  <1>3 assume c1 : M, 
-       assume d1 : D, 
+  <1>3 assume c1 : M,
+       assume d1 : D,
        assume p1 : distributed_representation (M,D),
        prove my_plus_commutes_prop((NonNull(c1,d1,p1), Null))
-       by definition of my_plus_commutes_prop, swap 
+       by definition of my_plus_commutes_prop, swap
           property equal_symmetric step <1>2
 
-  <1>4 assume c1  c2 : M, 
-       assume d1  d2 : D, 
+  <1>4 assume c1  c2 : M,
+       assume d1  d2 : D,
        assume pp1  pp2 : distributed_representation (M,D),
-       hypothesis H1 : D!lt (d1, d2), 
+       hypothesis H1 : D!lt (d1, d2),
        hypothesis Hrec1 : my_plus_commutes_prop((NonNull(c1,d1,pp1),pp2)),
        prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
          <3>1 prove ~ (D!lt (d2, d1))
-              by hypothesis H1 property  D!lt_is_asymetric 
+              by hypothesis H1 property  D!lt_is_asymetric
          <3>2 prove my_plus((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))) =
               NonNull(c2, d2, my_plus((NonNull(c1,d1,pp1), pp2)))
               by definition of my_plus hypothesis H1
@@ -1132,17 +1122,17 @@ theorem my_plus_swap : all c: distributed_representation (M,D) * distributed_rep
               type  distributed_representation
          <3>5 prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
               by definition of swap,  my_plus_commutes_prop, equal
-              step <3>2, <3>3 property M!equal_reflexive, D!equal_reflexive 
+              step <3>2, <3>3 property M!equal_reflexive, D!equal_reflexive
               type distributed_representation hypothesis Hrec1
          <3>f conclude
 
-   <1>5 assume c1  c2 : M, 
-        assume d1  d2 : D, 
+   <1>5 assume c1  c2 : M,
+        assume d1  d2 : D,
         assume pp1  pp2 : distributed_representation (M,D),
-        hypothesis NH1 : ~(D!lt(d1, d2)), 
-        hypothesis H2 : D!lt (d2, d1), 
+        hypothesis NH1 : ~(D!lt(d1, d2)),
+        hypothesis H2 : D!lt (d2, d1),
         hypothesis Hrec2 : my_plus_commutes_prop((pp1, NonNull(c2,d2,pp2))),
-        prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) )) 
+        prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
          <3>2 prove my_plus((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))) =
               NonNull(c1, d1, my_plus((pp1, NonNull(c2,d2,pp2))))
               by definition of my_plus hypothesis NH1, H2
@@ -1152,41 +1142,41 @@ theorem my_plus_swap : all c: distributed_representation (M,D) * distributed_rep
                  type  distributed_representation
          <3>5 prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
               by definition of swap,  my_plus_commutes_prop, equal
-              step <3>2, <3>3 property M!equal_reflexive, D!equal_reflexive 
+              step <3>2, <3>3 property M!equal_reflexive, D!equal_reflexive
               hypothesis Hrec2 type distributed_representation
          <3>f conclude
 
-   <1>6 assume c1  c2 : M, 
-        assume d1  d2 : D, 
+   <1>6 assume c1  c2 : M,
+        assume d1  d2 : D,
         assume pp1  pp2 : distributed_representation (M,D),
-        hypothesis NH1 : ~(D!lt(d1, d2)), 
-        hypothesis NH2 : ~(D!lt (d2, d1)),         
+        hypothesis NH1 : ~(D!lt(d1, d2)),
+        hypothesis NH2 : ~(D!lt (d2, d1)),
         hypothesis Hyp1 :  M!is_zero (M!plus (c1, c2)),
         hypothesis Hrec3 : my_plus_commutes_prop((pp1, pp2)),
-        prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) )) 
+        prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
          <3>1 prove my_plus((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) )) = my_plus((pp1, pp2))
-                by definition of my_plus 
+                by definition of my_plus
                    type distributed_representation
                    hypothesis NH1, NH2, Hyp1
          <3>5 prove  M!is_zero (M!plus (c2, c1))
                  by hypothesis Hyp1 property M!plus_commutes, M!is_zero_substitution_rule
-         <3>2 prove my_plus(swap((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))))= my_plus((pp2, pp1)) 
-                 by definition of my_plus, swap 
-                    type distributed_representation 
+         <3>2 prove my_plus(swap((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))))= my_plus((pp2, pp1))
+                 by definition of my_plus, swap
+                    type distributed_representation
                     hypothesis NH1, NH2 step  <3>5
          <3>3 prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
              by definition of my_plus_commutes_prop, swap
              step <3>1,<3>2  hypothesis Hrec3
          <3>f conclude
 
-   <1>7 assume c1  c2 : M, 
-        assume d1  d2 : D, 
+   <1>7 assume c1  c2 : M,
+        assume d1  d2 : D,
         assume pp1  pp2 : distributed_representation (M,D),
-        hypothesis NH1 : ~(D!lt(d1, d2)), 
-        hypothesis NH2 : ~(D!lt (d2, d1)),         
+        hypothesis NH1 : ~(D!lt(d1, d2)),
+        hypothesis NH2 : ~(D!lt (d2, d1)),
         hypothesis Hyp2 :  ~ (M!is_zero (M!plus (c1, c2))),
         hypothesis Hrec3 : my_plus_commutes_prop((pp1, pp2)),
-        prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) )) 
+        prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
          <3>3 prove D!equal (d1, d2)
               by property  my_total_order, D!gt_is_lt, D!lt_is_asymetric hypothesis NH1, NH2
          <3>9 prove M!equal(M!plus(c1, c2), M!plus(c2, c1))
@@ -1195,9 +1185,9 @@ theorem my_plus_swap : all c: distributed_representation (M,D) * distributed_rep
             by property M!is_zero_substitution_rule step <3>9 hypothesis Hyp2
          <3>1 prove my_plus((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) )) = NonNull(M!plus(c1, c2), d1, my_plus((pp1, pp2)))
             by definition of my_plus hypothesis NH1, NH2, Hyp2
-               type distributed_representation  
+               type distributed_representation
           <3>2 prove my_plus(swap((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))) = NonNull(M!plus(c2, c1), d2, my_plus((pp2, pp1)))
-            by definition of my_plus, swap 
+            by definition of my_plus, swap
                type distributed_representation hypothesis NH1, NH2, Hyp2
                step <3>8
           <3>4 prove my_plus_commutes_prop((pp1, pp2))
@@ -1209,17 +1199,17 @@ theorem my_plus_swap : all c: distributed_representation (M,D) * distributed_rep
     <1>f qed by step <1>1, <1>2, <1>3, <1>4, <1>5, <1>6, <1>7
             property functional_induction_my_plus_inst1;
 
-proof of plus_commutes = 
+proof of plus_commutes =
         <1>1 assume p1 : Self,
              assume p2 : Self,
              prove equal(plus(p1, p2), plus(p2,p1))
              <2>1 prove my_plus_commutes_prop((p1,p2))
              by property my_plus_swap
-             <2>f qed 
-              by definition of plus, swap, my_plus_commutes_prop 
+             <2>f qed
+              by definition of plus, swap, my_plus_commutes_prop
               step <2>1
         <1>f conclude
-; 
+;
 
 
   proof of plus_is_associative = assumed;
@@ -1263,10 +1253,10 @@ species Distributed_polynomials_commutative_ring
                !mult (pp, q))
    termination proof = structural p ;
 
-  
-   
-   proof of module_mult_compat = 
-   assumed ; 
+
+
+   proof of module_mult_compat =
+   assumed ;
 
 
    proof of mult_left_substitution_rule = assumed;
