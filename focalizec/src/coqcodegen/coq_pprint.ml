@@ -109,8 +109,7 @@ let (pp_type_simple_to_coq, pp_type_variable_to_coq, pp_type_simple_args_to_coq,
     | Types.ST_tuple tys ->
         (* Tuple priority: 3. *)
         if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
-        Format.fprintf ppf "@[<2>((%a)%%type)@]"
-          (rec_pp_to_coq_tuple ctx 3) tys ;
+        Format.fprintf ppf "@[<2>%a@]" (rec_pp_to_coq_tuple ctx 3) tys ;
         if prio >= 3 then Format.fprintf ppf ")@]"
     | Types.ST_construct (type_name, arg_tys) ->
         (begin
@@ -190,20 +189,19 @@ let (pp_type_simple_to_coq, pp_type_variable_to_coq, pp_type_simple_args_to_coq,
   (** {b Descr} : Encodes FoCaLize tuples into nested pairs because Coq
       doesn't have tuples with abitrary arity: it just has pairs.
       Associativity is on the left, i.e, a FoCaLize tuple "(1, 2, 3, 4)" will
-      be mapped onto the Coq "(prod 1 (prod 2 (prod 3 4)))" data structure.
+      be mapped onto the Coq "(prod (prod (prod 1 2) 3) 4)" data structure.
+      In other words, (((1, 2), 3), 4).
 
       {b Rem} : Not exported outside this module.                          *)
   (* ********************************************************************* *)
-  and rec_pp_to_coq_tuple ctx prio ppf = function
-    | [] -> assert false  (* Tuples should never have 0 component. *)
-    | [last] ->
-        Format.fprintf ppf "%a" (rec_pp_to_coq ctx prio) last
-    | ty1 :: ty2 :: rem ->
-        Format.fprintf ppf "%a@ * %a"
-          (rec_pp_to_coq ctx prio) ty1
-          (rec_pp_to_coq_tuple ctx prio)
-          (ty2 :: rem)
-
+  and rec_pp_to_coq_tuple ctx prio ppf types =
+    let rec local_print local_ppf  = function
+      | [] -> assert false  (* Tuples should never have 0 component. *)
+      | [last] -> Format.fprintf local_ppf "%a" (rec_pp_to_coq ctx prio) last
+      | ty1 :: ty2 :: rem ->
+          Format.fprintf local_ppf "(Datatypes.prod@ %a@ %a)"
+            local_print (ty2 :: rem) (rec_pp_to_coq ctx prio) ty1 in
+    local_print ppf (List.rev types)
 
 
   and rec_pp_to_coq_sum_arguments ctx prio ppf = function
