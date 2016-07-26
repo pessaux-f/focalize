@@ -551,41 +551,41 @@ Definition __tpl_firstprj2  (__var_a : Set) (__var_b : Set)
  (x : ((__var_a * __var_b)%type)) :  __var_a :=
   __left __var_a __var_b x.
 
-(* Rightmost level-2 projection of any tuple (...,(x, _)) *)
+(* Rightmost level-2 projection of any tuple (((_, _), x), _) *)
 Definition __tpl_lastprj2 (__var_a : Set) (__var_b : Set) (__var_c : Set)
  (x : ((__var_a * __var_b * __var_c)%type)) :  __var_b :=
 __right _ _ (__left _ _ x).
 
-(* First projection of a 3-uple (x, (_, _)) *)
+(* First projection of a 3-uple ((x, _), _) *)
 Definition __tpl_firstprj3  (__var_a : Set) (__var_b : Set)  (__var_c : Set)
  (x : ((__var_a * __var_b * __var_c)%type)) :  __var_a :=
 __left _ _ (__left _ _ x).
 
-(* Rightmost level-3 projection of any tuple (...,(x, (_, _))) *)
+(* Rightmost level-3 projection of any tuple (((_, x), _), _) *)
 Definition __tpl_lastprj3 (__var_a : Set) (__var_b : Set) (__var_c : Set)
   (__var_d : Set)
   (x : ((__var_a * __var_b * __var_c * __var_d)%type)) :  __var_b :=
 __right _ _ (__left _ _ (__left _ _ x)).
 
-(* First projection of a 4-uple (x, (_, (_, _))) *)
+(* First projection of a 4-uple (((x, _), _), _) *)
 Definition __tpl_firstprj4  (__var_a : Set) (__var_b : Set)  (__var_c : Set)
  (__var_d : Set)
  (x : ((__var_a * __var_b * __var_c * __var_d)%type)) :  __var_a :=
 __left _ _ (__left _ _ (__left _ _ x)).
 
-(* Rightmost level-4 projection of any tuple (...,(x, (_, (_, _)))) *)
+(* Rightmost level-4 projection of any tuple (((((_, _), x), _), _), _) *)
 Definition __tpl_lastprj4 (__var_a : Set) (__var_b : Set) (__var_c : Set)
   (__var_d : Set) (__var_e : Set)
   (x : ((__var_a * __var_b * __var_c * __var_d * __var_e)%type)) :  __var_b :=
 __right _ _ (__left _ _ (__left _ _ (__left _ _ x))).
 
-(* First projection of a 5-uple (x, (_, (_, (_, _)))) *)
+(* First projection of a 5-uple. *)
 Definition __tpl_firstprj5  (__var_a : Set) (__var_b : Set)  (__var_c : Set)
  (__var_d : Set) (__var_e : Set)
  (x : ((__var_a * __var_b * __var_c * __var_d* __var_e)%type)) :  __var_a :=
 __left _ _ (__left _ _ (__left _ _ (__left _ _ x))).
 
-(* Rightmost level-5 projection of any tuple (...,(x, (_, (_, (_, _))))) *)
+(* Rightmost level-5 projection of any tuple. *)
 Definition __tpl_lastprj5 (__var_a : Set) (__var_b : Set) (__var_c : Set)
   (__var_d : Set) (__var_e : Set) (__var_f : Set)
   (x : ((__var_a * __var_b * __var_c * __var_d * __var_e * __var_f)%type)) :
