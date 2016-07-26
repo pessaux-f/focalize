@@ -691,54 +691,57 @@ proof =
 
 
   proof of monomial_is_additive =
-     <1>1 assume x y: M, assume i: D ,
-     prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
-                   !monomial (M!plus (x, y), i))
-     <2>1 hypothesis H_0: M!is_zero(x),
-          prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
-                   !monomial (M!plus (x, y), i))
-         <3>0 prove M!equal(x, M!zero)
-         by property M!is_zero_spec, M!equal_symmetric hypothesis H_0
-         <3>1 prove equal(monomial(x, i), zero)
-         by definition of monomial property equal_reflexive
-            hypothesis H_0
-         <3>2 prove
-     !equal (!plus (!monomial (x, i), !monomial (y, i)),!monomial (y, i))
-          by property equal_transitive, zero_is_neutral, plus_left_substitution_rule step <3>1
-          <3>3 prove
-     !equal (!monomial (M!plus (x, y), i), !monomial (y, i))
-          by property equal_transitive, M!zero_is_neutral, M!plus_left_substitution_rule,  monomial_left_substitution_rule step <3>0
-          <3>f qed by property equal_symmetric, equal_transitive
-                      step <3>2, <3>3
-<2>2 hypothesis H_1: ~ (M!is_zero(x)),
-          prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
-                   !monomial (M!plus (x, y), i))
-          <3>1 hypothesis H_2: M!is_zero(y),
-          prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
-                   !monomial (M!plus (x, y), i))
-              <4>0 prove M!equal(y, M!zero)
-              by property M!is_zero_spec, M!equal_symmetric hypothesis H_2                   <4>1 prove equal(monomial(y, i), zero)
-             by definition of monomial property equal_reflexive
-                hypothesis H_2
-             <4>2 prove
-     !equal (!plus (!monomial (x, i), !monomial (y, i)),!monomial (x, i))
-             by property equal_transitive, zero_is_neutral, plus_right_substitution_rule step <4>1
-            <4>3 prove
-        !equal (!monomial (M!plus (x, y), i), !monomial (x, i))
-                by property equal_transitive, M!zero_is_neutral, M!plus_right_substitution_rule,  monomial_left_substitution_rule step <4>0
+    <1>1 assume x y: M, assume i: D ,
+         prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
+                       !monomial (M!plus (x, y), i))
+      <2>1 hypothesis H_0: M!is_zero(x),
+           prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
+                         !monomial (M!plus (x, y), i))
+        <3>0 prove M!equal(x, M!zero)
+        by property M!is_zero_spec, M!equal_symmetric hypothesis H_0
+        <3>1 prove equal(monomial(x, i), zero)
+        by definition of monomial property equal_reflexive hypothesis H_0
+        <3>2 prove
+             !equal (!plus (!monomial (x, i), !monomial (y, i)),
+                     !monomial (y, i))
+             by property equal_transitive, zero_is_neutral,
+                plus_left_substitution_rule step <3>1
+          <3>3 prove !equal (!monomial (M!plus (x, y), i), !monomial (y, i))
+               by property equal_transitive, M!zero_is_neutral,
+               M!plus_left_substitution_rule,  monomial_left_substitution_rule
+               step <3>0
+          <3>f qed by property equal_symmetric, equal_transitive step <3>2, <3>3
+      <2>2 hypothesis H_1: ~ (M!is_zero(x)),
+           prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
+                         !monomial (M!plus (x, y), i))
+        <3>1 hypothesis H_2: M!is_zero(y),
+             prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
+                           !monomial (M!plus (x, y), i))
+          <4>0 prove M!equal(y, M!zero)
+               by property M!is_zero_spec, M!equal_symmetric hypothesis H_2
+          <4>1 prove equal(monomial(y, i), zero)
+             by definition of monomial property equal_reflexive hypothesis H_2
+             <4>2 prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
+                                !monomial (x, i))
+                  by property equal_transitive, zero_is_neutral,
+                    plus_right_substitution_rule step <4>1
+            <4>3 prove !equal (!monomial (M!plus (x, y), i), !monomial (x, i))
+                 by property equal_transitive, M!zero_is_neutral,
+                   M!plus_right_substitution_rule,
+                   monomial_left_substitution_rule step <4>0
             <4>f qed by property equal_symmetric, equal_transitive
-                      step <4>2, <4>3
+                     step <4>2, <4>3
           <3>2 hypothesis H_3: ~( M!is_zero(y)),
                hypothesis Hyp: ~ (D!lt(i, i)),
-          prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
-                   !monomial (M!plus (x, y), i))
-             by definition of monomial, plus, my_plus, zero
-                property equal_reflexive
-                hypothesis H_1, H_3,  Hyp
-                type distributed_representation
+               prove !equal (!plus (!monomial (x, i), !monomial (y, i)),
+                             !monomial (M!plus (x, y), i))
+               by definition of monomial, plus, my_plus, zero
+                  property equal_reflexive
+                  hypothesis H_1, H_3,  Hyp
+                  type distributed_representation
          <3>f qed by step <3>1, <3>2 property D!lt_is_irreflexive
- <2>f qed by step <2>1, <2>2
-     <1>f conclude
+    <2>f qed by step <2>1, <2>2
+  <1>f conclude
  ;
 
   logical let plus_invariant_property(p) = all q: Self,
