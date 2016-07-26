@@ -94,10 +94,15 @@ species Indexed_set (D is Ordered_set_with_zero,
   ;
 
   theorem int_succ_lt: all a: int, a < a + 1
-    proof =
-     assumed
-     (* by property int_lt_le_S, int_plus_commute *)
+  proof =
+    coq proof {*
+      unfold basics._lt_, basics._plus_.
+      unfold coq_builtins.bi__int_lt, coq_builtins.bi__int_plus.
+      intros. elim Z_lt_dec. intro. simpl. auto with zarith.
+      intro. simpl. auto with zarith. Qed.
+    *}
     ;
+
   theorem int_add_lt: all a b c: int,
     a < b -> (a + c < b + c)
     proof =
