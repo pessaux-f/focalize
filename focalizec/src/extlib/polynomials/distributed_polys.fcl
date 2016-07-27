@@ -931,237 +931,243 @@ proof = assumed
 ;
 *)
 
-theorem functional_induction_my_plus_inst1:
-  ((my_plus_commutes_prop((Null, Null))) /\
+  logical let plus_commutes_prop (c1: distributed_representation (M,D), c2 :  distributed_representation (M,D)) : prop =
+  equal(plus(c1,c2), plus(c2,c1));
+
+theorem functional_induction_plus_inst1:
+  ((plus_commutes_prop(Null, Null)) /\
   (all c1 : M, all d1 : D, all p1 : distributed_representation (M,D),
-    my_plus_commutes_prop((Null, NonNull(c1,d1,p1)))) /\
+    plus_commutes_prop(Null, NonNull(c1,d1,p1))) /\
   (all c1 : M, all d1 : D, all p1 : distributed_representation (M,D),
-   my_plus_commutes_prop((NonNull(c1,d1,p1), Null))) /\
+   plus_commutes_prop(NonNull(c1,d1,p1), Null)) /\
   (all c1  c2 : M, all d1  d2 : D,
    all pp1  pp2 : distributed_representation (M,D),
-   D!lt (d1, d2) -> my_plus_commutes_prop((NonNull(c1,d1,pp1),pp2)) ->
-       my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2)))) /\
+   D!lt (d1, d2) -> plus_commutes_prop(NonNull(c1,d1,pp1),pp2) ->
+       plus_commutes_prop(NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))) /\
   (all c1  c2 : M, all d1  d2 : D,
    all pp1  pp2 : distributed_representation (M,D),
-   ~ D!lt (d1, d2) -> D!lt(d2,d1) -> my_plus_commutes_prop((pp1, NonNull(c2,d2,pp2))) ->
-       my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2)))) /\
+   ~ D!lt (d1, d2) -> D!lt(d2,d1) -> plus_commutes_prop(pp1, NonNull(c2,d2,pp2)) ->
+       plus_commutes_prop(NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))) /\
   (all c1  c2 : M, all d1  d2 : D,
    all pp1  pp2 : distributed_representation (M,D),
    ~ D!lt (d1, d2) -> ~ D!lt(d2,d1) ->
-   M!is_zero (M!plus (c1, c2)) -> my_plus_commutes_prop((pp1, pp2)) ->
-       my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2)))) /\
+   M!is_zero (M!plus (c1, c2)) -> plus_commutes_prop(pp1, pp2) ->
+       plus_commutes_prop(NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))) /\
   (all c1  c2 : M, all d1  d2 : D,
    all pp1  pp2 : distributed_representation (M,D),
    ~ D!lt (d1, d2) -> ~ D!lt(d2,d1) ->
-   ~ (M!is_zero (M!plus (c1, c2))) -> my_plus_commutes_prop((pp1, pp2)) ->
-       my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))))
-   )
+   ~ (M!is_zero (M!plus (c1, c2))) -> plus_commutes_prop(pp1, pp2) ->
+       plus_commutes_prop(NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))
+   ))
    ->
-   all c: distributed_representation (M,D) * distributed_representation (M,D),
-   my_plus_commutes_prop(c)
-proof
- = coq proof definition of my_plus, swap, my_plus_commutes_prop
+   all c1: distributed_representation (M,D), all c2 : distributed_representation (M,D),
+   plus_commutes_prop(c1, c2)
+proof =  coq proof definition of plus, my_plus, plus_commutes_prop
        {*
 Proof.
-unfold my_plus_commutes_prop; unfold my_plus; unfold Termination_my_plus_namespace.Indexed_sum__my_plus.
-intros.
-simpl in H; decompose [and] H.
-apply Termination_my_plus_namespace.my_plus_ind.
+unfold plus; unfold plus_commutes_prop; unfold my_plus; unfold Termination_my_plus_namespace.Indexed_sum__my_plus.
+do 8 intro.
+assert
+ (forall
+    c : distributed_representation__t _p_M_T _p_D_T *
+        distributed_representation__t _p_M_T _p_D_T,
+  Is_true
+    (abst_equal
+       (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt _p_M_plus
+          _p_M_is_zero abst_length_pair c)
+       (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt _p_M_plus
+          _p_M_is_zero abst_length_pair (snd c, fst c)))).
+ intros.
+ decompose [and] H.
+ apply Termination_my_plus_namespace.my_plus_ind.
+ 
+intros; case_eq s_2.
+intro Hs_2; simpl.
+rewrite Termination_my_plus_namespace.my_plus_equation in H0.
+rewrite Termination_my_plus_namespace.my_plus_equation;  assumption.
 
- intros;  case_eq s_2.
-  intro Hs_2;   simpl.
-  rewrite Termination_my_plus_namespace.my_plus_equation in H0.
-  rewrite Termination_my_plus_namespace.my_plus_equation;   assumption.
-
-  intros m1 d1 d Hs_2.
- replace
-   (Is_true
+intros m1 d1 d Hs_2; simpl.
+replace (Is_true
      (abst_equal (NonNull _p_M_T _p_D_T m1 d1 d)
         (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
-           _p_M_plus _p_M_is_zero abst_length_pair abst_length_pair_measure
-           (swap _p_D_T _p_M_T
-              (Null _p_M_T _p_D_T, NonNull _p_M_T _p_D_T m1 d1 d)))))
-with
-   (Is_true
-     (abst_equal
-     (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
-           _p_M_plus _p_M_is_zero abst_length_pair abst_length_pair_measure
-              (Null _p_M_T _p_D_T, NonNull _p_M_T _p_D_T m1 d1 d))
-        (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
-           _p_M_plus _p_M_is_zero abst_length_pair abst_length_pair_measure
-           (swap _p_D_T _p_M_T
-              (Null _p_M_T _p_D_T, NonNull _p_M_T _p_D_T m1 d1 d))))).
-  simpl; apply H2.
-  rewrite Termination_my_plus_namespace.my_plus_equation; auto.
-
-  intros; rewrite e1.
-   replace
-   (Is_true
-     (abst_equal (NonNull _p_M_T _p_D_T m1 d1 ss_1)
-        (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
-           _p_M_plus _p_M_is_zero abst_length_pair abst_length_pair_measure
-           (swap _p_D_T _p_M_T
-              (NonNull _p_M_T _p_D_T m1 d1 ss_1, Null _p_M_T _p_D_T)))))
+           _p_M_plus _p_M_is_zero abst_length_pair
+           (NonNull _p_M_T _p_D_T m1 d1 d, Null _p_M_T _p_D_T)))) 
   with
-  ( Is_true
-     (abst_equal
+  (Is_true
+     (abst_equal 
        (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
-           _p_M_plus _p_M_is_zero abst_length_pair abst_length_pair_measure
-             (NonNull _p_M_T _p_D_T m1 d1 ss_1, Null _p_M_T _p_D_T))
+           _p_M_plus _p_M_is_zero abst_length_pair
+           (Null _p_M_T _p_D_T , NonNull _p_M_T _p_D_T m1 d1 d))
         (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
-           _p_M_plus _p_M_is_zero abst_length_pair abst_length_pair_measure
-           (swap _p_D_T _p_M_T
-              (NonNull _p_M_T _p_D_T m1 d1 ss_1, Null _p_M_T _p_D_T))))).
-  simpl; apply H1.
-  rewrite Termination_my_plus_namespace.my_plus_equation; auto.
+           _p_M_plus _p_M_is_zero abst_length_pair
+           (NonNull _p_M_T _p_D_T m1 d1 d, Null _p_M_T _p_D_T)))).
+simpl; apply H2.
+rewrite Termination_my_plus_namespace.my_plus_equation; auto.
 
-
- intros.
- replace
-  (NonNull _p_M_T _p_D_T m2 d2
-     (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt _p_M_plus
-        _p_M_is_zero abst_length_pair abst_length_pair_measure
-        (s_1, ss_2))) with
-  (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt _p_M_plus
-     _p_M_is_zero abst_length_pair abst_length_pair_measure
-     (NonNull _p_M_T _p_D_T m1 d1 ss_1, NonNull _p_M_T _p_D_T m2 d2 ss_2)) .
-  apply H3.
-  exact (EqTrue_is_true _ e3).
-
-   rewrite e1 in H6;  assumption.
-
-  rewrite Termination_my_plus_namespace.my_plus_equation; rewrite e3.
-  rewrite e1; auto.
-
- intros.
- replace
-  (NonNull _p_M_T _p_D_T m1 d1
-     (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt _p_M_plus
-        _p_M_is_zero abst_length_pair abst_length_pair_measure
-        (ss_1, s_2))) with
-  (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt _p_M_plus
-     _p_M_is_zero abst_length_pair abst_length_pair_measure
-     (NonNull _p_M_T _p_D_T m1 d1 ss_1, NonNull _p_M_T _p_D_T m2 d2 ss_2)) .
-  simpl.
-  apply H4.
-   apply (IsTrue_eq_false2 _ e3).
-
-   apply (EqTrue_is_true _ e4).
-
-   rewrite e2 in H6.
-   exact H6.
-
-  rewrite Termination_my_plus_namespace.my_plus_equation.
-  rewrite e3; rewrite e4.
-  rewrite e2.
-  auto.
-
-intros.
- replace
- (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
-           _p_M_plus _p_M_is_zero abst_length_pair abst_length_pair_measure
-           (ss_1, ss_2))
+intros; simpl; rewrite e1.
+replace (    Is_true
+     (abst_equal 
+        (NonNull _p_M_T _p_D_T m1 d1 ss_1)
+        (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
+           _p_M_plus _p_M_is_zero abst_length_pair
+           (Null _p_M_T _p_D_T, NonNull _p_M_T _p_D_T m1 d1 ss_1)))
+)
 with
-(Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
-           _p_M_plus _p_M_is_zero abst_length_pair abst_length_pair_measure
-              (NonNull _p_M_T _p_D_T m1 d1 ss_1,
-              NonNull _p_M_T _p_D_T m2 d2 ss_2)).
-  simpl.
-  apply H5.
+(
+   Is_true
+     (abst_equal 
+       (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
+           _p_M_plus _p_M_is_zero abst_length_pair
+           (NonNull _p_M_T _p_D_T m1 d1 ss_1, Null _p_M_T _p_D_T ))
+        (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
+           _p_M_plus _p_M_is_zero abst_length_pair
+           (Null _p_M_T _p_D_T, NonNull _p_M_T _p_D_T m1 d1 ss_1)))  
+).
+apply H1.
+rewrite Termination_my_plus_namespace.my_plus_equation; auto.
 
-   apply (IsTrue_eq_false2 _ e3).
-   apply (IsTrue_eq_false2 _ e4).
-   apply (EqTrue_is_true _ e5).
-
-  simpl in H6;    exact H6.
-
-  rewrite Termination_my_plus_namespace.my_plus_equation.
-  rewrite e3; rewrite e4.
-  replace (_p_M_plus m1 m2) with m  by auto.
-  rewrite e5;   auto.
-
- intros.
- replace
-        (NonNull _p_M_T _p_D_T m d1
+intros; simpl.
+replace 
+(NonNull _p_M_T _p_D_T m2 d2
            (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
-              _p_M_plus _p_M_is_zero abst_length_pair
-              abst_length_pair_measure (ss_1, ss_2)))
+              _p_M_plus _p_M_is_zero abst_length_pair 
+              (s_1, ss_2)))
+with
+       (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
+           _p_M_plus _p_M_is_zero abst_length_pair
+           (NonNull _p_M_T _p_D_T m1 d1 ss_1,
+           NonNull _p_M_T _p_D_T m2 d2 ss_2)).
+apply H3.
+exact (EqTrue_is_true _ e3).
+
+rewrite e1 in H6;  assumption.
+
+rewrite Termination_my_plus_namespace.my_plus_equation; rewrite e3; 
+rewrite e1; auto.
+
+intros; simpl.
+replace (NonNull _p_M_T _p_D_T m1 d1
+           (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
+              _p_M_plus _p_M_is_zero abst_length_pair 
+              (ss_1, s_2)))
 with
       (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
-           _p_M_plus _p_M_is_zero abst_length_pair abst_length_pair_measure
-              (NonNull _p_M_T _p_D_T m1 d1 ss_1,
-              NonNull _p_M_T _p_D_T m2 d2 ss_2)).
-  simpl; apply H7.
+           _p_M_plus _p_M_is_zero abst_length_pair
+           (NonNull _p_M_T _p_D_T m1 d1 ss_1,
+           NonNull _p_M_T _p_D_T m2 d2 ss_2)).
+apply H4.
+apply (IsTrue_eq_false2 _ e3).
 
-  apply (IsTrue_eq_false2 _ e3).
-  apply (IsTrue_eq_false2 _ e4).
-  apply (IsTrue_eq_false2 _ e5).
+apply (EqTrue_is_true _ e4).
 
-  simpl in H6;    exact H6.
+rewrite e2 in H6;    exact H6.
 
-  rewrite Termination_my_plus_namespace.my_plus_equation;  rewrite e3; rewrite e4.
-  replace (_p_M_plus m1 m2) with m  by auto.
-   rewrite e5;   auto. *}
+rewrite Termination_my_plus_namespace.my_plus_equation.
+rewrite e3; rewrite e4;   rewrite e2;   auto.
+
+intros; simpl.
+replace (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
+           _p_M_plus _p_M_is_zero abst_length_pair 
+           (ss_1, ss_2)) with
+(Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
+           _p_M_plus _p_M_is_zero abst_length_pair
+           (NonNull _p_M_T _p_D_T m1 d1 ss_1,
+           NonNull _p_M_T _p_D_T m2 d2 ss_2)).
+apply H5.
+apply (IsTrue_eq_false2 _ e3).
+apply (IsTrue_eq_false2 _ e4).
+apply (EqTrue_is_true _ e5).
+
+simpl in H6;    exact H6.
+
+rewrite Termination_my_plus_namespace.my_plus_equation.
+rewrite e3; rewrite e4; replace (_p_M_plus m1 m2) with m  by auto.
+rewrite e5;   auto.
+
+intros; simpl.
+replace (NonNull _p_M_T _p_D_T m d1
+           (Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
+              _p_M_plus _p_M_is_zero abst_length_pair 
+              (ss_1, ss_2))) with
+(Termination_my_plus_namespace.my_plus _p_D_T _p_M_T _p_D_lt
+           _p_M_plus _p_M_is_zero abst_length_pair
+           (NonNull _p_M_T _p_D_T m1 d1 ss_1,
+           NonNull _p_M_T _p_D_T m2 d2 ss_2)).
+simpl; apply H7.
+
+apply (IsTrue_eq_false2 _ e3).
+apply (IsTrue_eq_false2 _ e4).
+apply (IsTrue_eq_false2 _ e5).
+
+simpl in H6;    exact H6.
+
+rewrite Termination_my_plus_namespace.my_plus_equation;  rewrite e3; rewrite e4.
+replace (_p_M_plus m1 m2) with m  by auto.
+rewrite e5;   auto.
+
+intros; apply H0.
+Qed. *}
 ;
 
 
-theorem my_plus_swap : all c: distributed_representation (M,D) * distributed_representation (M,D)  , my_plus_commutes_prop(c)
-  proof =
-  <1>1 prove my_plus_commutes_prop((Null, Null))
-       by definition of my_plus_commutes_prop, swap property equal_reflexive
+proof of plus_commutes =
+  <1>1 prove plus_commutes_prop(Null, Null)
+       by definition of plus, plus_commutes_prop, swap property equal_reflexive
+
   <1>2 assume c1 : M,
        assume d1 : D,
        assume p1 : distributed_representation (M,D),
-       prove my_plus_commutes_prop((Null, NonNull(c1,d1,p1)))
-       by definition of my_plus_commutes_prop, swap, my_plus
+       prove plus_commutes_prop(Null, NonNull(c1,d1,p1))
+       by definition of plus_commutes_prop, plus, my_plus
            type distributed_representation property equal_reflexive
+
   <1>3 assume c1 : M,
        assume d1 : D,
        assume p1 : distributed_representation (M,D),
-       prove my_plus_commutes_prop((NonNull(c1,d1,p1), Null))
-       by definition of my_plus_commutes_prop, swap
+       prove plus_commutes_prop(NonNull(c1,d1,p1), Null)
+       by definition of plus, plus_commutes_prop, my_plus
           property equal_symmetric step <1>2
 
   <1>4 assume c1  c2 : M,
        assume d1  d2 : D,
        assume pp1  pp2 : distributed_representation (M,D),
        hypothesis H1 : D!lt (d1, d2),
-       hypothesis Hrec1 : my_plus_commutes_prop((NonNull(c1,d1,pp1),pp2)),
-       prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
+       hypothesis Hrec1 : plus_commutes_prop(NonNull(c1,d1,pp1),pp2),
+       prove plus_commutes_prop(NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) )
          <3>1 prove ~ (D!lt (d2, d1))
               by hypothesis H1 property  D!lt_is_asymetric
-         <3>2 prove my_plus((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))) =
-              NonNull(c2, d2, my_plus((NonNull(c1,d1,pp1), pp2)))
-              by definition of my_plus hypothesis H1
+         <3>2 prove plus(NonNull(c1,d1,pp1), NonNull(c2,d2,pp2)) =
+              NonNull(c2, d2, plus(NonNull(c1,d1,pp1), pp2))
+              by definition of plus, my_plus hypothesis H1
                  type  distributed_representation
-         <3>3 prove my_plus(swap( (NonNull(c1,d1,pp1), NonNull(c2,d2,pp2)))) = NonNull(c2, d2, my_plus((pp2, NonNull(c1,d1,pp1))))
-              by step <3>1 hypothesis H1 definition of my_plus, swap
+         <3>3 prove plus(NonNull(c2,d2,pp2), NonNull(c1,d1,pp1)) = NonNull(c2, d2, plus(pp2, NonNull(c1,d1,pp1)))
+              by step <3>1 hypothesis H1 definition of plus, my_plus
               type  distributed_representation
-         <3>5 prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
-              by definition of swap,  my_plus_commutes_prop, equal
+         <3>5 prove plus_commutes_prop(NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) )
+              by definition of  equal, plus_commutes_prop, plus
               step <3>2, <3>3 property M!equal_reflexive, D!equal_reflexive
               type distributed_representation hypothesis Hrec1
-         <3>f conclude
+         <3>f conclude 
 
    <1>5 assume c1  c2 : M,
         assume d1  d2 : D,
         assume pp1  pp2 : distributed_representation (M,D),
         hypothesis NH1 : ~(D!lt(d1, d2)),
         hypothesis H2 : D!lt (d2, d1),
-        hypothesis Hrec2 : my_plus_commutes_prop((pp1, NonNull(c2,d2,pp2))),
-        prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
-         <3>2 prove my_plus((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))) =
-              NonNull(c1, d1, my_plus((pp1, NonNull(c2,d2,pp2))))
-              by definition of my_plus hypothesis NH1, H2
+        hypothesis Hrec2 : plus_commutes_prop(pp1, NonNull(c2,d2,pp2)),
+        prove plus_commutes_prop(NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) )
+         <3>2 prove plus(NonNull(c1,d1,pp1), NonNull(c2,d2,pp2)) =
+              NonNull(c1, d1, plus(pp1, NonNull(c2,d2,pp2)))
+              by definition of plus, my_plus hypothesis NH1, H2
                  type  distributed_representation
-         <3>3 prove my_plus(swap((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2)))) = NonNull(c1, d1, my_plus((NonNull(c2,d2,pp2), pp1)))
-              by  hypothesis NH1, H2 definition of my_plus, swap
+         <3>3 prove plus( NonNull(c2,d2,pp2), NonNull(c1,d1,pp1)) = NonNull(c1, d1, plus(NonNull(c2,d2,pp2), pp1))
+              by  hypothesis NH1, H2 definition of plus, my_plus,  plus_commutes_prop
                  type  distributed_representation
-         <3>5 prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
-              by definition of swap,  my_plus_commutes_prop, equal
+         <3>5 prove plus_commutes_prop(NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))
+              by definition of plus_commutes_prop, equal
               step <3>2, <3>3 property M!equal_reflexive, D!equal_reflexive
               hypothesis Hrec2 type distributed_representation
-         <3>f conclude
+         <3>f conclude 
 
    <1>6 assume c1  c2 : M,
         assume d1  d2 : D,
@@ -1169,22 +1175,22 @@ theorem my_plus_swap : all c: distributed_representation (M,D) * distributed_rep
         hypothesis NH1 : ~(D!lt(d1, d2)),
         hypothesis NH2 : ~(D!lt (d2, d1)),
         hypothesis Hyp1 :  M!is_zero (M!plus (c1, c2)),
-        hypothesis Hrec3 : my_plus_commutes_prop((pp1, pp2)),
-        prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
-         <3>1 prove my_plus((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) )) = my_plus((pp1, pp2))
-                by definition of my_plus
+        hypothesis Hrec3 : plus_commutes_prop(pp1, pp2),
+        prove plus_commutes_prop(NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) )
+         <3>1 prove plus(NonNull(c1,d1,pp1), NonNull(c2,d2,pp2)) = plus(pp1, pp2)
+                by definition of plus, my_plus
                    type distributed_representation
                    hypothesis NH1, NH2, Hyp1
          <3>5 prove  M!is_zero (M!plus (c2, c1))
                  by hypothesis Hyp1 property M!plus_commutes, M!is_zero_substitution_rule
-         <3>2 prove my_plus(swap((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))))= my_plus((pp2, pp1))
-                 by definition of my_plus, swap
+         <3>2 prove plus(NonNull(c2,d2,pp2), NonNull(c1,d1,pp1))= plus(pp2, pp1)
+                 by definition of my_plus, plus
                     type distributed_representation
                     hypothesis NH1, NH2 step  <3>5
-         <3>3 prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
-             by definition of my_plus_commutes_prop, swap
+         <3>3 prove plus_commutes_prop(NonNull(c1,d1,pp1), NonNull(c2,d2,pp2))
+             by definition of plus_commutes_prop
              step <3>1,<3>2  hypothesis Hrec3
-         <3>f conclude
+         <3>f conclude 
 
    <1>7 assume c1  c2 : M,
         assume d1  d2 : D,
@@ -1192,41 +1198,30 @@ theorem my_plus_swap : all c: distributed_representation (M,D) * distributed_rep
         hypothesis NH1 : ~(D!lt(d1, d2)),
         hypothesis NH2 : ~(D!lt (d2, d1)),
         hypothesis Hyp2 :  ~ (M!is_zero (M!plus (c1, c2))),
-        hypothesis Hrec3 : my_plus_commutes_prop((pp1, pp2)),
-        prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
+        hypothesis Hrec3 : plus_commutes_prop(pp1, pp2),
+        prove plus_commutes_prop(NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) )
          <3>3 prove D!equal (d1, d2)
               by property  my_total_order, D!gt_is_lt, D!lt_is_asymetric hypothesis NH1, NH2
          <3>9 prove M!equal(M!plus(c1, c2), M!plus(c2, c1))
             by property M!plus_commutes
          <3>8 prove ~ ( M!is_zero (M!plus (c2, c1)))
             by property M!is_zero_substitution_rule step <3>9 hypothesis Hyp2
-         <3>1 prove my_plus((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) )) = NonNull(M!plus(c1, c2), d1, my_plus((pp1, pp2)))
-            by definition of my_plus hypothesis NH1, NH2, Hyp2
+         <3>1 prove plus(NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ) = NonNull(M!plus(c1, c2), d1, plus(pp1, pp2))
+            by definition of my_plus, plus hypothesis NH1, NH2, Hyp2
                type distributed_representation
-          <3>2 prove my_plus(swap((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))) = NonNull(M!plus(c2, c1), d2, my_plus((pp2, pp1)))
-            by definition of my_plus, swap
+          <3>2 prove plus(NonNull(c2,d2,pp2), NonNull(c1,d1,pp1)) = NonNull(M!plus(c2, c1), d2, plus(pp2, pp1))
+            by definition of my_plus, plus
                type distributed_representation hypothesis NH1, NH2, Hyp2
                step <3>8
-          <3>4 prove my_plus_commutes_prop((pp1, pp2))
-            by  hypothesis Hrec3
-                definition of swap,  my_plus_commutes_prop
-          <3>5 prove my_plus_commutes_prop((NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) ))
-            by step <3>1, <3>2, <3>9, <3>4 definition of swap,  my_plus_commutes_prop, equal step <3>3  type distributed_representation
+          <3>5 prove plus_commutes_prop(NonNull(c1,d1,pp1), NonNull(c2,d2,pp2) )
+            by step <3>1, <3>2, <3>9 
+               definition of plus_commutes_prop, equal 
+               step <3>3  type distributed_representation hypothesis Hrec3
          <3>f conclude
-    <1>f qed by step <1>1, <1>2, <1>3, <1>4, <1>5, <1>6, <1>7
-            property functional_induction_my_plus_inst1;
-
-proof of plus_commutes =
-        <1>1 assume p1 : Self,
-             assume p2 : Self,
-             prove equal(plus(p1, p2), plus(p2,p1))
-             <2>1 prove my_plus_commutes_prop((p1,p2))
-             by property my_plus_swap
-             <2>f qed
-              by definition of plus, swap, my_plus_commutes_prop
-              step <2>1
-        <1>f conclude
-;
+    <1>f qed by step <1>1, <1>2, <1>3, <1>4, <1>5, <1>6, <1>7 
+            type distributed_representation
+            definition of  plus_commutes_prop
+            property functional_induction_plus_inst1;
 
 
   proof of plus_is_associative = assumed;
