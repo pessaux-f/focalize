@@ -227,7 +227,12 @@ proof = assumed
 ;
 
 theorem one_pos : 0 <= 1
-proof = assumed
+proof =
+  coq proof {*
+    unfold basics._lt__equal_. unfold coq_builtins.bi__int_leq.
+    elim Z_le_dec. intro; simpl. auto with zarith. intro; simpl.
+    auto with zarith. Qed.
+  *}
 ;
 
 theorem length_poly_pos: all p : distributed_representation(C, D),
