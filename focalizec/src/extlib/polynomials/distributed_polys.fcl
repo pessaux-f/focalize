@@ -93,29 +93,6 @@ species Indexed_set (D is Ordered_set_with_zero,
        | (p1, p2) -> length_poly (p1) + length_poly (p2)
   ;
 
-  theorem int_succ_lt: all a: int, a < a + 1
-  proof =
-    coq proof {*
-      unfold basics._lt_, basics._plus_.
-      unfold coq_builtins.bi__int_lt, coq_builtins.bi__int_plus.
-      intros. elim Z_lt_dec. intro. simpl. auto with zarith.
-      intro. simpl. auto with zarith. Qed.
-    *}
-    ;
-
-  theorem int_add_lt: all a b c: int,
-    a < b -> (a + c < b + c)
-    proof =
-      coq proof {*
-      unfold basics._lt_, basics._plus_.
-      unfold coq_builtins.bi__int_lt, coq_builtins.bi__int_plus.
-      intros a b c.
-      case (Z_lt_dec a b). intros H1 H2. auto with zarith. elim Z_lt_dec.
-      simpl. auto. intros. simpl. auto with zarith. elim Z_lt_dec.
-      intros. auto with zarith.  simpl.  auto with zarith. intros.
-      simpl. auto with zarith. Qed.
-      *}
-    ;
 
    theorem length_pair_left_lt: all p1 p2: distributed_representation(C, D),
      all c1: C, all d1: D,
@@ -222,18 +199,6 @@ proof =
   (*    proof = assumed *)
   (*   ; *)
 
-theorem add_pos :  all n m : int, 0 <= n -> 0  <= m ->  0 <= n + m
-proof = assumed
-;
-
-theorem one_pos : 0 <= 1
-proof =
-  coq proof {*
-    unfold basics._lt__equal_. unfold coq_builtins.bi__int_leq.
-    elim Z_le_dec. intro; simpl. auto with zarith. intro; simpl.
-    auto with zarith. Qed.
-  *}
-;
 
 theorem length_poly_pos: all p : distributed_representation(C, D),
     0 <= length_poly (p)

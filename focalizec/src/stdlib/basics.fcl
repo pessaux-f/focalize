@@ -882,15 +882,59 @@ theorem int_plus_minus: all x y z : int,
 theorem int_minus_plus:
   all x y z : int,
   x - y = z -> x = y + z
-  proof =
-    coq proof {*
-      intros x y z; unfold syntactic_equal in |- *;
-      intros H;
-      unfold coq_builtins.bi__int_minus, _equal_, syntactic_equal;
-      apply EQ_syntactic_equal; rewrite <- (Zplus_minus y x);
-      apply Zplus_eq_compat; trivial; apply decidable. apply Z_eq_dec. assumption.      Qed.
-    *}
+proof =
+  coq proof {*
+    intros x y z; unfold syntactic_equal in |- *;
+    intros H;
+    unfold coq_builtins.bi__int_minus, _equal_, syntactic_equal;
+    apply EQ_syntactic_equal; rewrite <- (Zplus_minus y x);
+    apply Zplus_eq_compat; trivial; apply decidable. apply Z_eq_dec.
+    assumption. Qed.
+  *}
 ;;
+
+
+theorem int_succ_lt: all a: int, a < a + 1
+proof =
+  coq proof {*
+    unfold basics._lt_, basics._plus_.
+    unfold coq_builtins.bi__int_lt, coq_builtins.bi__int_plus.
+    intros. elim Z_lt_dec. intro. simpl. auto with zarith.
+    intro. simpl. auto with zarith. Qed.
+  *} ;;
+
+theorem int_add_lt: all a b c: int,
+  a < b -> (a + c < b + c)
+proof =
+  coq proof {*
+  unfold basics._lt_, basics._plus_.
+  unfold coq_builtins.bi__int_lt, coq_builtins.bi__int_plus.
+  intros a b c.
+  case (Z_lt_dec a b). intros H1 H2. auto with zarith. elim Z_lt_dec.
+  simpl. auto. intros. simpl. auto with zarith. elim Z_lt_dec.
+  intros. auto with zarith.  simpl.  auto with zarith. intros.
+  simpl. auto with zarith. Qed.
+  *}  ;;
+
+theorem add_pos :  all n m : int, 0 <= n -> 0  <= m ->  0 <= n + m
+proof =
+  coq proof {*
+  unfold basics._lt__equal_, basics._plus_.
+  unfold coq_builtins.bi__int_leq, coq_builtins.bi__int_plus. intros.
+  apply dec_IsTrue. apply Zplus_le_0_compat. exact (IsTrue_dec H).
+  exact (IsTrue_dec H0). Qed.
+  *}
+;;
+
+theorem one_pos : 0 <= 1
+proof =
+  coq proof {*
+    unfold basics._lt__equal_. unfold coq_builtins.bi__int_leq.
+    elim Z_le_dec. intro; simpl. auto with zarith. intro; simpl.
+    auto with zarith. Qed.
+  *}
+;;
+
 
 
 (** {3 Basic species definitions} *)
