@@ -124,7 +124,7 @@ species Indexed_set (D is Ordered_set_with_zero,
                    apply zenon_H3. apply refl_equal.
                    (* end of lemma zenon_L1_ *)
                    apply NNPP. intro zenon_G.
-                   generalize (abst_int_succ_lt match p1 with | Null => 0 | NonNull _ _ pp => (basics._plus_ (abst_length_poly pp) 1) end). zenon_intro zenon_H4.
+                   generalize (basics.int_succ_lt match p1 with | Null => 0 | NonNull _ _ pp => (basics._plus_ (abst_length_poly pp) 1) end). zenon_intro zenon_H4.
                    cut ((Is_true (basics._lt_ match p1 with | Null => 0 | NonNull _ _ pp => (basics._plus_ (abst_length_poly pp) 1) end (basics._plus_ match p1 with | Null => 0 | NonNull _ _ pp => (basics._plus_ (abst_length_poly pp) 1) end 1))) = (Is_true (basics._lt_ (abst_length_poly p1) (abst_length_poly (@ NonNull _p_C_T _p_D_T c1 d1 p1))))).
                    intro zenon_D_pnotp.
                    apply zenon_G.
