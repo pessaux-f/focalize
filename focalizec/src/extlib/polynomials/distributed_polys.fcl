@@ -664,7 +664,7 @@ proof =
          by property length_pair_left_right_lt
      <1>5 prove all c : Self * Self, 0 <= !length_pair (c)
           by property length_pair_measure
-     <1>e qed coq proof {* wf_qed *}
+     <1>e qed coq proof {*wf_qed*}
     ;
 
 
