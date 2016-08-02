@@ -860,13 +860,6 @@ proof =
     ;
 
 
-  let swap (c: distributed_representation (M,D) * distributed_representation (M, D)) : distributed_representation (M,D) * distributed_representation (M,D) =
-  match c with
-   | (x, y) ->  (y, x)
-  ;
-
-  logical let my_plus_commutes_prop (c: distributed_representation (M,D) * distributed_representation (M,D)) : prop =
-  equal(my_plus(c), my_plus(swap(c)));
 
 
 (*
@@ -1082,7 +1075,7 @@ Qed. *}
 
 proof of plus_commutes =
   <1>1 prove plus_commutes_prop(Null, Null)
-       by definition of plus, plus_commutes_prop, swap property equal_reflexive
+       by definition of plus, plus_commutes_prop property equal_reflexive
 
   <1>2 assume c1 : M,
        assume d1 : D,
