@@ -643,7 +643,7 @@ let subst_termination_proof ~current_unit c1 c2 proof =
   let new_desc =
     (match proof.Parsetree.ast_desc with
      | Parsetree.TP_structural _ -> proof.Parsetree.ast_desc
-     | Parsetree.TP_lexicographic facts ->
+     | Parsetree.TP_lexicographic _facts ->
          (* [Unsure] *) failwith "TODO substColl for lexico."
          (*
          let facts' = List.map (subst_fact ~current_unit c1 c2) facts in
