@@ -100,6 +100,46 @@ let is_recursive_call ~current_unit function_name argument_list expr_list
 
 
 
+(** ***************************************************************************
+    {b Descr}: Traverse a pattern and replace catch-alls by fresh variables.
+    This is needed to prevent Coq from complaining about *value* placeholders
+    for which it can't find a value. This only happen in the generated
+    termination theorems.
+
+    {b Visibility}: Not exported outside this module.
+ *************************************************************************** *)
+let name_catchalls pattern =
+  (* Counter to generate unique fresh variables in an expression. These
+     variables serve to name catch-all patterns. *)
+  let fresh_vars_cnt = ref 0 in
+  let rec __rec_name p =
+    match p.Parsetree.ast_desc with
+    | Parsetree.P_const _ | Parsetree.P_var _ -> p
+    | Parsetree.P_as (p, v) ->
+        { p with Parsetree.ast_desc = Parsetree.P_as((__rec_name p), v) }
+    | Parsetree.P_wild ->
+        incr fresh_vars_cnt ;
+        { p with Parsetree.ast_desc =
+            Parsetree.P_var
+              (Parsetree.Vlident ("__" ^ (string_of_int !fresh_vars_cnt))) }
+    | Parsetree.P_constr (cstr, p_list) ->
+        { p with Parsetree.ast_desc =
+            Parsetree.P_constr (cstr, (List.map __rec_name p_list)) }
+    | Parsetree.P_record lp_list ->
+        let lp_list' =
+          List.map (fun (i, pat) -> (i, (__rec_name pat))) lp_list in
+        { p with Parsetree.ast_desc = Parsetree.P_record lp_list' }
+    | Parsetree.P_tuple p_list ->
+        { p with Parsetree.ast_desc =
+            Parsetree.P_tuple (List.map __rec_name p_list) }
+    | Parsetree.P_paren p ->
+        { p with Parsetree.ast_desc = Parsetree.P_paren (__rec_name p) } in
+  (* Now really do the job. *)
+  fresh_vars_cnt := 0 ;
+  __rec_name pattern
+;;
+
+
 type typed_vname = (Parsetree.vname * Types.type_simple) ;;
 
 
@@ -208,9 +248,14 @@ let rec list_recursive_calls ~current_unit function_name argument_list
          list_recursive_calls
            ~current_unit function_name argument_list bindings matched_expr in
        (* Find the recursive calls in each expression, adding the proper
-          'pattern match' binding to the list of bindings. *)
+          'pattern match' binding to the list of bindings.
+          ATTENTION: if the pattern is a catch-all, it must be turned into
+          a fresh variable otherwise no quantification will be done for this
+          unnamed variable, hence in termination theorems Coq will complain
+          about a placeholder for which it is impossible to find a *value*. *)
        let list_recursive_calls_for_pattern (p, e) =
-         let new_bindings = (B_match (matched_expr, p)) :: bindings in
+         let p' = name_catchalls p in
+         let new_bindings = (B_match (matched_expr, p')) :: bindings in
          list_recursive_calls
            ~current_unit function_name argument_list new_bindings e in
        let list_recursive_calls_for_all_patterns =
