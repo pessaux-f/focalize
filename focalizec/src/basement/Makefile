@@ -26,7 +26,7 @@ BYT_OBJS=\
 include $(ROOT_DIR)/Makefile.common
 
 CAML_INCLUDES =
-CAML_FLAGS = -w A-4-9 -warn-error $(WARN_ERROR)
+CAML_FLAGS = -w A-4-9 -warn-error $(WARN_ERROR) -safe-string
 
 depend:
 	$(CAMLDEP) $(CAML_INCLUDES) $(BYT_OBJS:.cmo=.mli) $(BYT_OBJS:.cmo=.ml) > .depend

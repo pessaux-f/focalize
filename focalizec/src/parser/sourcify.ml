@@ -246,7 +246,7 @@ and pp_rep_type_def ppf = pp_ast pp_rep_type_def_desc ppf
 ;;
 
 let pp_rep_type_def_representation =
-  pp_ast 
+  pp_ast
     (fun ppf rep_type_def ->
       Format.fprintf ppf "@[<2>representation@ =@ %a@]"
         pp_rep_type_def_desc rep_type_def)
@@ -323,9 +323,9 @@ let pp_constant_desc ppf = function
       Format.fprintf ppf "%s" s
   | Parsetree.C_string s -> Format.fprintf ppf "\"%s\"" (String.escaped s)
   | Parsetree.C_char c ->
-      let tmp_s = " " in
-      tmp_s.[0] <- c ;
-      Format.fprintf ppf "%s" tmp_s
+      let tmp_s = Bytes.create 1 in
+      Bytes.unsafe_set tmp_s 0 c ;
+      Format.fprintf ppf "%s" (Bytes.to_string tmp_s)
 ;;
 
 let pp_constant = pp_ast pp_constant_desc

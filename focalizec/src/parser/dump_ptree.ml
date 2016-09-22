@@ -314,9 +314,9 @@ let pp_constant_desc ppf = function
   | Parsetree.C_bool s -> Format.fprintf ppf "@[<2>C_bool@ (%s)@]" s
   | Parsetree.C_string s -> Format.fprintf ppf "@[<2>C_string@ (%s)@]" s
   | Parsetree.C_char c ->
-      let tmp_s = " " in
-      tmp_s.[0] <- c;
-      Format.fprintf ppf "@[<2>C_char@ (%s)@]" tmp_s
+      let tmp_s = Bytes.create 1 in
+      Bytes.unsafe_set tmp_s 0 c ;
+      Format.fprintf ppf "@[<2>C_char@ (%s)@]" (Bytes.to_string tmp_s)
 ;;
 (* *********************************************************************** *)
 (* pp_constant : Format.formatter -> Parsetree.constant -> unit            *)

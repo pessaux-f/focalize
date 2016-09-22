@@ -427,7 +427,7 @@ let token_of_paren_uppercase_infix_symbol s =
 (** {3 Various auxiliaries to lex special tokens} *)
 
 (** {6 Lexing the external code tokens} *)
-let initial_external_code_buffer = String.create 256 ;;
+let initial_external_code_buffer = Bytes.create 256 ;;
 let external_code_buff = ref initial_external_code_buffer
 and external_code_index = ref 0
 ;;
@@ -438,24 +438,24 @@ let reset_external_code_buffer () =
 ;;
 
 let store_external_code_char c =
-  if !external_code_index >= String.length !external_code_buff then begin
-    let new_buff = String.create (String.length !external_code_buff * 2) in
-    String.blit !external_code_buff 0
-                new_buff 0 (String.length !external_code_buff);
+  if !external_code_index >= Bytes.length !external_code_buff then begin
+    let new_buff = Bytes.create (Bytes.length !external_code_buff * 2) in
+    Bytes.blit
+      !external_code_buff 0 new_buff 0 (Bytes.length !external_code_buff);
     external_code_buff := new_buff
   end;
-  String.unsafe_set !external_code_buff !external_code_index c;
+  Bytes.unsafe_set !external_code_buff !external_code_index c;
   incr external_code_index
 ;;
 
 let get_stored_external_code () =
-  let s = String.sub !external_code_buff 0 !external_code_index in
+  let s = Bytes.sub !external_code_buff 0 !external_code_index in
   external_code_buff := initial_external_code_buffer;
-  s
+  (Bytes.to_string s)
 ;;
 
 (** {6 Lexing the documentation tokens} *)
-let initial_documentation_buffer = String.create 256;;
+let initial_documentation_buffer = Bytes.create 256;;
 let documentation_buff = ref initial_documentation_buffer
 and documentation_index = ref 0
 ;;
@@ -466,24 +466,24 @@ let reset_documentation_buffer () =
 ;;
 
 let store_documentation_char c =
-  if !documentation_index >= String.length !documentation_buff then begin
-    let new_buff = String.create (String.length !documentation_buff * 2) in
-    String.blit !documentation_buff 0
-                new_buff 0 (String.length !documentation_buff);
+  if !documentation_index >= Bytes.length !documentation_buff then begin
+    let new_buff = Bytes.create (Bytes.length !documentation_buff * 2) in
+    Bytes.blit
+      !documentation_buff 0 new_buff 0 (Bytes.length !documentation_buff);
     documentation_buff := new_buff
   end;
-  String.unsafe_set !documentation_buff !documentation_index c;
+  Bytes.unsafe_set !documentation_buff !documentation_index c;
   incr documentation_index
 ;;
 
 let get_stored_documentation () =
-  let s = String.sub !documentation_buff 0 !documentation_index in
+  let s = Bytes.sub !documentation_buff 0 !documentation_index in
   documentation_buff := initial_documentation_buffer;
-  s
+  (Bytes.to_string s)
 ;;
 
 (** {6 Lexing the string tokens} *)
-let initial_string_buffer = String.create 256;;
+let initial_string_buffer = Bytes.create 256;;
 let string_buff = ref initial_string_buffer
 and string_index = ref 0
 ;;
@@ -494,24 +494,24 @@ let reset_string_buffer () =
 ;;
 
 let store_string_char c =
-  if !string_index >= String.length !string_buff then begin
-    let new_buff = String.create (String.length !string_buff * 2) in
-      String.blit !string_buff 0
-                  new_buff 0 (String.length !string_buff);
-      string_buff := new_buff
+  if !string_index >= Bytes.length !string_buff then begin
+    let new_buff = Bytes.create (Bytes.length !string_buff * 2) in
+    Bytes.blit
+      !string_buff 0 new_buff 0 (Bytes.length !string_buff);
+    string_buff := new_buff
   end;
-  String.unsafe_set !string_buff !string_index c;
+  Bytes.unsafe_set !string_buff !string_index c;
   incr string_index
 ;;
 
 let get_stored_string () =
-  let s = String.sub !string_buff 0 !string_index in
+  let s = Bytes.sub !string_buff 0 !string_index in
   string_buff := initial_string_buffer;
-  s
+  (Bytes.to_string s)
 ;;
 
 (** {6 Lexing the delimited identifier tokens} *)
-let initial_delimited_ident_buffer = String.create 256;;
+let initial_delimited_ident_buffer = Bytes.create 256;;
 let delimited_ident_buff = ref initial_delimited_ident_buffer
 and delimited_ident_index = ref 0
 ;;
@@ -522,20 +522,20 @@ let reset_delimited_ident_buffer () =
 ;;
 
 let store_delimited_ident_char c =
-  if !delimited_ident_index >= String.length !delimited_ident_buff then begin
-    let new_buff = String.create (String.length !delimited_ident_buff * 2) in
-    String.blit !delimited_ident_buff 0
-                new_buff 0 (String.length !delimited_ident_buff);
+  if !delimited_ident_index >= Bytes.length !delimited_ident_buff then begin
+    let new_buff = Bytes.create (Bytes.length !delimited_ident_buff * 2) in
+    Bytes.blit
+      !delimited_ident_buff 0 new_buff 0 (Bytes.length !delimited_ident_buff);
     delimited_ident_buff := new_buff
   end;
-  String.unsafe_set !delimited_ident_buff !delimited_ident_index c;
+  Bytes.unsafe_set !delimited_ident_buff !delimited_ident_index c;
   incr delimited_ident_index
 ;;
 
 let get_stored_delimited_ident () =
-  let s = String.sub !delimited_ident_buff 0 !delimited_ident_index in
+  let s = Bytes.sub !delimited_ident_buff 0 !delimited_ident_index in
   delimited_ident_buff := initial_delimited_ident_buffer;
-  s
+  (Bytes.to_string s)
 ;;
 
 let external_code_start_pos = ref None;;

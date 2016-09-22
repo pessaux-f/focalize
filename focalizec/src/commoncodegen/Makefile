@@ -24,7 +24,7 @@ BYT_OBJS =  misc_common.cmo\
 include $(ROOT_DIR)/Makefile.common
 
 CAML_INCLUDES = -I ../basement -I ../parser -I ../typing
-CAML_FLAGS = -w A-4-9 -warn-error $(WARN_ERROR)
+CAML_FLAGS = -w A-4-9 -warn-error $(WARN_ERROR) -safe-string
 
 depend:
 	$(CAMLDEP) $(CAML_INCLUDES) *.mli *.ml > ./.depend
