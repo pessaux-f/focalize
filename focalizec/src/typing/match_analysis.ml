@@ -360,7 +360,7 @@ let verify ~current_unit typing_env m_expr =
 (* ************************************************************************** *)
 (** {b Descr}: Search for pattern matching expressions in the AST.
 
-    {b Visibility}: Expored outside this module.                              *)
+    {b Visibility}: Exported outside this module.                             *)
 (* ************************************************************************** *)
 let rec verify_matchings ~current_unit typing_env stuff_to_compile =
   match stuff_to_compile with
