@@ -1,5 +1,5 @@
 open Own_types;;
-open Own_basics;;
+
 
 type species_name = string * string;;
                                  (** a couple of module name * species name *)
@@ -21,11 +21,11 @@ type myexpr =
   | MMeth of string option * string
   | MFun of string * typ option * myexpr
   | MVar of string * typ option
-  | MMatch of (myexpr * typ option) * (ident * string option list * myexpr) list
+  | MMatch of (myexpr * typ option) * (Own_basics.ident * string option list * myexpr) list
   | MInt of int
   | MString of string
   | MVarloc of bool * (string * typ option) * myexpr * myexpr
-  | MGlob_id of ident
+  | MGlob_id of Own_basics.ident
   | MCaml_def of string
 ;;
 
@@ -56,27 +56,26 @@ let expr_let_notyp s e1 e2 = MVarloc(false, (s, None),e1,e2);;
 let expr_seq t1 t2 b =
   if b then
 (*    Focal has the same evaluate strategy than Ocaml (ie: right to left) *)
-    expr_app (expr_glob (Prefix(None, "seq"))) [t2;t1]
-  else
-    expr_let_notyp "_unused_var" t1 t2;;
+    expr_app (expr_glob (Own_basics.Prefix (None, "seq"))) [t2;t1]
+  else expr_let_notyp "_unused_var" t1 t2;;
 
 let positif e = e;;
-let negatif e = expr_app (expr_glob focnot) [e];;
+let negatif e = expr_app (expr_glob Own_basics.focnot) [e];;
 
 let rec expr_of_caml_list l =
   match l with
-  | [] -> expr_glob focnil
-  | e::r -> expr_app (expr_glob foccons) [e;expr_of_caml_list r];;
+  | [] -> expr_glob Own_basics.focnil
+  | e::r -> expr_app (expr_glob Own_basics.foccons) [e;expr_of_caml_list r];;
 let expr_of_caml_couple f1 f2 (e1,e2) =
-  expr_app (expr_glob foccrp) [f1 e1; f2 e2];;
+  expr_app (expr_glob Own_basics.foccrp) [f1 e1; f2 e2];;
 let expr_of_caml_bool b =
-  expr_glob (if b then foctrue else focfalse);;
+  expr_glob (if b then Own_basics.foctrue else Own_basics.focfalse);;
 
 let rec expr_tuple_of_caml_list f l =
   match l with
-  | [] -> expr_basic focunit []
+  | [] -> expr_basic Own_basics.focunit []
   | n::[] -> f n
-  | n::r -> expr_basic foccrp [f n; expr_tuple_of_caml_list f r];;
+  | n::r -> expr_basic Own_basics.foccrp [f n; expr_tuple_of_caml_list f r];;
 
 let string_of_string_option t =
   match t with
@@ -85,16 +84,17 @@ let string_of_string_option t =
 
 let string_of_ident i =
   match i with
-  | Prefix(None, s) -> "#" ^ s
-  | Prefix(Some o, s) -> o ^ "#" ^ s
-  | Infix s ->s ;;
+  | Own_basics.Prefix (None, s) -> "#" ^ s
+  | Own_basics.Prefix (Some o, s) -> o ^ "#" ^ s
+  | Own_basics.Infix s -> s
+;;
 
 (** Convert a term of type myexpr to a string *)
 let  string_of_myexpr =
   let rec aux e  =
     match e with
     | MGlob_id s -> string_of_ident s
-    | MVar (s, _) -> if s = focself then "" else s
+    | MVar (s, _) -> if s = Own_basics.focself then "" else s
     | MInt i -> string_of_int i
     | MString s -> "\"" ^ s ^ "\""
     | MFun (s, Some t, e) ->
@@ -105,16 +105,17 @@ let  string_of_myexpr =
         "let " ^ (if b then "rec " else "") ^ s ^ " = " ^ aux e1 ^ " in " ^
         aux e2
     | MIfte (e1, e2, e3) ->
-        "if " ^ aux e1 ^ " then " ^ aux e2 ^ " else " ^ aux e3 
+        "if " ^ aux e1 ^ " then " ^ aux e2 ^ " else " ^ aux e3
     | MApp (e1, _, l1) ->
-        aux e1 ^ (if l1 = [] then "" else to_args (fun (e, _t) -> aux e) l1)
+        aux e1 ^ (if l1 = [] then ""
+                  else Own_basics.to_args (fun (e, _t) -> aux e) l1)
     | MMeth (sn, f) -> (string_of_string_option sn) ^ "!" ^ f
     | MCaml_def s -> "caml " ^ s
     | MMatch ((e, _) ,case_l) ->
         "match " ^ aux e ^ "with " ^
         List.fold_right
-          (fun (s, l, e) se -> " | #" ^ ident_name s ^
-            to_args (function None -> "_" | Some s -> s) l ^
+          (fun (s, l, e) se -> " | #" ^ Own_basics.ident_name s ^
+            Own_basics.to_args (function None -> "_" | Some s -> s) l ^
             " -> " ^ aux e ^ se)
           case_l "" in
   aux
@@ -134,9 +135,9 @@ let string_of_string_option t =
 
 let dbg_string_ident s =
   match s with
-  | Prefix(None, s) -> "Prefix(None, " ^ s  ^ ")"
-  | Prefix(Some e, s) -> "Prefix(Some(" ^ e ^ "), " ^ s  ^ ")"
-  | Infix s -> "Infix(" ^ s ^ ")"
+  | Own_basics.Prefix (None, s) -> "Prefix(None, " ^ s  ^ ")"
+  | Own_basics.Prefix (Some e, s) -> "Prefix(Some(" ^ e ^ "), " ^ s  ^ ")"
+  | Own_basics.Infix s -> "Infix(" ^ s ^ ")"
 ;;
 
 (** Convert a term of type myexpr to a string *)
@@ -151,16 +152,18 @@ let dbg_string_myexpr =
         "MFun(" ^ s ^ ", " ^ string_of_typ_option t ^ ", " ^ aux e ^ ")"
 (*  | MFun (s,None,e) -> "fun (" ^ s ^ ") -> " ^ aux e *)
     | MVarloc (b, (s,t),e1,e2) ->
-        "MVatloc(" ^ string_of_bool b ^ ", (" ^
+        "MVatloc(" ^ Own_basics.string_of_bool b ^ ", (" ^
         s ^ ", " ^ string_of_typ_option t ^ ")," ^
         aux e1 ^ ", " ^ aux e2 ^ ")"
-    | MIfte   (e1, e2, e3) -> 
+    | MIfte   (e1, e2, e3) ->
         "MIfte(" ^ aux e1 ^ ", " ^ aux e2 ^ ", " ^ aux e3  ^ ")"
-    | MApp (e1,_, l1) -> 
+    | MApp (e1,_, l1) ->
         "MApp(" ^
         aux e1 ^ ", " ^
         (if l1 =[] then ""
-        else to_args (fun (e, _t) -> aux e ^ " : " ^ string_of_typ _t) l1) ^
+         else
+           Own_basics.to_args
+             (fun (e, _t) -> aux e ^ " : " ^ string_of_typ _t) l1) ^
         ")"
     | MMeth (sn, f) ->
         "MMeth(" ^ (string_of_string_option sn) ^ ", " ^ f ^ ")"
@@ -168,8 +171,8 @@ let dbg_string_myexpr =
     | MMatch((e, t), case_l) ->
         "MMatch((" ^ aux e ^ ", " ^ string_of_typ_option t ^ "), " ^
         List.fold_right
-          (fun (s,l,e) se -> " | #" ^ ident_name s ^
-            to_args string_of_string_option l ^
+          (fun (s,l,e) se -> " | #" ^ Own_basics.ident_name s ^
+            Own_basics.to_args string_of_string_option l ^
             " -> " ^ aux e ^ se)
           case_l "" ^ ")" in
   aux
@@ -230,7 +233,7 @@ type parameters_expect =
                                                       type:
                                                       PrmExpEnt(p1,(list,[int])) for
                                                       p1 in list(int)
-                                                      
+
                                                       p1 in list(list(int)) *)
 
 let create_prmexpcoll s p= PrmExpColl(s, p);;
@@ -242,7 +245,7 @@ let string_of_parameters_expect =
   function
     | PrmExpColl(p,(s,lp)) ->
         p ^ " is " ^ s ^
-         (if lp = [] then "" else to_args (fun x -> x) lp)
+         (if lp = [] then "" else Own_basics.to_args (fun x -> x) lp)
            (*"(" ^ List.fold_right (fun e s -> e ^ "," ^ s)  lp ")" *)
     | PrmExpEnt (p,t) ->  p ^ " in " ^ string_of_typ t;;
 

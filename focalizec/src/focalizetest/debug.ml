@@ -10,7 +10,8 @@ let extract_vname v =
   | Vuident v -> v
   | Vpident v -> v
   | Viident v -> v
-  | Vqident v -> v;;
+  | Vqident v -> v
+;;
 
 let extract_qname v =
   match v with
