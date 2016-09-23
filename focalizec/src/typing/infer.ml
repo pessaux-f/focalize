@@ -5143,7 +5143,7 @@ let typecheck_regular_type_def_body ctx ~is_repr_of_external env type_name
   | Parsetree.RTDB_record labels ->
       (* First, we sort the label list in order to get a canonical
          representation of a record. *)
-      let labels = Sort.list (fun (n1, _) (n2, _) -> n1 <= n2) labels in
+      let labels = List.sort (fun (n1, _) (n2, _) -> compare n1 n2) labels in
       (* Now typecheck the fields of the record. *)
       let fields_descriptions =
         List.map
