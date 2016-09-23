@@ -55,32 +55,36 @@ let expr_let s t e1 e2 = MVarloc(false, (s, Some t),e1,e2);;
 let expr_let_notyp s e1 e2 = MVarloc(false, (s, None),e1,e2);;
 let expr_seq t1 t2 b =
   if b then
-(*    Focal has the same evaluate strategy than Ocaml (ie: right to left) *)
+    (* Focal has the same evaluate strategy than Ocaml (ie: right to left) *)
     expr_app (expr_glob (Own_basics.Prefix (None, "seq"))) [t2;t1]
-  else expr_let_notyp "_unused_var" t1 t2;;
+  else expr_let_notyp "_unused_var" t1 t2
+;;
 
-let positif e = e;;
-let negatif e = expr_app (expr_glob Own_basics.focnot) [e];;
+let positif e = e ;;
+let negatif e = expr_app (expr_glob Own_basics.focnot) [e] ;;
 
 let rec expr_of_caml_list l =
   match l with
   | [] -> expr_glob Own_basics.focnil
-  | e::r -> expr_app (expr_glob Own_basics.foccons) [e;expr_of_caml_list r];;
+  | e::r -> expr_app (expr_glob Own_basics.foccons) [e;expr_of_caml_list r] ;;
+
 let expr_of_caml_couple f1 f2 (e1,e2) =
-  expr_app (expr_glob Own_basics.foccrp) [f1 e1; f2 e2];;
+  expr_app (expr_glob Own_basics.foccrp) [f1 e1; f2 e2] ;;
+
 let expr_of_caml_bool b =
-  expr_glob (if b then Own_basics.foctrue else Own_basics.focfalse);;
+  expr_glob (if b then Own_basics.foctrue else Own_basics.focfalse) ;;
 
 let rec expr_tuple_of_caml_list f l =
   match l with
   | [] -> expr_basic Own_basics.focunit []
-  | n::[] -> f n
-  | n::r -> expr_basic Own_basics.foccrp [f n; expr_tuple_of_caml_list f r];;
+  | n :: [] -> f n
+  | n :: r -> expr_basic Own_basics.foccrp [f n; expr_tuple_of_caml_list f r];;
 
 let string_of_string_option t =
   match t with
   | None -> ""
-  | Some e -> e;;
+  | Some e -> e
+;;
 
 let string_of_ident i =
   match i with
@@ -123,15 +127,11 @@ let  string_of_myexpr =
 
 
 let string_of_an_option f t =
-  match t with
-  | None -> "None"
-  | Some t -> "Some(" ^ f t ^ ")";;
+  match t with None -> "None" | Some t -> "Some(" ^ f t ^ ")" ;;
 
-let string_of_typ_option t =
-  string_of_an_option string_of_typ t;;
+let string_of_typ_option t = string_of_an_option string_of_typ t ;;
 
-let string_of_string_option t =
-  string_of_an_option (fun e -> e) t;;
+let string_of_string_option t = string_of_an_option (fun e -> e) t ;;
 
 let dbg_string_ident s =
   match s with
@@ -181,12 +181,12 @@ let dbg_string_myexpr =
 
 
 (* The type defining a method *)
-type a_method =
-    {methname : string;
-     methtyp  : typ;
-     methdef  : myexpr;
-     methrec  : bool
-    };;
+type a_method = {
+  methname : string ;
+  methtyp  : typ ;
+  methdef  : myexpr ;
+  methrec  : bool
+} ;;
 
 type methods =
   | Unique of a_method
@@ -195,7 +195,7 @@ type methods =
 
 (* For creating a method *)
 let meth_create s typ def is_rec =
-  {methname=s; methtyp=typ; methdef=def; methrec=is_rec };; 
+  {methname=s; methtyp=typ; methdef=def; methrec=is_rec } ;;
 
 
 let meths_concat m1 m2 =
@@ -209,12 +209,13 @@ let meths_concat m1 m2 =
           aux cumul r
         else
           aux (e::cumul) r in
-   List.rev(aux (aux [] m1) m2);;
+  List.rev(aux (aux [] m1) m2)
+;;
 
-let ( @@ ) = meths_concat;;
+let ( @@ ) = meths_concat ;;
 
 (** We have three types for parameters:
-    - parameters_expect is used when we extract the parameters from 
+    - parameters_expect is used when we extract the parameters from
       a species in the environment
     - parameters_instance is the type used when the tester specify the parameter
       he wants to instanciate.

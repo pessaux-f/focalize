@@ -1,10 +1,10 @@
-open Parsetree;;
-module PtU = Parsetree_utils;;
+open Parsetree ;;
+module PtU = Parsetree_utils ;;
 
-open Own_prop;;
-open Own_types;;
-open Own_expr;;
-open Own_basics;;
+open Own_prop ;;
+open Own_types ;;
+open Own_expr ;;
+
 
 
 exception No_module_opened;;
@@ -85,15 +85,12 @@ let extract_vname v =
 
 let convert_vname_m m v =
   match v with
-  | Vlident v -> Prefix(m, v)
+  | Vlident v -> Own_basics.Prefix(m, v)
   | Vuident v ->
-      if v = "::" then
-        Infix "::"
-      else
-        Prefix(m, v)
-  | Vpident v -> Prefix(m, v)
-  | Viident v -> Infix v
-  | Vqident v -> Prefix(m, v);;
+      if v = "::" then Own_basics.Infix "::" else Own_basics.Prefix (m, v)
+  | Vpident v -> Own_basics.Prefix (m, v)
+  | Viident v -> Own_basics.Infix v
+  | Vqident v -> Own_basics.Prefix (m, v) ;;
 
 let convert_vname v = convert_vname_m None v;;
 
@@ -171,10 +168,10 @@ let rec string_of_type_simple =
   let fvar () = "Var" in
   let farrow t1 t2 = aux t1 ^ " -> " ^ aux t2 in
   let ftuple l =
-    "(" ^ add_string_args l ", " aux ^ ")" in
-  let fsum l = "{" ^ add_string_args l ", " aux ^ "}" in 
+    "(" ^ Own_basics.add_string_args l ", " aux ^ ")" in
+  let fsum l = "{" ^ Own_basics.add_string_args l ", " aux ^ "}" in 
   let fconstruct _ tn args =
-    tn ^ "(" ^ add_string_args args ", " aux ^ ")" in
+    tn ^ "(" ^ Own_basics.add_string_args args ", " aux ^ ")" in
   let frep () = "Self" in
   let fprop () = "prop" in
   let fspecrep _s1 s2 = s2 in
@@ -191,7 +188,7 @@ let rec typ_of_type_simple t =
   let fsum _l = failwith "typ_of_type_simple: sum" in
   let fconstruct m tn args = if args = [] then TAtom(Some m, tn) else
                            TPrm(Some m, tn, List.map typ_of_type_simple args) in
-  let frep () = TAtom(None, focself) in
+  let frep () = TAtom(None, Own_basics.focself) in
   let fprop () = TProp in
   let fspecrep _s1 s2 = TSpecPrm(s2) in
   Types.extract_type_simple fvar farrow ftuple fsum fconstruct fprop frep fspecrep t;;
@@ -532,17 +529,19 @@ let focalize_get_all_constructors =
   fun m ->
   let all_modules = focalize_get_all_open m in
   List.fold_left
-      (fun s e ->
-        let opened = open_module e in
-        let constr = Env.get_constructor_list opened in
-         List.map (get_constr_def opened) constr @ s
-      ) [] all_modules;;
+    (fun s e ->
+      let opened = open_module e in
+      let constr = Env.get_constructor_list opened in
+      List.map (get_constr_def opened) constr @ s)
+    [] all_modules
+;;
 
-let is_constructor (i : ident) =
-  let c = ident_name i in
-  List.mem c (List.map (fun (e, _) -> extract_vname e)
-                     (focalize_get_all_constructors ())
-             );;
+let is_constructor (i : Own_basics.ident) =
+  let c = Own_basics.ident_name i in
+  List.mem c
+    (List.map
+       (fun (e, _) -> extract_vname e) (focalize_get_all_constructors ()))
+;;
 
 (** Get the constructors of a special type *)
 let get_constructors_of_a_type t =
@@ -794,27 +793,27 @@ let rec myexpr_of_texpr m_name bv texpr : Own_expr.myexpr =
       let n = match s.ast_desc with CI i -> i in
       let id =
         match n.ast_desc with
-        | I_global (Vname v) 
+        | I_global (Vname v)
         | I_local v -> MGlob_id (convert_vname v)
         | I_global (Qualified(m, v)) ->
             MGlob_id(convert_vname_m (Some m) v) in
       if e_l = [] then
         id
       else
-        let args = List.map (expr_typ bv) e_l in 
+        let args = List.map (expr_typ bv) e_l in
         let res = MApp(id, None (* Some (get_typ s) *), args) in
           res
   | E_const { ast_desc = C_bool s } ->
     ( match s with
-     | "true" -> expr_glob foctrue
-     | "false" -> expr_glob focfalse
+     | "true" -> expr_glob Own_basics.foctrue
+     | "false" -> expr_glob Own_basics.focfalse
      | _ -> failwith "myexpr_of_texpr: bad bool"
     )
   | E_const { ast_desc = C_int r } -> MInt (int_of_string r)
   | E_const { ast_desc = C_string s } -> MString s
   | E_var x ->
      (match x.ast_desc with
-      | EI_local vn -> 
+      | EI_local vn ->
           if List.mem (extract_vname vn) bv then
             expr_var_typ (extract_vname vn) (get_typ x)
           else
@@ -870,7 +869,8 @@ let rec myexpr_of_texpr m_name bv texpr : Own_expr.myexpr =
   | E_record _ -> failwith "myexpr_of_texpr: record"
   | E_record_access _ -> failwith "myexpr_of_texpr: record_access"
   | E_record_with _ -> failwith "myexpr_of_texpr: record_with"
-  | E_tuple([e1;e2]) -> MApp(expr_glob foccrp, None, [expr_typ bv e1; expr_typ bv e2])
+  | E_tuple([e1;e2]) ->
+      MApp(expr_glob Own_basics.foccrp, None, [expr_typ bv e1; expr_typ bv e2])
   | E_tuple(_) -> failwith "myexpr_of_texpr: e_tuple"
   | E_external(_) -> failwith "myexpr_of_texpr: e_external"
   | E_paren(e) -> aux bv e

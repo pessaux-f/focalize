@@ -19,7 +19,7 @@ let depends =
     else
       match typ with
       | TAtom (m, t) -> (
-          try 
+          try
             let types_inside =
               List.fold_left
                 (fun s (_,t) -> t ++ s)
