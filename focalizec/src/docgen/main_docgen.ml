@@ -6,9 +6,10 @@
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*                                                                     *)
-(*                               LIP6  --  INRIA Rocquencourt          *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech       *)
 (*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                *)
+(*            2012 - ... ENSTA ParisTech                               *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
@@ -43,133 +44,6 @@ let gen_doc_foc_informations out_fmt name_opt math_opt latex_opt comments =
 
 
 
-let gen_doc_species_expr out_fmt ~current_unit species_expr =
-  (* ***************************************************************** *)
-  (* Just a local recursive function to go inside the paren expression
-     when generating the XML for species parameters expressions.       *)
-  (* ***************************************************************** *)
-  let rec rec_gen_species_param_expr e =
-    match e.Parsetree.ast_desc with
-     | Parsetree.E_self ->
-         Format.fprintf out_fmt "<foc:param>Self</foc:param>@\n"
-     | Parsetree.E_constr (cstr_expr, []) ->
-         (begin
-         let Parsetree.CI glob_ident = cstr_expr.Parsetree.ast_desc in
-         match glob_ident.Parsetree.ast_desc with
-          | Parsetree.I_local vn | Parsetree.I_global (Parsetree.Vname vn) ->
-              Format.fprintf out_fmt "<foc:param>%a</foc:param>@\n"
-                Utils_docgen.pp_xml_vname vn
-          | Parsetree.I_global (Parsetree.Qualified (mod_name, vn)) ->
-              Format.fprintf out_fmt
-                "<foc:param infile=\"%s\">%a</foc:param>@\n"
-                mod_name Utils_docgen.pp_xml_vname vn
-         end)
-     | Parsetree.E_var ident ->
-         (begin
-         (* To handle the case of "IN" parameters names. They must be a simple
-            identifier, i.e. parsed as a EI_local. *)
-         match ident.Parsetree.ast_desc with
-          | Parsetree.EI_local vname ->
-               Format.fprintf out_fmt "<foc:param>%a</foc:param>@\n"
-                Utils_docgen.pp_xml_vname vname
-          | _ -> assert false
-         end)
-     | Parsetree.E_paren e' -> rec_gen_species_param_expr e'
-     | _ -> assert false in
-  (* **************** *)
-  (* Now, do the job. *)
-  let species_expr_desc = species_expr.Parsetree.ast_desc in
-  let (infile, ident_vname) =
-    Utils_docgen.get_in_file_and_name_from_ident
-      ~current_unit species_expr_desc.Parsetree.se_name in
-  match species_expr_desc.Parsetree.se_params with
-   | [] ->
-       (begin
-       (* order = "high" because the atom represents a species. *)
-       Format.fprintf out_fmt "<foc:atom order=\"high\"";
-       if infile <> "" then
-         Format.fprintf out_fmt " infile=\"%s\"" infile;
-       Format.fprintf out_fmt ">%a</foc:atom>@\n"
-         Utils_docgen.pp_xml_vname ident_vname
-       end)
-   | params ->
-       (begin
-       Format.fprintf out_fmt "@[<h 2><foc:app>@\n";
-       Format.fprintf out_fmt "<foc:foc-name";
-       if infile <> "" then
-         Format.fprintf out_fmt " infile=\"%s\"" infile;
-       Format.fprintf out_fmt ">%a</foc:foc-name>@\n"
-         Utils_docgen.pp_xml_vname ident_vname;
-       List.iter
-         (fun species_param ->
-           let Parsetree.SP expr = species_param.Parsetree.ast_desc in
-           rec_gen_species_param_expr expr)
-         params;
-       Format.fprintf out_fmt "@]</foc:app>@\n"
-       end)
-;;
-
-
-
-let gen_doc_inherits out_fmt ~current_unit species_def =
-  let species_def_descr = species_def.Parsetree.ast_desc in
-  if species_def_descr.Parsetree.sd_inherits.Parsetree.ast_desc <> [] then
-    (begin
-    (* ************************************ *)
-    (* Now generate the "inherits" clauses. *)
-    List.iter
-      (fun spe_expr ->
-        Format.fprintf out_fmt "@[<h 2><foc:inherits>@\n";
-        gen_doc_species_expr out_fmt ~current_unit spe_expr;
-        Format.fprintf out_fmt "@]</foc:inherits>@\n")
-      species_def_descr.Parsetree.sd_inherits.Parsetree.ast_desc
-    end)
-;;
-
-
-
-(* ********************************************************************** *)
-(** {b Descr}: Emits the XML code for species parameters declaration in a
-    species definition.
-
-    {b Rem} : Not exported outside this module.                           *)
-(* ********************************************************************** *)
-let gen_doc_parameters out_fmt ~current_unit params =
-  List.iter
-    (fun (p_vname, p_kind) ->
-      Format.fprintf out_fmt "@[<h 2><foc:parameter kind=\"";
-      (match p_kind.Parsetree.ast_desc with
-       | Parsetree.SPT_in in_ident ->
-           let (infile, ident_vname) =
-             Utils_docgen.get_in_file_and_name_from_ident
-               ~current_unit in_ident in
-           Format.fprintf out_fmt "entity\">@\n";
-           Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
-             Utils_docgen.pp_xml_vname p_vname;
-           Format.fprintf out_fmt "@[<h 2><foc:type>@\n";
-           (* order = "high" because the atom represents a species. *)
-           Format.fprintf out_fmt
-             "<foc:atom order=\"high\" infile=\"%s\">%a</foc:atom>@\n"
-             infile Utils_docgen.pp_xml_vname ident_vname;
-           Format.fprintf out_fmt "@]</foc:type>@\n"
-       | Parsetree.SPT_is species_expr ->
-           Format.fprintf out_fmt "collection\">@\n";
-           Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
-             Utils_docgen.pp_xml_vname p_vname;
-           Format.fprintf out_fmt "@[<h 2><foc:type>@\n";
-           gen_doc_species_expr out_fmt ~current_unit species_expr;
-           Format.fprintf out_fmt "@]</foc:type>@\n");
-      (* <foc:informations>. The comments and other informative stuff. *)
-      let (_, _, i_descrip, i_mathml, i_latex, i_other) =
-        Utils_docgen.extract_tagged_info_from_annotation
-          p_kind.Parsetree.ast_annot in
-      gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other;
-      Format.fprintf out_fmt "@]</foc:parameter>@\n")
-    params
-;;
-
-
-
 (* ************************************************************************** *)
 (** {b Descr}: Emits XML code for a [simple_type].
 
@@ -192,6 +66,30 @@ let gen_doc_type_variable out_fmt ty_var =
   Format.fprintf out_fmt "@[<h 2><foc:type>@\n" ;
   Types.pp_type_variable_to_xml out_fmt ty_var ;
   Format.fprintf out_fmt "@]</foc:type>@\n"
+;;
+
+
+
+(* ********************************************** *)
+(* Format.formatter -> Parsetree.constant -> unit *)
+(** {b Descr}: Emits the XML code for constants.
+
+    {b Rem}: Not exported outside this modole.    *)
+(* ********************************************** *)
+let gen_doc_constant out_fmt cst =
+  match cst.Parsetree.ast_desc with
+   | Parsetree.C_int s ->
+       Format.fprintf out_fmt "<foc:int val=\"%s\"></foc:int>@\n" s
+   | Parsetree.C_float s ->
+       Format.fprintf out_fmt "<foc:float val=\"%s\"></foc:float>@\n" s
+   | Parsetree.C_bool s ->
+       Format.fprintf out_fmt "<foc:bool val=\"%s\"></foc:bool>@\n" s
+   | Parsetree.C_string s ->
+       Format.fprintf out_fmt "<foc:string val=\"%s\"></foc:string>@\n"
+         (Utils_docgen.xmlify_string s)
+   | Parsetree.C_char c ->
+       Format.fprintf out_fmt "<foc:char val=\"%s\"></foc:char>@\n"
+         (Utils_docgen.xmlify_string (Char.escaped c))
 ;;
 
 
@@ -307,58 +205,6 @@ let gen_doc_expr_ident out_fmt env id =
        if symbol_markup_open then
          Format.fprintf out_fmt "@]</foc:symbol>@\n"
        end)
-;;
-
-
-
-(* **************************************************** *)
-(** {b Descr}: Emits XML code for a [Env.from_history].
-
-    {b Rem}: Not exported outside this module.          *)
-(* **************************************************** *)
-let gen_doc_history out_fmt from_hist =
-  (* foc:initial-apparition. The species where the field was declared or
-     defined for the first time along the inheritance tree without being
-     re-defined. *)
-  Format.fprintf out_fmt "@[<h 2><foc:history>@\n";
-  let (mod_name, spe_name) = from_hist.Env.fh_initial_apparition in
-  Format.fprintf out_fmt
-    "<foc:initial-apparition infile=\"%s\">%a</foc:initial-apparition>@\n"
-    mod_name Utils_docgen.pp_xml_vname spe_name;
-  (* foc:comes-from. The latest species from where we get the field by
-     inheritance along the inheritance tree. I.e. the closest parent providing
-     us the field. *)
-  let (come_from_mod_name, come_from_spe_name)  =
-    (match from_hist.Env.fh_inherited_along with
-     | [] -> from_hist.Env.fh_initial_apparition
-     | (host, _, _) :: _ -> host) in
-  Format.fprintf out_fmt "<foc:comes-from infile=\"%s\">%a</foc:comes-from>@\n"
-    come_from_mod_name Utils_docgen.pp_xml_vname come_from_spe_name;
-  Format.fprintf out_fmt "@]</foc:history>@\n"
-;;
-
-
-
-(* ********************************************** *)
-(* Format.formatter -> Parsetree.constant -> unit *)
-(** {b Descr}: Emits the XML code for constants.
-
-    {b Rem}: Not exported outside this modole.    *)
-(* ********************************************** *)
-let gen_doc_constant out_fmt cst =
-  match cst.Parsetree.ast_desc with
-   | Parsetree.C_int s ->
-       Format.fprintf out_fmt "<foc:int val=\"%s\"></foc:int>@\n" s
-   | Parsetree.C_float s ->
-       Format.fprintf out_fmt "<foc:float val=\"%s\"></foc:float>@\n" s
-   | Parsetree.C_bool s ->
-       Format.fprintf out_fmt "<foc:bool val=\"%s\"></foc:bool>@\n" s
-   | Parsetree.C_string s ->
-       Format.fprintf out_fmt "<foc:string val=\"%s\"></foc:string>@\n"
-         (Utils_docgen.xmlify_string s)
-   | Parsetree.C_char c ->
-       Format.fprintf out_fmt "<foc:char val=\"%s\"></foc:char>@\n"
-         (Utils_docgen.xmlify_string (Char.escaped c))
 ;;
 
 
@@ -530,6 +376,164 @@ and gen_doc_expression out_fmt env initial_expression =
      | _ -> (* TODO. *) ()
  in
   rec_gen initial_expression
+;;
+
+
+
+let gen_doc_species_expr out_fmt env ~current_unit species_expr =
+  (* ***************************************************************** *)
+  (* Just a local recursive function to go inside the paren expression
+     when generating the XML for species parameters expressions.       *)
+  (* ***************************************************************** *)
+  let rec rec_gen_species_param_expr e =
+    match e.Parsetree.ast_desc with
+     | Parsetree.E_self ->
+         Format.fprintf out_fmt "<foc:param>Self</foc:param>@\n"
+     | Parsetree.E_constr (cstr_expr, []) ->
+         (begin
+         let Parsetree.CI glob_ident = cstr_expr.Parsetree.ast_desc in
+         match glob_ident.Parsetree.ast_desc with
+          | Parsetree.I_local vn | Parsetree.I_global (Parsetree.Vname vn) ->
+              Format.fprintf out_fmt "<foc:param>%a</foc:param>@\n"
+                Utils_docgen.pp_xml_vname vn
+          | Parsetree.I_global (Parsetree.Qualified (mod_name, vn)) ->
+              Format.fprintf out_fmt
+                "<foc:param infile=\"%s\">%a</foc:param>@\n"
+                mod_name Utils_docgen.pp_xml_vname vn
+         end)
+     | Parsetree.E_var ident ->
+         (begin
+         (* To handle the case of "IN" parameters names. They must be a simple
+            identifier, i.e. parsed as a EI_local. *)
+         match ident.Parsetree.ast_desc with
+          | Parsetree.EI_local vname ->
+               Format.fprintf out_fmt "<foc:param>%a</foc:param>@\n"
+                Utils_docgen.pp_xml_vname vname
+          | _ -> assert false
+         end)
+     | Parsetree.E_paren e' -> rec_gen_species_param_expr e'
+     | _ ->
+         (* Other cases represent expressions used to instantiate an entity
+            parameter. *)
+          gen_doc_expression out_fmt env e in
+  (* **************** *)
+  (* Now, do the job. *)
+  let species_expr_desc = species_expr.Parsetree.ast_desc in
+  let (infile, ident_vname) =
+    Utils_docgen.get_in_file_and_name_from_ident
+      ~current_unit species_expr_desc.Parsetree.se_name in
+  match species_expr_desc.Parsetree.se_params with
+   | [] ->
+       (begin
+       (* order = "high" because the atom represents a species. *)
+       Format.fprintf out_fmt "<foc:atom order=\"high\"";
+       if infile <> "" then
+         Format.fprintf out_fmt " infile=\"%s\"" infile;
+       Format.fprintf out_fmt ">%a</foc:atom>@\n"
+         Utils_docgen.pp_xml_vname ident_vname
+       end)
+   | params ->
+       (begin
+       Format.fprintf out_fmt "@[<h 2><foc:app>@\n";
+       Format.fprintf out_fmt "<foc:foc-name";
+       if infile <> "" then
+         Format.fprintf out_fmt " infile=\"%s\"" infile;
+       Format.fprintf out_fmt ">%a</foc:foc-name>@\n"
+         Utils_docgen.pp_xml_vname ident_vname;
+       List.iter
+         (fun species_param ->
+           let Parsetree.SP expr = species_param.Parsetree.ast_desc in
+           rec_gen_species_param_expr expr)
+         params;
+       Format.fprintf out_fmt "@]</foc:app>@\n"
+       end)
+;;
+
+
+
+let gen_doc_inherits out_fmt env ~current_unit species_def =
+  let species_def_descr = species_def.Parsetree.ast_desc in
+  if species_def_descr.Parsetree.sd_inherits.Parsetree.ast_desc <> [] then
+    (begin
+    (* ************************************ *)
+    (* Now generate the "inherits" clauses. *)
+    List.iter
+      (fun spe_expr ->
+        Format.fprintf out_fmt "@[<h 2><foc:inherits>@\n";
+        gen_doc_species_expr out_fmt env ~current_unit spe_expr;
+        Format.fprintf out_fmt "@]</foc:inherits>@\n")
+      species_def_descr.Parsetree.sd_inherits.Parsetree.ast_desc
+    end)
+;;
+
+
+
+(* ********************************************************************** *)
+(** {b Descr}: Emits the XML code for species parameters declaration in a
+    species definition.
+
+    {b Rem} : Not exported outside this module.                           *)
+(* ********************************************************************** *)
+let gen_doc_parameters out_fmt env ~current_unit params =
+  List.iter
+    (fun (p_vname, p_kind) ->
+      Format.fprintf out_fmt "@[<h 2><foc:parameter kind=\"";
+      (match p_kind.Parsetree.ast_desc with
+       | Parsetree.SPT_in in_ident ->
+           let (infile, ident_vname) =
+             Utils_docgen.get_in_file_and_name_from_ident
+               ~current_unit in_ident in
+           Format.fprintf out_fmt "entity\">@\n";
+           Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+             Utils_docgen.pp_xml_vname p_vname;
+           Format.fprintf out_fmt "@[<h 2><foc:type>@\n";
+           (* order = "high" because the atom represents a species. *)
+           Format.fprintf out_fmt
+             "<foc:atom order=\"high\" infile=\"%s\">%a</foc:atom>@\n"
+             infile Utils_docgen.pp_xml_vname ident_vname;
+           Format.fprintf out_fmt "@]</foc:type>@\n"
+       | Parsetree.SPT_is species_expr ->
+           Format.fprintf out_fmt "collection\">@\n";
+           Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+             Utils_docgen.pp_xml_vname p_vname;
+           Format.fprintf out_fmt "@[<h 2><foc:type>@\n";
+           gen_doc_species_expr out_fmt env ~current_unit species_expr;
+           Format.fprintf out_fmt "@]</foc:type>@\n");
+      (* <foc:informations>. The comments and other informative stuff. *)
+      let (_, _, i_descrip, i_mathml, i_latex, i_other) =
+        Utils_docgen.extract_tagged_info_from_annotation
+          p_kind.Parsetree.ast_annot in
+      gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other;
+      Format.fprintf out_fmt "@]</foc:parameter>@\n")
+    params
+;;
+
+
+
+(* **************************************************** *)
+(** {b Descr}: Emits XML code for a [Env.from_history].
+
+    {b Rem}: Not exported outside this module.          *)
+(* **************************************************** *)
+let gen_doc_history out_fmt from_hist =
+  (* foc:initial-apparition. The species where the field was declared or
+     defined for the first time along the inheritance tree without being
+     re-defined. *)
+  Format.fprintf out_fmt "@[<h 2><foc:history>@\n";
+  let (mod_name, spe_name) = from_hist.Env.fh_initial_apparition in
+  Format.fprintf out_fmt
+    "<foc:initial-apparition infile=\"%s\">%a</foc:initial-apparition>@\n"
+    mod_name Utils_docgen.pp_xml_vname spe_name;
+  (* foc:comes-from. The latest species from where we get the field by
+     inheritance along the inheritance tree. I.e. the closest parent providing
+     us the field. *)
+  let (come_from_mod_name, come_from_spe_name)  =
+    (match from_hist.Env.fh_inherited_along with
+     | [] -> from_hist.Env.fh_initial_apparition
+     | (host, _, _) :: _ -> host) in
+  Format.fprintf out_fmt "<foc:comes-from infile=\"%s\">%a</foc:comes-from>@\n"
+    come_from_mod_name Utils_docgen.pp_xml_vname come_from_spe_name;
+  Format.fprintf out_fmt "@]</foc:history>@\n"
 ;;
 
 
@@ -775,9 +779,10 @@ let gen_doc_species out_fmt env ~current_unit species_def species_descr =
   gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other;
   (* Parameters: foc:parameter*. *)
   gen_doc_parameters
-    out_fmt ~current_unit species_def.Parsetree.ast_desc.Parsetree.sd_params;
+    out_fmt env ~current_unit
+    species_def.Parsetree.ast_desc.Parsetree.sd_params;
   (* Inherits: foc:inherits*. *)
-  gen_doc_inherits out_fmt ~current_unit species_def;
+  gen_doc_inherits out_fmt env ~current_unit species_def;
   (* Methods: (%foc:component;)*. *)
   (* Do not [fold_right] otherwise methods will be processed in revere order
      and resulting environment will also be reversed. *)
@@ -815,7 +820,7 @@ let gen_doc_collection out_fmt env ~current_unit coll_def coll_descr =
   gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other;
   (* foc:implements. *)
   gen_doc_species_expr
-    out_fmt ~current_unit coll_def.Parsetree.ast_desc.Parsetree.cd_body;
+    out_fmt env ~current_unit coll_def.Parsetree.ast_desc.Parsetree.cd_body;
   (* (%foc:component;)*. *)
   (* Do not [fold_right] otherwise methods will be processed in revere order
      and resulting environment will also be reversed. *)
