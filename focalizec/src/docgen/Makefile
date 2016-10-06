@@ -33,7 +33,7 @@ byt: $(BYT_OBJS) fcd2html.sh
 bin: $(BIN_OBJS) fcd2html.sh
 
 fcd2html.sh: $(ROOT_DIR)/.config_var
-	@echo '#!/bin/sh\nxsltproc '$(INSTALL_LIB_DIR)'/focdoc2html.xsl $$1 | xsltproc '$(INSTALL_LIB_DIR)'/mmlctop2_0.xsl - > $$1.xml' > fcd2html.sh
+	@echo -e '#!/bin/sh\nxsltproc '$(INSTALL_LIB_DIR)'/focdoc2html.xsl $$1 | xsltproc '$(INSTALL_LIB_DIR)'/mmlctop2_0.xsl - > $$1.xml' > fcd2html.sh
 
 
 depend:
