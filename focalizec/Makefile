@@ -91,6 +91,18 @@ clean:
 	  fi;\
 	done
 
+# To clean only the compiler but not stdlib, extlib and contribs
+lightclean:
+	@for i in $(COMPILER_DIRS); do\
+	  if test -d $$i; then\
+	    echo "--> $$i ..." >&2 &&\
+	    ($(CD) $$i && $(MAKE) clean);\
+	    err=$$?;\
+	    echo "<-- $$i [$$err]" >&2 &&\
+	    case $$err in 0);; *) exit $$err;; esac;\
+	  fi;\
+	done
+
 install:
 	@for i in $(ALL_DIRS); do\
 	  if test -d $$i; then\
