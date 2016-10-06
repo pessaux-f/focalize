@@ -570,7 +570,7 @@
   <!-- ********************************************************************* -->
   <xsl:template name="concrete-type">
     <xsl:text>parameters of type: </xsl:text>
-    <xsl:for-each select="foc:param">
+    <xsl:for-each select="foc:ty-param">
       <xsl:value-of select="normalize-space (.)"/>
       <xsl:text> : Type </xsl:text>
       <xsl:if test="not (position() = last())">            

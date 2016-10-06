@@ -856,12 +856,12 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
   (* foc:foc-name. *)
   Format.fprintf out_fmt "<foc:foc-name infile=\"%s\">%a</foc:foc-name>@\n"
     current_unit Utils_docgen.pp_xml_vname ty_vname;
-  (* foc:param*. *)
+  (* foc:ty-param*. *)
   List.iter
     (fun ty ->
-      Format.fprintf out_fmt "<foc:param infile=\"%s\">" current_unit ;
+      Format.fprintf out_fmt "<foc:ty-param infile=\"%s\">" current_unit ;
       gen_doc_type_variable out_fmt ty ;
-      Format.fprintf out_fmt "</foc:param>@\n")
+      Format.fprintf out_fmt "</foc:ty-param>@\n")
     ty_param_vars ;
   (* (foc:alias|foc:constr* ). *)
   (match ty_descrip.Env.TypeInformation.type_kind with
