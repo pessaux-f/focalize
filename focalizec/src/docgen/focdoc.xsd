@@ -67,9 +67,15 @@
     <xs:complexType>
       <xs:sequence>
         <xs:element ref="foc:foc-name"/>
-        <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:param"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:ty-param"/>
         <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:constr"/>
       </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+    <xs:element name="ty-param">
+    <xs:complexType>
+      <xs:attribute name="infile" type="xs:NCName"/>
     </xs:complexType>
   </xs:element>
 
