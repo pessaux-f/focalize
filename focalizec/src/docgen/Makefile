@@ -28,13 +28,14 @@ CAML_INCLUDES = -I ../basement -I ../parser -I ../typing
 CAML_FLAGS = -w A-4-9 -warn-error $(WARN_ERROR) -safe-string
 
 
+
 byt: $(BYT_OBJS) fcd2html.sh
 
 bin: $(BIN_OBJS) fcd2html.sh
 
-fcd2html.sh: $(ROOT_DIR)/.config_var
-	@echo -e '#!/bin/sh\nxsltproc '$(INSTALL_LIB_DIR)'/focdoc2html.xsl $$1 | xsltproc '$(INSTALL_LIB_DIR)'/mmlctop2_0.xsl - > $$1.xml' > fcd2html.sh
-
+fcd2html.sh: fcd2html.in $(ROOT_DIR)/.config_var
+	@cat fcd2html.in > fcd2html.sh
+	@echo " "$(INSTALL_LIB_DIR)'/focdoc2html.xsl $$1 | xsltproc '$(INSTALL_LIB_DIR)'/mmlctop2_0.xsl - > $$1.xml' >> fcd2html.sh
 
 depend:
 	$(CAMLDEP) $(CAML_INCLUDES) *.mli *.ml > ./.depend

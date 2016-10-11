@@ -1,0 +1,4 @@
+#!/bin/sh
+# This script is automatically generated during the build process of FoCaLiZe.
+
+xsltproc
