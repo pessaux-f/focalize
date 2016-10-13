@@ -18,8 +18,6 @@
 
 ROOT_DIR=../../..
 
-FOCALIZE_COMP_FLAGS=-no-stdlib-path
-
 FOCALIZE_SRC=\
  basics.fcl \
  wellfoundation.fcl \
