@@ -1485,55 +1485,50 @@ let (pp_type_simple_to_xml, pp_type_variable_to_xml,
 
   let internal_pp_var_to_xml ppf ty_var =
     let ty_variable_name = get_or_make_type_variable_name ty_var in
-    Format.fprintf ppf "<foc:tvar>%s</foc:tvar>@\n" ty_variable_name in
+    Format.fprintf ppf "<foc:ty-var>%s</foc:ty-var>@\n" ty_variable_name in
 
 
   let rec rec_pp ppf ty =
+    Format.fprintf ppf "@[<h 2><foc:type-expr>@\n" ;
     (* First of all get the "repr" guy ! *)
     let ty = repr ty in
-    match ty with
+    (match ty with
     | ST_var ty_var -> internal_pp_var_to_xml ppf ty_var
     | ST_arrow (ty1, ty2) ->
-        Format.fprintf ppf "@[<h 2><foc:fct>@\n%a%a@]</foc:fct>@\n"
+        Format.fprintf ppf "@[<h 2><foc:ty-fun>@\n%a%a@]</foc:ty-fun>@\n"
           rec_pp  ty1 rec_pp ty2 ;
     | ST_sum_arguments tys ->
-        Format.fprintf ppf "@[<h 2><foc:sum_args>@\n" ;
+        Format.fprintf ppf "@[<h 2><foc:ty-sum-args>@\n" ;
         List.iter (rec_pp ppf) tys ;
-        Format.fprintf ppf "@]</foc:sum_args>@\n"
+        Format.fprintf ppf "@]</foc:ty-sum-args>@\n"
     | ST_tuple tys ->
-        Format.fprintf ppf "@[<h 2><foc:prod>@\n" ;
+        Format.fprintf ppf "@[<h 2><foc:ty-prod>@\n" ;
         List.iter (rec_pp ppf) tys ;
-        Format.fprintf ppf "@]</foc:prod>@\n"
+        Format.fprintf ppf "@]</foc:ty-prod>@\n"
     | ST_construct ((mod_name, cstr_name), arg_tys) ->
-        (begin
-        match arg_tys with
-         | [] ->
-             (* order = "first" because the atom does not represent a
-                species. *)
-             Format.fprintf ppf
-               "<foc:atom order=\"first\" infile=\"%s\">%s</foc:atom>@\n"
-               mod_name cstr_name
-         | _ ->
-             (* order = "first" because the atom does not represent a
-                species. *)
-             Format.fprintf ppf "@[<h 2><foc:prm order=\"first\">" ;
-             List.iter (rec_pp ppf) arg_tys ;
-             Format.fprintf ppf
-               "<foc:foc-name infile=\"%s\">%s</foc:foc-name>@\n"
-               mod_name cstr_name ;
-             Format.fprintf ppf "@]</foc:prm>@\n"
-        end)
-    | ST_prop -> Format.fprintf ppf
-               "<foc:atom order=\"first\" infile=\"coq_builtins\">prop__t</foc:atom>@\n"
-    | ST_self_rep ->
-        (* order = "first" because the atom does not represent a species. *)
-        Format.fprintf ppf "<foc:self order=\"first\"/>@\n"
-    | ST_species_rep (mod_name, collection_name) ->
-        (* order = "first" because the atom does not represent a species.
-           Here it represents a **carrier** of species. *)
+        Format.fprintf ppf "@[<h 2><foc:ty-cstr>@\n" ;
+        (* The "infile" is an attribute of the identifier. *)
+        Format.fprintf ppf "@[<h 2><foc:identifier infile=\"%s\">@\n" mod_name ;
+        Format.fprintf ppf "<foc:fcl-name>%s</foc:fcl-name>@\n" cstr_name ;
+        Format.fprintf ppf "@]</foc:identifier>@\n" ;
+        List.iter (rec_pp ppf) arg_tys ;
+        Format.fprintf ppf "@]</foc:ty-cstr>@\n"
+    | ST_prop ->
+        Format.fprintf ppf "@[<h 2><foc:ty-cstr>@\n" ;
         Format.fprintf ppf
-          "<foc:atom order=\"first\" infile=\"%s\">%s</foc:atom>@\n"
-          mod_name collection_name in
+          "@[<h 2><foc:identifier infile=\"coq_builtins\">@\n" ;
+        Format.fprintf ppf "<foc:fcl-name>prop</foc:fcl-name>@\n" ;
+        Format.fprintf ppf "@]</foc:identifier>@\n" ;
+        Format.fprintf ppf "@]</foc:ty-cstr>@\n"
+    | ST_self_rep -> Format.fprintf ppf "<foc:self/>@\n"
+    | ST_species_rep (mod_name, collection_name) ->
+        Format.fprintf ppf "@[<h 2><foc:ty-species-rep>@\n" ;
+        Format.fprintf ppf "@[<h 2><foc:identifier infile=\"%s\">@\n" mod_name ;
+        Format.fprintf ppf "<foc:fcl-name>%s</foc:fcl-name>@\n"
+          collection_name ;
+        Format.fprintf ppf "@]</foc:identifier>@\n" ;
+        Format.fprintf ppf "@]</foc:ty-species-rep>@\n") ;
+    Format.fprintf ppf "@]</foc:type-expr>@\n" in
 
 
   ((* pp_type_simple_to_xml *)

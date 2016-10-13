@@ -31,7 +31,7 @@ UTILSLIB_DIR=../utils
 
 FOCALIZE_COMPILER=$(ROOT_DIR)/src/toplevel/focalizec
 
-FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR)
+FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR) -focalize-doc
 
 #From Makefile.config FOCALIZEC=$(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 

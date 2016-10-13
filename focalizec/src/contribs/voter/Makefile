@@ -31,7 +31,7 @@ FOCALIZEC=../../toplevel/focalizec
 FOCALIZE_COMP_FLAGS=\
   -no-stdlib-path -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR)\
   -I $(UTILSLIB_DIR) -no-dedukti-code \
-	-coq-version $(COQ_VERSION)
+	-coq-version $(COQ_VERSION) -focalize-doc
 
 CAML_FLAGS= -w A -warn-error $(WARN_ERROR) -dtypes
 CAML_INCLUDES=-I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR)

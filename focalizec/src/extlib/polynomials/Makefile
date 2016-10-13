@@ -34,7 +34,7 @@ FOCALIZE_COMP_FLAGS=\
   -no-stdlib-path -no-dedukti-code \
   -I $(STDLIB_DIR) \
   -I $(ROOT_DIR)/focalizec/src/extlib/algebra -zvtovopt -script \
-	-coq-version $(COQ_VERSION)
+	-coq-version $(COQ_VERSION) -focalize-doc
 
 CAML_FLAGS= -w A -warn-error $(WARN_ERROR) -dtypes
 CAML_INCLUDES=-I $(STDLIB_DIR) -I $(ROOT_DIR)/focalizec/src/extlib/algebra

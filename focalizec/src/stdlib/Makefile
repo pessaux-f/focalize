@@ -90,7 +90,7 @@ include $(ROOT_DIR)/Makefile.common
 FOCALIZEC=../toplevel/focalizec
 FOCALIZE_COMP_FLAGS=-no-stdlib-path \
  -stop-before-coq -stop-before-dk -no-dedukti-code \
- -coq-version $(COQ_VERSION)
+ -coq-version $(COQ_VERSION) -focalize-doc
 FOCALIZEDEP=../focalizedep/focalizedep
 
 ifeq ($(shell test "$(COQ_VERSION)" != "" -a "$(COQ_VERSION)" \< "8.5"; echo $$?),0)
