@@ -10,39 +10,65 @@
         <xs:element ref="foc:foc-name"/>
         <xs:element ref="foc:general-informations"/>
         <xs:choice maxOccurs="unbounded">
-          <xs:element ref="foc:meth-letprop"/>
+          <xs:element ref="foc:global-letprop"/>
           <xs:element ref="foc:collection"/>
           <xs:element ref="foc:type-def"/>
           <xs:element ref="foc:global-fun"/>
           <xs:element ref="foc:species"/>
+          <xs:element ref="foc:directive"/>
         </xs:choice>
-        <xs:element ref="foc:directive"/>
       </xs:sequence>
       <xs:attribute ref="xsi:schemaLocation" use="required"/>
     </xs:complexType>
   </xs:element>
 
 
+  <!-- Comments kept from the source code. -->
+  <xs:element name="comments" type="xs:string"/>
+
+  <!-- Parameters bound by a let (method, expression, global). -->
+  <xs:element name="binding-param">
+    <xs:complexType>
+      <xs:element ref="foc:fcl-name"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Toplevel logical let definition. -->
+  <xs:element name="global-letprop">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+        <xs:element maxOccurs="unbounded" ref="foc:letprop-param"/>
+        <xs:element ref="foc:logexpr"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Toplevel let (non-logical) definition. -->
   <xs:element name="global-fun">
     <xs:complexType>
       <xs:sequence>
         <xs:element ref="foc:foc-name"/>
+        <xs:sequence>
+          <xs:element ref="foc:binding-param"/>
+        </xs:sequence>
         <xs:element ref="foc:type-expr"/>
+        <xs:element ref="foc:expr"/>
       </xs:sequence>
       <xs:attribute name="recursive" type="xs:NCName"/>
     </xs:complexType>
   </xs:element>
 
-
-  <!-- Comment. -->
-  <xs:element name="comments" type="xs:string"/>
-
-  <!-- ******************************************************
-       ******************************************************
-       BELOW: HAS BEEN CLEANED. ABOVE: NEED TO BE CLEANUP UP.
-       ******************************************************
-       ****************************************************** -->
-
+  <!-- Toplevel theorem. -->
+  <xs:element name="global-letprop">
+    <xs:complexType>
+      <xs:sequence>
+       <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:logexpr"/>
+        <xs:element ref="foc:proof"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
 
   <!-- General informations. -->
   <xs:element name="general-informations">
@@ -160,9 +186,6 @@
     </xs:complexType>
   </xs:element>
 
-
-  
-
   <!-- Parameter of a logical let definition. -->
   <xs:element name="letprop-param">
     <xs:complexType>
@@ -183,7 +206,7 @@
           <xs:element ref="foc:informations"/>
         </xs:sequence>
         <xs:element maxOccurs="unbounded" ref="foc:letprop-param"/>
-          <xs:element ref="foc:logexpr"/>
+        <xs:element ref="foc:logexpr"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -195,7 +218,11 @@
         <xs:element ref="foc:foc-name"/>
         <xs:element ref="foc:history"/>
         <xs:element ref="foc:informations"/>
+        <xs:sequence>
+          <xs:element ref="foc:binding-param"/>
+        </xs:sequence>
         <xs:element ref="foc:type-expr"/>
+        <xs:element ref="foc:expr"/>
       </xs:sequence>
       <xs:attribute name="recursive" type="xs:NCName"/>
     </xs:complexType>
@@ -630,10 +657,26 @@
     </xs:complexType>
   </xs:element>
 
-    <!-- Expression between parens. -->
+  <!-- Expression between parens. -->
   <xs:element name="expr-paren">
     <xs:complexType>
       <xs:element ref="foc:expr"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Expression let (rec) in. -->
+  <xs:element name="expr-let-in">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:foc-name"/>
+        <xs:sequence>
+          <xs:element ref="foc:binding-param"/>
+        </xs:sequence>
+        <xs:element ref="foc:type-expr"/>
+        <xs:element ref="foc:expr"/>
+      </xs:sequence>
+      <xs:element ref="foc:expr"/>           <!-- "in" expression -->
+      <xs:attribute name="recursive" type="xs:NCName"/>
     </xs:complexType>
   </xs:element>
 
@@ -649,7 +692,7 @@
         <xs:element ref="foc:expr-constructor"/>
         <xs:element ref="foc:expr-match"/>         <!-- TODO: define -->
         <xs:element ref="foc:expr-if"/>
-        <xs:element ref="foc:expr-let"/>           <!-- TODO: define -->
+        <xs:element ref="foc:expr-let-in"/>
         <xs:element ref="foc:expr-record"/>
         <xs:element ref="foc:expr-record-access"/>
         <xs:element ref="foc:expr-tuple"/>

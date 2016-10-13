@@ -305,7 +305,7 @@ and gen_doc_expression out_fmt env initial_expression =
             Format.fprintf out_fmt "<foc:name>%a</foc:name>@\n"
               Utils_docgen.pp_xml_vname vname)
           vnames;
-        rec_gen expr;
+        rec_gen expr ;
         Format.fprintf out_fmt "@]</foc:expr-fun>@\n"
     | Parsetree.E_var id -> gen_doc_expr_ident out_fmt env id ;
     | Parsetree.E_app (expr, exprs) ->
@@ -324,14 +324,12 @@ and gen_doc_expression out_fmt env initial_expression =
      | Parsetree.E_match (expr, pat_exprs) ->
 *)
     | Parsetree.E_if (expr1, expr2, expr3) ->
-        Format.fprintf out_fmt "@[<h 2><foc:expr-if>@\n";
-        rec_gen expr1;
-        rec_gen expr2;
-        rec_gen expr3;
+        Format.fprintf out_fmt "@[<h 2><foc:expr-if>@\n" ;
+        rec_gen expr1 ;
+        rec_gen expr2 ;
+        rec_gen expr3 ;
         Format.fprintf out_fmt "@]</foc:expr-if>@\n"
-(*
-     | Parsetree.E_let (let_def, expr) ->
-*)
+    | Parsetree.E_let (let_def, expr) -> gen_doc_let_in out_fmt env let_def expr
     | Parsetree.E_record label_exprs ->
         Format.fprintf out_fmt "@[<h 2><foc:expr-record>@\n";
         List.iter
@@ -339,21 +337,21 @@ and gen_doc_expression out_fmt env initial_expression =
             let (Parsetree.LI label) = label_ident.Parsetree.ast_desc in
             (* Since record labels are not methods, we don't want any symbol
                at this point. Hence pass the empty environment. *)
-            gen_doc_ident out_fmt Env_docgen.empty label;
+            gen_doc_ident out_fmt Env_docgen.empty label ;
             rec_gen expr)
-          label_exprs;
+          label_exprs ;
         Format.fprintf out_fmt "@]</foc:expr-record>@\n"
     | Parsetree.E_record_access (expr, label_ident) ->
-        Format.fprintf out_fmt "@[<h 2><foc:expr-record-access>@\n";
-        rec_gen expr;
+        Format.fprintf out_fmt "@[<h 2><foc:expr-record-access>@\n" ;
+        rec_gen expr ;
         let (Parsetree.LI label) = label_ident.Parsetree.ast_desc in
         (* Since record labels are not methods, we don't want any symbol
            at this point. Hence pass the empty environment. *)
-        gen_doc_ident out_fmt Env_docgen.empty label;
+        gen_doc_ident out_fmt Env_docgen.empty label ;
         Format.fprintf out_fmt "@]</foc:expr-record-access>@\n"
     | Parsetree.E_record_with (expr, label_exprs) ->
-        Format.fprintf out_fmt "@[<h 2><foc:expr-record-with>@\n";
-        rec_gen expr;
+        Format.fprintf out_fmt "@[<h 2><foc:expr-record-with>@\n" ;
+        rec_gen expr ;
         List.iter
           (fun (label_ident, expr) ->
             let (Parsetree.LI label) = label_ident.Parsetree.ast_desc in
@@ -378,6 +376,36 @@ and gen_doc_expression out_fmt env initial_expression =
     Format.fprintf out_fmt "@]</foc:expr>@\n" in
   (* Now do the job. *)
   rec_gen initial_expression
+
+
+
+(** Generate the documentation for a let-in expression. *)
+and gen_doc_let_in out_fmt env let_def in_expr =
+  let let_def_descr = let_def.Parsetree.ast_desc in
+  let attr_rec_string =
+    (match let_def_descr.Parsetree.ld_rec with
+     | Parsetree.RF_rec -> " recursive=\"yes\""
+     | Parsetree.RF_no_rec -> "") in
+  Format.fprintf out_fmt "@[<h 2><foc:expr-let-in%s>@\n" attr_rec_string ;
+  List.iter
+    (fun bnd ->
+      Format.fprintf out_fmt "<foc:fcl-name>%a</foc:fcl-name>@\n"
+        Utils_docgen.pp_xml_vname bnd.Parsetree.ast_desc.Parsetree.b_name ;
+      (* binding-param. *)
+      Format.fprintf out_fmt "<foc:binding-param>@\n" ;
+      List.iter
+        (fun (vname, _) ->
+          Format.fprintf out_fmt "<foc:fcl-name>%a</foc:fcl-name></>@\n"
+            Utils_docgen.pp_xml_vname vname)
+        bnd.Parsetree.ast_desc.Parsetree.b_params ;
+      Format.fprintf out_fmt "</foc:binding-param>@\n" ;
+      (* TODO: type. *)
+      match bnd.Parsetree.ast_desc.Parsetree.b_body with
+      | Parsetree.BB_logical _ -> () (* TODO: not really handled indeed. *)
+      | Parsetree.BB_computational expr -> gen_doc_expression out_fmt env expr)
+    let_def_descr.Parsetree.ld_bindings ;
+  (* Finally, the "in" expression. *)
+  gen_doc_expression out_fmt env in_expr
 ;;
 
 
@@ -544,15 +572,18 @@ let gen_doc_history out_fmt from_hist =
 
 
 let gen_doc_logical_let out_fmt env from_opt name pnames sch body_as_prop doc =
-  (* foc:meth-letprop. *)
-  Format.fprintf out_fmt "@[<h 2><foc:meth-letprop>@\n";
+  (* foc:meth-letprop or global-letprop. *)
+  (* If [from_opt] is None, then we are called for a toplevel logical let. *)
+  if from_opt = None then
+    Format.fprintf out_fmt "@[<h 2><foc:global-letprop>@\n"
+  else Format.fprintf out_fmt "@[<h 2><foc:meth-letprop>@\n" ;
   (* foc:fcl-name. *)
   Format.fprintf out_fmt "<foc:fcl-name>%a</foc:fcl-name>@\n"
     Utils_docgen.pp_xml_vname name;
   (* foc:history?. *)
   (match from_opt with
    | Some from -> gen_doc_history out_fmt from
-   | None ->()) ;
+   | None -> ()) ;
   (* foc:informations?. *)
   let (_, _, i_descrip, i_mathml, i_latex, i_other) =
     Utils_docgen.extract_tagged_info_from_annotation doc in
@@ -576,13 +607,14 @@ let gen_doc_logical_let out_fmt env from_opt name pnames sch body_as_prop doc =
     params_with_type ;
   (* foc:logexpr. *)
   gen_doc_logical_expr out_fmt env' body_as_prop ;
-  Format.fprintf out_fmt "@]</foc:meth-letprop>@\n" ;
+  if from_opt = None then Format.fprintf out_fmt "@]</foc:global-letprop>@\n"
+  else Format.fprintf out_fmt "@]</foc:meth-letprop>@\n" ;
   env'
 ;;
 
 
 
-let gen_doc_computational_let out_fmt env from name sch rec_flag doc =
+let gen_doc_computational_let out_fmt env from name sch body_expr rec_flag doc =
   let attr_rec_string =
     (match rec_flag with
      | Parsetree.RF_rec -> " recursive=\"yes\""
@@ -600,30 +632,38 @@ let gen_doc_computational_let out_fmt env from name sch rec_flag doc =
   let env' = Env_docgen.add_method name i_mathml i_latex env in
   (* foc:type-expr. *)
   gen_doc_type out_fmt (Types.specialize sch) ;
+  (* foc:expr. *)
+  gen_doc_expression out_fmt env body_expr ;
   Format.fprintf out_fmt "@]</foc:meth-let>@\n" ;
   env'
 ;;
 
 
 
-let gen_doc_computational_toplevel_let out_fmt name sch rec_flag =
+let gen_doc_computational_toplevel_let out_fmt env name sch body_expr rec_flag =
   let attr_rec_string =
     (match rec_flag with
      | Parsetree.RF_rec -> " recursive=\"yes\""
      | Parsetree.RF_no_rec -> "") in
-  Format.fprintf out_fmt "@[<h 2><foc:global-fun%s>@\n" attr_rec_string;
+  Format.fprintf out_fmt "@[<h 2><foc:global-fun%s>@\n" attr_rec_string ;
   (* foc:fcl-name. *)
   Format.fprintf out_fmt "<foc:fcl-name>%a</foc:fcl-name>@\n"
-    Utils_docgen.pp_xml_vname name;
+    Utils_docgen.pp_xml_vname name ;
+  (* TODO: params. *)
   (* foc:type-expr. *)
   gen_doc_type out_fmt (Types.specialize sch) ;
+  (* foc-expr. *)
+  gen_doc_expression out_fmt env body_expr ;
   Format.fprintf out_fmt "@]</foc:global-fun>@\n"
 ;;
 
 
 
+(* If [from_opt] is None, then we are called for a toplevel logical let. *)
 let gen_doc_theorem out_fmt env opt_from name lexpr doc =
-  Format.fprintf out_fmt "@[<h 2><foc:theorem>@\n" ;
+  if opt_from = None then
+    Format.fprintf out_fmt "@[<h 2><foc:global-theorem>@\n"
+  else Format.fprintf out_fmt "@[<h 2><foc:meth-theorem>@\n" ;
   (* foc:fcl-name. *)
   Format.fprintf out_fmt "<foc:fcl-name>%a</foc:fcl-name>@\n"
     Utils_docgen.pp_xml_vname name ;
@@ -640,7 +680,8 @@ let gen_doc_theorem out_fmt env opt_from name lexpr doc =
   Format.fprintf out_fmt "@[<h 2><foc:proof>@\n" ;
   (* TODO. *)
   Format.fprintf out_fmt "@]</foc:proof>@\n" ;
-  Format.fprintf out_fmt "@]</foc:theorem>@\n" ;
+  if opt_from = None then Format.fprintf out_fmt "@]</foc:global-theorem>@\n"
+  else Format.fprintf out_fmt "@]</foc:meth-theorem>@\n" ;
   env'
 ;;
 
@@ -717,7 +758,7 @@ let gen_doc_method out_fmt env species_def_fields = function
       env'
       )
   | Env.TypeInformation.SF_let (from, n, pnames, sch, body, _, _, lflags) -> (
-      (* foc:definition, foc:letprop. *)
+      (* foc:meth-let, foc:meth-letprop. *)
       let doc =
         Utils_docgen.find_annotation_of_method n species_def_fields in
       match lflags.Env.TypeInformation.ldf_logical with
@@ -736,21 +777,25 @@ let gen_doc_method out_fmt env species_def_fields = function
                 env  (* TODO. Not handled by the DTD and XSLs. *)
           | Parsetree.BB_computational _ -> assert false
          )
-      | Parsetree.LF_no_logical ->
-          gen_doc_computational_let
-            out_fmt env from n sch
-            lflags.Env.TypeInformation.ldf_recursive doc
+      | Parsetree.LF_no_logical -> (
+          match body with
+          | Parsetree.BB_logical _ -> assert false
+          | Parsetree.BB_computational expr ->
+              gen_doc_computational_let
+                out_fmt env from n sch expr
+                lflags.Env.TypeInformation.ldf_recursive doc
+         )
      )
    | Env.TypeInformation.SF_let_rec _l ->
-       (* foc:definition, foc:letprop. *)  (* TODO *)
+       (* foc:meth-let, foc:meth-letprop. *)  (* TODO *)
        env
    | Env.TypeInformation.SF_theorem (from, n, _, body, _, _) ->
-       (* foc:theorem. *)
+       (* foc:meth-theorem. *)
        let doc =
          Utils_docgen.find_annotation_of_method n species_def_fields in
        gen_doc_theorem out_fmt env (Some from) n body doc
    | Env.TypeInformation.SF_property (from, n, _, body, _) ->
-       (* foc:property. *)
+       (* foc:meth-property. *)
        let doc =
          Utils_docgen.find_annotation_of_method n species_def_fields in
        gen_doc_property out_fmt env from n body doc
@@ -964,10 +1009,13 @@ let gen_doc_pcm out_fmt env ~current_unit = function
        | Parsetree.LF_no_logical -> (
            List.iter2
              (fun binding sch ->
-               gen_doc_computational_toplevel_let
-                 out_fmt
-                 binding.Parsetree.ast_desc.Parsetree.b_name
-                 sch let_def.Parsetree.ast_desc.Parsetree.ld_rec)
+               match binding.Parsetree.ast_desc.Parsetree.b_body with
+                 | Parsetree.BB_logical _ -> assert false
+                 | Parsetree.BB_computational expr ->
+                     gen_doc_computational_toplevel_let
+                       out_fmt env (* TODO: no env is returned and extended. *)
+                       binding.Parsetree.ast_desc.Parsetree.b_name
+                       sch expr let_def.Parsetree.ast_desc.Parsetree.ld_rec)
              let_def.Parsetree.ast_desc.Parsetree.ld_bindings schemes ;
            env  (* TODO The DTD does not have "informations" for toplevel let
                    so we never check the documentation and then never extend
@@ -979,6 +1027,7 @@ let gen_doc_pcm out_fmt env ~current_unit = function
       Types.purge_type_simple_to_xml_variable_mapping () ;
       (* foc:theorem. *)
       let th_desc = theo_def.Parsetree.ast_desc in
+      (* No history, hence pass [None]. *)
       gen_doc_theorem
         out_fmt env None th_desc.Parsetree.th_name th_desc.Parsetree.th_stmt
         theo_def.Parsetree.ast_annot
