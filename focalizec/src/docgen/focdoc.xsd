@@ -7,15 +7,15 @@
   <xs:element name="focdoc">
     <xs:complexType>
       <xs:sequence>
-        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:fcl-name"/>
         <xs:element ref="foc:general-informations"/>
         <xs:choice maxOccurs="unbounded">
-          <xs:element ref="foc:global-letprop"/>
           <xs:element ref="foc:collection"/>
           <xs:element ref="foc:type-def"/>
           <xs:element ref="foc:global-fun"/>
           <xs:element ref="foc:species"/>
           <xs:element ref="foc:directive"/>
+          <xs:element ref="foc:global-theorem"/>
         </xs:choice>
       </xs:sequence>
       <xs:attribute ref="xsi:schemaLocation" use="required"/>
@@ -30,40 +30,30 @@
   <xs:element name="binding-param">
     <xs:complexType>
       <xs:element ref="foc:fcl-name"/>
+      <xs:element ref="foc:type-expr"/>
     </xs:complexType>
   </xs:element>
 
-  <!-- Toplevel logical let definition. -->
-  <xs:element name="global-letprop">
-    <xs:complexType>
-      <xs:sequence>
-        <xs:element ref="foc:foc-name"/>
-        <xs:element maxOccurs="unbounded" ref="foc:letprop-param"/>
-        <xs:element ref="foc:logexpr"/>
-      </xs:sequence>
-    </xs:complexType>
-  </xs:element>
-
-  <!-- Toplevel let (non-logical) definition. -->
+  <!-- Toplevel let definition. -->
   <xs:element name="global-fun">
     <xs:complexType>
       <xs:sequence>
-        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:fcl-name"/>
         <xs:sequence>
           <xs:element ref="foc:binding-param"/>
         </xs:sequence>
         <xs:element ref="foc:type-expr"/>
-        <xs:element ref="foc:expr"/>
+        <xs:element ref="foc:let-body"/>
       </xs:sequence>
       <xs:attribute name="recursive" type="xs:NCName"/>
     </xs:complexType>
   </xs:element>
 
   <!-- Toplevel theorem. -->
-  <xs:element name="global-letprop">
+  <xs:element name="global-theorem">
     <xs:complexType>
       <xs:sequence>
-       <xs:element ref="foc:foc-name"/>
+       <xs:element ref="foc:fcl-name"/>
         <xs:element ref="foc:logexpr"/>
         <xs:element ref="foc:proof"/>
       </xs:sequence>
@@ -120,7 +110,7 @@
   <xs:element name="meth-property">
     <xs:complexType>
       <xs:sequence>
-        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:fcl-name"/>
         <xs:element ref="foc:history"/>
         <xs:element ref="foc:informations"/>
         <xs:element ref="foc:logexpr"/>
@@ -132,7 +122,7 @@
   <xs:element name="meth-theorem">
     <xs:complexType>
       <xs:sequence>
-        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:fcl-name"/>
         <xs:element ref="foc:history"/>
         <xs:element ref="foc:informations"/>
         <xs:element ref="foc:logexpr"/>
@@ -157,7 +147,7 @@
   <xs:element name="collection">
     <xs:complexType>
       <xs:sequence>
-        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:fcl-name"/>
         <xs:element ref="foc:informations"/>
         <xs:element ref="foc:implements"/>
         <xs:element ref="foc:method"/>
@@ -165,14 +155,53 @@
     </xs:complexType>
   </xs:element>
 
+  <xs:element name="tydef-external"/>
+
+  <!-- Alias type definition with its equivalent type expression. -->
+  <xs:element name="tydef-alias">
+    <xs:complexType>
+      <xs:element ref="foc:type-expr"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Sum type definition with all its value constructors. -->
+  <xs:element name="tydef-sum">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="1" maxOccurs="unbounded" ref="foc:ty-val-constr"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Record type definition with all its fields. -->
+  <xs:element name="tydef-record">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:fcl-name"/>
+        <xs:element ref="foc:type-expr"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="type-def-body">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="tydef-record"/>
+        <xs:element ref="tydef-sum"/>
+        <xs:element ref="tydef-alias"/>
+        <xs:element ref="tydef-external"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
   <!-- Type definition. -->  <!-- TODO: records and aliases. -->
   <xs:element name="type-def">
     <xs:complexType>
+      <xs:element ref="foc:fcl-name"/>
       <xs:sequence>
-        <xs:element ref="foc:foc-name"/>
         <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:ty-var"/>
-        <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:ty-val-constr"/>
       </xs:sequence>
+      <xs:element ref="type-def-body"/>
     </xs:complexType>
   </xs:element>
 
@@ -180,34 +209,33 @@
   <xs:element name="ty-val-constr">
     <xs:complexType>
       <xs:sequence>
-        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:fcl-name"/>
         <xs:element ref="foc:type-expr"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
 
-  <!-- Parameter of a logical let definition. -->
-  <xs:element name="letprop-param">
+  <xs:element name="let-bkind-comp"/>  <!-- Computational. -->
+  <xs:element name="let-bkind-log"/>   <!-- Logical. -->
+
+  <!-- Kind of let-binding body (logical or computational). -->
+  <xs:element name="let-body-kind">
     <xs:complexType>
-      <xs:sequence>
-        <xs:element ref="foc:foc-name"/>
-        <xs:element ref="foc:type-expr"/>
-      </xs:sequence>
+      <xs:choice>
+        <xs:element ref="foc:let-bkind-comp"/>
+        <xs:element ref="foc:let-bkind-log"/>
+      </xs:choice>
     </xs:complexType>
   </xs:element>
 
-  <!-- Logical let method. -->
-  <xs:element name="meth-letprop">
+  <!-- Let-binding body (logical,computational, method, let-in or toplevel. -->
+  <xs:element name="let-body">
     <xs:complexType>
-      <xs:sequence>
-        <xs:element ref="foc:foc-name"/>
-        <xs:sequence minOccurs="0">
-          <xs:element ref="foc:history"/>
-          <xs:element ref="foc:informations"/>
-        </xs:sequence>
-        <xs:element maxOccurs="unbounded" ref="foc:letprop-param"/>
+      <xs:element ref="foc:let-body-kind"/>
+      <xs:choice>
         <xs:element ref="foc:logexpr"/>
-      </xs:sequence>
+        <xs:element ref="foc:expr"/>
+      </xs:choice>
     </xs:complexType>
   </xs:element>
 
@@ -215,14 +243,14 @@
   <xs:element name="meth-let">
     <xs:complexType>
       <xs:sequence>
-        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:fcl-name"/>
         <xs:element ref="foc:history"/>
         <xs:element ref="foc:informations"/>
         <xs:sequence>
           <xs:element ref="foc:binding-param"/>
         </xs:sequence>
         <xs:element ref="foc:type-expr"/>
-        <xs:element ref="foc:expr"/>
+        <xs:element ref="foc:let-body"/>
       </xs:sequence>
       <xs:attribute name="recursive" type="xs:NCName"/>
     </xs:complexType>
@@ -232,7 +260,7 @@
   <xs:element name="meth-signature">
     <xs:complexType>
       <xs:sequence>
-        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:fcl-name"/>
         <xs:element ref="foc:history"/>
         <xs:element ref="foc:informations"/>
         <xs:element ref="foc:type-expr"/>
@@ -256,7 +284,7 @@
   <xs:element name="species">
     <xs:complexType>
       <xs:sequence>
-        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:fcl-name"/>
         <xs:element ref="foc:informations"/>
         <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:spe-param"/>
         <xs:element minOccurs="0" maxOccurs="unbounded" ref="foc:inherits"/>
@@ -402,7 +430,7 @@
     <xs:element name="var">
     <xs:complexType>
       <xs:sequence>
-        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:fcl-name"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -429,7 +457,7 @@
     <xs:element name="of-species">
     <xs:complexType>
       <xs:sequence>
-        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:fcl-name"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
@@ -668,17 +696,32 @@
   <xs:element name="expr-let-in">
     <xs:complexType>
       <xs:sequence>
-        <xs:element ref="foc:foc-name"/>
+        <xs:element ref="foc:fcl-name"/>
         <xs:sequence>
           <xs:element ref="foc:binding-param"/>
         </xs:sequence>
         <xs:element ref="foc:type-expr"/>
-        <xs:element ref="foc:expr"/>
+        <xs:element ref="foc:let-body"/>
       </xs:sequence>
       <xs:element ref="foc:expr"/>           <!-- "in" expression -->
       <xs:attribute name="recursive" type="xs:NCName"/>
     </xs:complexType>
   </xs:element>
+
+  <!-- Expression of external code -->
+  <xs:element name="expr-external"/>   <!-- TODO -->
+
+  <!-- Expression sequence. -->
+  <xs:element name="expr-sequence">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:expr"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Expression match with -->
+  <xs:element name="expr-match"/>   <!-- TODO -->
 
   <!-- Expressions. -->
   <xs:element name="expr">
@@ -690,13 +733,14 @@
         <xs:element ref="foc:expr-var"/>
         <xs:element ref="foc:expr-app"/>
         <xs:element ref="foc:expr-constructor"/>
-        <xs:element ref="foc:expr-match"/>         <!-- TODO: define -->
+        <xs:element ref="foc:expr-match"/>
         <xs:element ref="foc:expr-if"/>
         <xs:element ref="foc:expr-let-in"/>
         <xs:element ref="foc:expr-record"/>
         <xs:element ref="foc:expr-record-access"/>
         <xs:element ref="foc:expr-tuple"/>
-        <xs:element ref="foc:expr-external"/>   <!-- TODO: define -->
+        <xs:element ref="foc:expr-external"/>
+        <xs:element ref="foc:expr-sequence"/>
         <xs:element ref="foc:expr-paren"/>
       </xs:choice>
     </xs:complexType>
