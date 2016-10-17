@@ -155,6 +155,7 @@
     </xs:complexType>
   </xs:element>
 
+  <!-- External type. TODO: add information. -->
   <xs:element name="tydef-external"/>
 
   <!-- Alias type definition with its equivalent type expression. -->
@@ -183,6 +184,7 @@
     </xs:complexType>
   </xs:element>
 
+  <!-- Body if a type definition. Can be record, sum, alias or external. -->
   <xs:element name="type-def-body">
     <xs:complexType>
       <xs:choice>
@@ -194,7 +196,7 @@
     </xs:complexType>
   </xs:element>
 
-  <!-- Type definition. -->  <!-- TODO: records and aliases. -->
+  <!-- Type definition. -->
   <xs:element name="type-def">
     <xs:complexType>
       <xs:element ref="foc:fcl-name"/>
@@ -596,6 +598,88 @@
 
 
 
+  <!-- **************** PATTERNS **************** -->
+
+  <!-- Constant pattern. -->
+  <xs:element name="pat-cst">
+    <xs:complexType>
+      <xs:element ref="foc:cst"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Variable pattern. -->
+  <xs:element name="pat-var">
+    <xs:complexType>
+      <xs:element ref="foc:fcl-name"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Alias pattern. -->
+  <xs:element name="pat-as">
+    <xs:complexType>
+      <xs:element ref="foc:pattern"/>
+      <xs:element ref="foc:fcl-name"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Match-all pattern. -->
+  <xs:element name="pat-wild"/>
+
+  <!-- Sum type value pattern. -->
+  <xs:element name="pat-constr">
+  <xs:complexType>
+    <xs:element ref="foc:identifier"/>
+      <xs:sequence>
+        <xs:element ref="foc:pattern"/>
+      </xs:sequence>
+      <xs:element ref="foc:fcl-name"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Record pattern. -->
+  <xs:element name="pat-record">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="foc:pattern"/>
+      <xs:element ref="foc:identifier"/>
+    </xs:sequence>
+  </xs:complexType>
+  </xs:element>
+
+  <!-- Tuple pattern. -->
+  <xs:element name="pat-tuple">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="foc:pattern"/>
+    </xs:sequence>
+  </xs:complexType>
+  </xs:element>
+
+  <!-- Parenthesed pattern. -->
+  <xs:element name="pat-paren">
+    <xs:complexType>
+      <xs:element ref="foc:pattern"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- All possible pattern cases. -->
+  <xs:element name="pattern">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="foc:pat-cst"/>
+        <xs:element ref="foc:pat-var"/>
+        <xs:element ref="foc:pat-as"/>
+        <xs:element ref="foc:pat-wild"/>
+        <xs:element ref="foc:pat-constr"/>
+        <xs:element ref="foc:pat-record"/>
+        <xs:element ref="foc:pat-tuple"/>
+        <xs:element ref="foc:pat-paren"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+
+
   <!-- **************** EXPRESSIONS **************** -->
 
   <!-- Expression "Self". -->
@@ -720,8 +804,24 @@
     </xs:complexType>
   </xs:element>
 
+  <!-- Case of a pattern-matching. -->
+  <xs:element name="match-case">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:pattern"/>
+        <xs:element ref="foc:expr"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
   <!-- Expression match with -->
-  <xs:element name="expr-match"/>   <!-- TODO -->
+  <xs:element name="expr-match"/>
+  <xs:complexType>
+    <xs:sequence>
+       <xs:element ref="foc:match-case"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
 
   <!-- Expressions. -->
   <xs:element name="expr">
