@@ -569,14 +569,13 @@ and gen_doc_let_bindings out_fmt env let_def from_n_docs ~xmltag =
                 Format.fprintf out_fmt "</foc:let-body>@\n" ;
                 evt
             | Parsetree.BB_computational
-                { Parsetree.ast_desc = Parsetree.E_external _ } ->
+                { Parsetree.ast_desc = Parsetree.E_external ext_expr } ->
                   (* The only admitted case is a "logical let" defined as an
                      "external". In this case, since external stuff is an
                      expression, we find an expression as body for a
                      "logical let". Otherwise, in any other case that's an
                      error. *)
-                  (* TODO *)
-                  ()
+                  gen_doc_external_expr out_fmt ext_expr
             | Parsetree.BB_computational _ -> assert false
            )
         | Parsetree.LF_no_logical -> (
@@ -1035,6 +1034,7 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
        gen_doc_type out_fmt ty_identity ;
        Format.fprintf out_fmt "</foc:tydef-alias>@\n"
    | Env.TypeInformation.TK_external _ ->
+       (* TODO *)
        Format.fprintf out_fmt "<foc:tydef-external></foc:tydef-external>@\n"
    | Env.TypeInformation.TK_variant constructors ->
        Format.fprintf out_fmt"@[<h 2><foc:tydef-sum>@\n" ;
