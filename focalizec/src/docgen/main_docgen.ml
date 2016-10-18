@@ -218,6 +218,47 @@ let gen_doc_history out_fmt from_hist =
 ;;
 
 
+
+
+(* ****************************************************** *)
+(** {b Descr}: Emits XML code for an external expression.
+
+    {b Rem}: Not exported outside this module.            *)
+(* ****************************************************** *)
+let gen_doc_external_expr out_fmt ext_expr =
+  Format.fprintf out_fmt "@[<h 2><foc:expr-external>@\n" ;
+  let ty =
+    (match ext_expr.Parsetree.ast_type with
+    | Parsetree.ANTI_type t -> t
+    | Parsetree.ANTI_none | Parsetree.ANTI_irrelevant -> assert false
+    | Parsetree.ANTI_scheme sch -> Types.specialize sch) in
+  gen_doc_type out_fmt ty ;
+  List.iter
+    (fun (lang, code) ->
+      Format.fprintf out_fmt "@[<h 2><foc:external-lang>@\n" ;
+      (match lang with
+      | Parsetree.EL_Caml -> Format.fprintf out_fmt "<foc:caml/>"
+      | Parsetree.EL_Coq -> Format.fprintf out_fmt "<foc:coq/>"
+      | Parsetree.EL_Dk -> Format.fprintf out_fmt "<foc:dk/>"
+      | Parsetree.EL_external other ->
+          Format.fprintf out_fmt "<foc:other>%s</foc:other>"
+            (Utils_docgen.xmlify_string other)) ;
+      Format.fprintf out_fmt "@]</foc:external-lang>@\n" ;
+      let code_as_xml = Utils_docgen.xmlify_string code in
+      Format.fprintf out_fmt
+        "<foc:external-code>%s</foc:external-code>@\n" code_as_xml
+    )
+    ext_expr.Parsetree.ast_desc.Parsetree.ee_external.Parsetree.ast_desc ;
+  Format.fprintf out_fmt "@]</foc:expr-external>@\n"
+;;
+
+
+
+(* **************************************************** *)
+(** {b Descr}: Emits XML code for a pattern.
+
+    {b Rem}: Not exported outside this module.          *)
+(* **************************************************** *)
 let rec gen_doc_pattern out_fmt pat =
   match pat.Parsetree.ast_desc with
   | Parsetree.P_const cst ->
@@ -450,9 +491,7 @@ and gen_doc_expression out_fmt env expression =
       Format.fprintf out_fmt "@[<h 2><foc:expr-tuple>@\n" ;
       List.iter (gen_doc_expression out_fmt env) exprs ;
       Format.fprintf out_fmt "@]</foc:expr-tuple>@\n"
-  | Parsetree.E_external _ext_expr ->
-      (* TODO *)
-      Format.fprintf out_fmt "<foc:expr-external/>@\n"
+  | Parsetree.E_external ext_expr -> gen_doc_external_expr out_fmt ext_expr
   | Parsetree.E_paren expr ->
       Format.fprintf out_fmt "@[<h 2><foc:expr-paren>@\n" ;
       gen_doc_expression out_fmt env expr ;

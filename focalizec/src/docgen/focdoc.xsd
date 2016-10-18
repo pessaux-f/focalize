@@ -679,6 +679,33 @@
   </xs:element>
 
 
+  <!-- **************** EXTERNALS **************** -->
+
+  <xs:element name="external-code" type="xs:string"/>
+
+  <!-- Kinds of target language. -->
+  <xs:element name="external-lang">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element name="caml"/>
+        <xs:element name="coq"/>
+        <xs:element name="dk"/>
+        <xs:element name="other" type="xs:string"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- External translation. -->
+  <xs:element name="external-transl">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:external-lang"/>
+        <xs:element ref="foc:external-code"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+
 
   <!-- **************** EXPRESSIONS **************** -->
 
@@ -793,7 +820,12 @@
   </xs:element>
 
   <!-- Expression of external code -->
-  <xs:element name="expr-external"/>   <!-- TODO -->
+  <xs:element name="expr-external">
+    <xs:complexType>
+      <xs:element ref="foc:type-expr"/>
+      <xs:element ref="foc:external-transl"/>
+    </xs:complexType>
+  </xs:element>
 
   <!-- Expression sequence. -->
   <xs:element name="expr-sequence">
