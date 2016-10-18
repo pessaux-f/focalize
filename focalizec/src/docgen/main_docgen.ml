@@ -411,11 +411,12 @@ and gen_doc_expression out_fmt env expression =
       Format.fprintf out_fmt "@]</foc:expr-if>@\n"
   | Parsetree.E_let (let_def, expr) ->
       let env' =
-        gen_doc_let_bindings out_fmt env let_def None None "expr-let-in" in
+        gen_doc_let_bindings
+          out_fmt env let_def [(None, None)] ~xmltag: "expr-let-in" in
       (* Now, generate the "in" expression. *)
       gen_doc_expression out_fmt env' expr
   | Parsetree.E_record label_exprs ->
-      Format.fprintf out_fmt "@[<h 2><foc:expr-record>@\n";
+      Format.fprintf out_fmt "@[<h 2><foc:expr-record>@\n" ;
       List.iter
         (fun (label_ident, expr) ->
           let (Parsetree.LI label) = label_ident.Parsetree.ast_desc in
@@ -441,9 +442,9 @@ and gen_doc_expression out_fmt env expression =
           let (Parsetree.LI label) = label_ident.Parsetree.ast_desc in
           (* Since record labels are not methods, we don't want any symbol
              at this point. Hence pass the empty environment. *)
-          gen_doc_ident out_fmt Env_docgen.empty label;
+          gen_doc_ident out_fmt Env_docgen.empty label ;
           gen_doc_expression out_fmt env expr)
-        label_exprs;
+        label_exprs ;
       Format.fprintf out_fmt "@]</foc:expr-record-with>@\n"
   | Parsetree.E_tuple exprs ->
       Format.fprintf out_fmt "@[<h 2><foc:expr-tuple>@\n" ;
@@ -466,16 +467,16 @@ and gen_doc_expression out_fmt env expression =
 
 (** Generate the documentation for a let-def and all its bindings.
     [let_markup] may be "expr-let-in", "global-fun", "meth-let". *)
-and gen_doc_let_bindings out_fmt env let_def opt_doc opt_history let_markup =
+and gen_doc_let_bindings out_fmt env let_def from_n_docs ~xmltag =
   let let_def_descr = let_def.Parsetree.ast_desc in
   let attr_rec_string =
     (match let_def_descr.Parsetree.ld_rec with
      | Parsetree.RF_rec -> " recursive=\"yes\""
      | Parsetree.RF_no_rec -> "") in
-  Format.fprintf out_fmt "@[<h 2><foc:%s%s>@\n" let_markup attr_rec_string ;
+  Format.fprintf out_fmt "@[<h 2><foc:%s%s>@\n" xmltag attr_rec_string ;
   let extended_env =
-    List.fold_left
-      (fun env_accu bnd ->
+    List.fold_left2
+      (fun env_accu bnd (opt_history, opt_doc) ->
         Format.fprintf out_fmt "<foc:fcl-name>%a</foc:fcl-name>@\n"
           Utils_docgen.pp_xml_vname bnd.Parsetree.ast_desc.Parsetree.b_name ;
         (* foc:history?. *)
@@ -522,7 +523,8 @@ and gen_doc_let_bindings out_fmt env let_def opt_doc opt_history let_markup =
             match bnd.Parsetree.ast_desc.Parsetree.b_body with
             | Parsetree.BB_logical lexpr ->
                 Format.fprintf out_fmt
-                  "<foc:let-body><foc:let-body-kind><foc:let-bkind-log/>@\n" ;
+                  "<foc:let-body><foc:let-body-kind><foc:let-bkind-log/>\
+                  </foc:let-body-kind>@\n" ;
                 (* foc:logexpr. *)
                 let evt = gen_doc_logical_expr out_fmt env_accu' lexpr in
                 Format.fprintf out_fmt "</foc:let-body>@\n" ;
@@ -543,14 +545,15 @@ and gen_doc_let_bindings out_fmt env let_def opt_doc opt_history let_markup =
             | Parsetree.BB_logical _ -> assert false
             | Parsetree.BB_computational expr ->
                 Format.fprintf out_fmt
-                  "<foc:let-body><foc:let-body-kind><foc:let-bkind-comp/>@\n" ;
+                  "<foc:let-body><foc:let-body-kind><foc:let-bkind-comp/>\
+                  </foc:let-body-kind>@\n" ;
                 let evt = gen_doc_expression out_fmt env_accu' expr in
                 Format.fprintf out_fmt "</foc:let-body>@\n" ;
                 evt)) ;
         env_accu')
       env
-      let_def_descr.Parsetree.ld_bindings in
-  Format.fprintf out_fmt "@]</foc:%s>@\n" let_markup ;
+      let_def_descr.Parsetree.ld_bindings from_n_docs in
+  Format.fprintf out_fmt "@]</foc:%s>@\n" xmltag ;
   extended_env
 ;;
 
@@ -742,6 +745,48 @@ let gen_doc_property out_fmt env from name lexpr doc =
 
 
 
+(** {b Descr}: Rebuild a let-def from the information exploded in a let-method
+    to be able to use [gen_doc_let_bindings] which factorizes the doc
+    generation for all let-bindings.
+
+    {b Attention}: Assumes that the list of methods infos is not empty. *)
+let make_fake_let_def_from_methods meths_infos =
+  (* Recover the flags as the ones of the first method. Anyway, mutually
+     recursive methods can only share the same flags. *)
+  let flags = match List.hd meths_infos with (_, _, _, _, _, fl) -> fl in
+  (* Same thing for the termination proof, although it is not clear of what
+     is the termination proof of mutually recursive functions :/ *)
+  let opt_term_proof =
+    match List.hd meths_infos with (_, _, _, _, op, _) -> op in
+  let fake_bindings =
+    List.map
+      (fun (name, pnames, sch, body, opt_term_proof, lflags) ->
+        let fake_binding_desc = {
+          Parsetree.b_name = name ;
+          Parsetree.b_params = List.map (fun n -> (n, None)) pnames ;
+          Parsetree.b_type = None ;
+          Parsetree.b_body = body } in
+          { Parsetree.ast_loc = Location.none ;
+            Parsetree.ast_desc = fake_binding_desc ;
+            Parsetree.ast_annot = [] ;
+            Parsetree.ast_type = Parsetree.ANTI_scheme sch })
+      meths_infos in
+  let fake_let_def_desc = {
+    Parsetree.ld_rec = flags.Env.TypeInformation.ldf_recursive ;
+    Parsetree.ld_logical = flags.Env.TypeInformation.ldf_logical ;
+    Parsetree.ld_final = flags.Env.TypeInformation.ldf_final ;
+    Parsetree.ld_local = Parsetree.LF_no_local ; (* Not implemented. *)
+    Parsetree.ld_bindings = fake_bindings ;
+    Parsetree.ld_termination_proof = opt_term_proof } in
+  (* Finally return the [let_def]. *)
+  { Parsetree.ast_loc = Location.none ;
+    Parsetree.ast_desc = fake_let_def_desc ;
+    Parsetree.ast_annot = [] ;
+    Parsetree.ast_type = Parsetree.ANTI_none }
+;;
+
+
+
 (* ************************************************************************ *)
 (** {b Descr}: Emits the XML code for a method of a species.
     We also take in parameter the list of fields of the species definition.
@@ -789,38 +834,34 @@ let gen_doc_method out_fmt env species_def_fields = function
       )
   | Env.TypeInformation.SF_let
       (from, n, pnames, sch, body, opt_term_proof, _, lflags) ->
-      (* foc:meth-let. *)
       let doc =
         Utils_docgen.find_annotation_of_method n species_def_fields in
       (* Let's build a fake let_def AST node to directly feed
          [gen_doc_let_bindings]. *)
-      let fake_binding_desc = {
-        Parsetree.b_name = n ;
-        Parsetree.b_params = List.map (fun n -> (n, None)) pnames ;
-        Parsetree.b_type = None ;
-        Parsetree.b_body = body } in
-      let fake_binding = {
-        Parsetree.ast_loc = Location.none ;
-        Parsetree.ast_desc = fake_binding_desc ;
-        Parsetree.ast_annot = [] ;
-        Parsetree.ast_type = Parsetree.ANTI_scheme sch } in
-      let fake_let_def_desc = {
-        Parsetree.ld_rec = lflags.Env.TypeInformation.ldf_recursive ;
-        Parsetree.ld_logical = lflags.Env.TypeInformation.ldf_logical ;
-        Parsetree.ld_final = lflags.Env.TypeInformation.ldf_final ;
-        Parsetree.ld_local = Parsetree.LF_no_local ; (* Not implemented. *)
-        Parsetree.ld_bindings = [fake_binding] ;
-        Parsetree.ld_termination_proof = opt_term_proof } in
-      let fake_let_def = {
-        Parsetree.ast_loc = Location.none ;
-        Parsetree.ast_desc = fake_let_def_desc ;
-        Parsetree.ast_annot = [] ;
-        Parsetree.ast_type = Parsetree.ANTI_scheme sch } in
+      let fake_let_def =
+        make_fake_let_def_from_methods
+          [ (n, pnames, sch, body, opt_term_proof, lflags)] in
       gen_doc_let_bindings
-        out_fmt env fake_let_def (Some doc) (Some from) "meth-let"
-   | Env.TypeInformation.SF_let_rec _l ->
-       (* foc:meth-let, foc:meth-letprop. *)  (* TODO *)
-       env
+        out_fmt env fake_let_def [((Some from), (Some doc))] ~xmltag: "meth-let"
+   | Env.TypeInformation.SF_let_rec meths_infos ->
+       let meths_sub_infos =
+         (* Put relevant infos in a list of tuples. *)
+         List.map
+           (fun (_, n, pnames, sch, body, opt_term_proof, _, lflags) ->
+             (n, pnames, sch, body, opt_term_proof, lflags))
+           meths_infos in
+       (* Recover "from" and "doc" information. Btw, traversing the list twice
+          is not more costly than doing it once then splitting it ! *)
+       let from_n_docs =
+         List.map
+           (fun (from, n, _, _, _, _, _, _) ->
+             let doc =
+               Utils_docgen.find_annotation_of_method n species_def_fields in
+             ((Some from), (Some doc)))
+           meths_infos in
+       let fake_let_defs = make_fake_let_def_from_methods meths_sub_infos in
+       gen_doc_let_bindings
+         out_fmt env fake_let_defs from_n_docs ~xmltag: "meth-let"
    | Env.TypeInformation.SF_theorem (from, n, _, body, _, _) ->
        (* foc:meth-theorem. *)
        let doc =
@@ -916,17 +957,19 @@ let gen_doc_collection out_fmt env ~current_unit coll_def coll_descr =
 ;;
 
 
+
 let gen_doc_testing out_fmt env ~current_unit:_current_unit testing_def =
 (* TODO TESTING: for now we only print the name of the testing, in the
   future we should make a link to or embed the testing report if
    generated. *)
-  (* foc:collection. *)
   Format.fprintf out_fmt "@[<h 2><foc:testing>@\n" ;
   Format.fprintf out_fmt "<foc:fcl-name>%a</foc:fcl-name>@\n"
     Utils_docgen.pp_xml_vname
     testing_def.Parsetree.ast_desc.Parsetree.tstd_name ;
   Format.fprintf out_fmt "@]</foc:testing>@\n@\n" ;
   env
+;;
+
 
 
 let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
@@ -1007,7 +1050,8 @@ let gen_doc_pcm out_fmt env ~current_unit = function
   | Infer.PCM_let_def (let_def, schemes) ->
       Types.purge_type_simple_to_xml_variable_mapping () ;
       (* foc:global-fun *)
-      gen_doc_let_bindings out_fmt env let_def None None "global-fun"
+      gen_doc_let_bindings
+        out_fmt env let_def [(None, None)] ~xmltag: "global-fun"
   | Infer.PCM_theorem (theo_def, _) ->
       Types.purge_type_simple_to_xml_variable_mapping () ;
       (* foc:theorem. *)
