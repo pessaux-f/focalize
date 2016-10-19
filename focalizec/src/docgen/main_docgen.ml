@@ -219,6 +219,27 @@ let gen_doc_history out_fmt from_hist =
 
 
 
+let gen_doc_external_translation out_fmt ext_transl =
+  Format.fprintf out_fmt "@[<h 2><foc:external-transl>@\n" ;
+  List.iter
+    (fun (lang, code) ->
+      Format.fprintf out_fmt "@[<h 2><foc:external-lang>@\n" ;
+      (match lang with
+      | Parsetree.EL_Caml -> Format.fprintf out_fmt "<foc:caml/>"
+      | Parsetree.EL_Coq -> Format.fprintf out_fmt "<foc:coq/>"
+      | Parsetree.EL_Dk -> Format.fprintf out_fmt "<foc:dk/>"
+      | Parsetree.EL_external other ->
+          Format.fprintf out_fmt "<foc:other>%s</foc:other>"
+            (Utils_docgen.xmlify_string other)) ;
+      Format.fprintf out_fmt "@]</foc:external-lang>@\n" ;
+      let code_as_xml = Utils_docgen.xmlify_string code in
+      Format.fprintf out_fmt
+        "<foc:external-code>%s</foc:external-code>@\n" code_as_xml)
+    ext_transl.Parsetree.ast_desc ;
+  Format.fprintf out_fmt "@]</foc:external-transl>@\n"
+;;
+
+
 
 (* ****************************************************** *)
 (** {b Descr}: Emits XML code for an external expression.
@@ -233,22 +254,8 @@ let gen_doc_external_expr out_fmt ext_expr =
     | Parsetree.ANTI_none | Parsetree.ANTI_irrelevant -> assert false
     | Parsetree.ANTI_scheme sch -> Types.specialize sch) in
   gen_doc_type out_fmt ty ;
-  List.iter
-    (fun (lang, code) ->
-      Format.fprintf out_fmt "@[<h 2><foc:external-lang>@\n" ;
-      (match lang with
-      | Parsetree.EL_Caml -> Format.fprintf out_fmt "<foc:caml/>"
-      | Parsetree.EL_Coq -> Format.fprintf out_fmt "<foc:coq/>"
-      | Parsetree.EL_Dk -> Format.fprintf out_fmt "<foc:dk/>"
-      | Parsetree.EL_external other ->
-          Format.fprintf out_fmt "<foc:other>%s</foc:other>"
-            (Utils_docgen.xmlify_string other)) ;
-      Format.fprintf out_fmt "@]</foc:external-lang>@\n" ;
-      let code_as_xml = Utils_docgen.xmlify_string code in
-      Format.fprintf out_fmt
-        "<foc:external-code>%s</foc:external-code>@\n" code_as_xml
-    )
-    ext_expr.Parsetree.ast_desc.Parsetree.ee_external.Parsetree.ast_desc ;
+  gen_doc_external_translation
+    out_fmt ext_expr.Parsetree.ast_desc.Parsetree.ee_external ;
   Format.fprintf out_fmt "@]</foc:expr-external>@\n"
 ;;
 
@@ -1191,9 +1198,19 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
        Format.fprintf out_fmt "<foc:tydef-alias>" ;
        gen_doc_type out_fmt ty_identity ;
        Format.fprintf out_fmt "</foc:tydef-alias>@\n"
-   | Env.TypeInformation.TK_external _ ->
-       (* TODO *)
-       Format.fprintf out_fmt "<foc:tydef-external></foc:tydef-external>@\n"
+   | Env.TypeInformation.TK_external (ext_transl, ext_mapping) ->
+       Format.fprintf out_fmt "<@[<h 2>foc:tydef-external>@\n" ;
+       gen_doc_external_translation out_fmt ext_transl ;
+       List.iter
+         (fun ext_binding ->
+           let (vname, ext_trans) = ext_binding.Parsetree.ast_desc in
+           Format.fprintf out_fmt "<@[<h 2>foc:external-ty-value-mapping>@\n" ;
+           Format.fprintf out_fmt "<foc:fcl-name>%a</foc:fcl-name>@\n"
+             Utils_docgen.pp_xml_vname vname ;
+           gen_doc_external_translation out_fmt ext_transl ;
+           Format.fprintf out_fmt "@]</foc:external-ty-value-mapping>@\n")
+         ext_mapping.Parsetree.ast_desc ;
+       Format.fprintf out_fmt "@]</foc:tydef-external>@\n"
    | Env.TypeInformation.TK_variant constructors ->
        Format.fprintf out_fmt"@[<h 2><foc:tydef-sum>@\n" ;
        List.iter

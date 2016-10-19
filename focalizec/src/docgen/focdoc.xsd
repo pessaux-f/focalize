@@ -330,8 +330,22 @@
     </xs:complexType>
   </xs:element>
 
-  <!-- External type. TODO: add information. -->
-  <xs:element name="tydef-external"/>
+  <xs:element name="external-ty-value-mapping">
+    <xs:complexType>
+      <xs:element ref="foc:fcl-name"/>
+      <xs:element ref="foc:external-transl"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- External type. -->
+  <xs:element name="tydef-external">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="foc:external-transl"/>
+        <xs:element ref="foc:external-ty-value-mapping"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
 
   <!-- Alias type definition with its equivalent type expression. -->
   <xs:element name="tydef-alias">
