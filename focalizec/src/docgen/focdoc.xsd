@@ -131,9 +131,184 @@
     </xs:complexType>
   </xs:element>
 
+  <!--  Enforced def-dependency. -->
+  <xs:element name="forced-def-dep">
+    <xs:complexType>
+      <xs:element ref="foc:identifier"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!--  Enforced decl-dependency. -->
+  <xs:element name="forced-decl-dep">
+    <xs:complexType>
+      <xs:element ref="foc:identifier"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!--  Enforced dependencies for a proof. -->
+  <xs:element name="forced-deps">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="foc:forced-def-dep"/>
+        <xs:element ref="foc:forced-decl-dep"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Assumed proof. -->
+  <xs:element name="pr-assumed">
+    <xs:complexType>
+      <xs:element ref="foc:forced-deps"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Manual proof in Coq. -->
+  <xs:element name="pr-coq">
+    <xs:complexType>
+      <xs:element ref="foc:forced-deps"/>
+      <xs:element ref="foc:external-code"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Manual proof in Dedukti. -->
+  <xs:element name="pr-dk">
+    <xs:complexType>
+      <xs:element ref="foc:forced-deps"/>
+      <xs:element ref="foc:external-code"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="node-label">
+    <xs:complexType>
+      <xs:attribute name="num" type="xs:int"/>
+      <xs:attribute name="name" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="fact-def">
+    <xs:complexType>
+      <xs:element ref="foc:identifier"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="fact-type">
+    <xs:complexType>
+      <xs:element ref="foc:identifier"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="fact-prop">
+    <xs:complexType>
+      <xs:element ref="foc:identifier"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="fact-hyp">
+    <xs:complexType>
+      <xs:element ref="fcl:name"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="fact-node">
+    <xs:complexType>
+      <xs:element ref="foc:node-label"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Kinds of hints in an automated proof. -->
+  <xs:element name="proof-fact">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="foc:fact-def"/>
+        <xs:element ref="foc:fact-prop"/>
+        <xs:element ref="foc:fact-hyp"/>
+        <xs:element ref="foc:fact-node"/>
+        <xs:element ref="foc:fact-type"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Proof left to the automated prover. -->
+  <xs:element name="pr-auto">
+    <xs:complexType>
+      <xs:element ref="foc:proof-fact"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="stmt-hyp-var">
+    <xs:complexType>
+      <xs:element ref="foc:fcl-name"/>
+      <xs:element ref="foc:type-expr"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="stmt-hyp-hyp">
+    <xs:complexType>
+      <xs:element ref="foc:fcl-name"/>
+      <xs:element ref="foc:logexpr"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="stmt-hyp-notation">
+    <xs:complexType>
+      <xs:element ref="foc:fcl-name"/>
+      <xs:element ref="foc:expr"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="stmt-hyp">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="foc:stmt-hyp-var"/>
+        <xs:element ref="foc:stmt-hyp-hyp"/>
+        <xs:element ref="foc:stmt-hyp-notation"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="statement">
+    <xs:complexType>
+      <xs:element ref="foc:stmt-hyp"/>
+      <xs:element minOccurs="0" ref="foc:logexpr"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="pr-node-sub">
+    <xs:complexType>
+      <xs:element ref="foc:node-label"/>
+      <xs:element ref="foc:statement"/>
+      <xs:element ref="foc:proof"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="pr-node-qed">
+    <xs:complexType>
+      <xs:element ref="foc:node-label"/>
+      <xs:element ref="foc:proof"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- Proof composed of several nodes (sub-proofs). -->
+  <xs:element name="pr-nodes">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="foc:pr-node-sub"/>
+        <xs:element ref="foc:pr-node-qed"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+
   <!-- Theorem's proof. -->
   <xs:element name="proof">
-    <xs:complexType/>
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="foc:pr-assumed"/>
+        <xs:element ref="foc:pr-auto"/>
+        <xs:element ref="foc:pr-coq"/>
+        <xs:element ref="foc:pr-dk"/>
+        <xs:element ref="foc:pr-nodes"/>
+      </xs:choice>
+    </xs:complexType>
   </xs:element>
 
   <!-- Collection "implements" clause. -->

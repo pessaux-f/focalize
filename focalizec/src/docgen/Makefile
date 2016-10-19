@@ -25,7 +25,7 @@ XSL_OBJS = focdoc2html.xsl mmlctop2_0.xsl proposition2tex.xsl focdoc2tex.xsl \
 include $(ROOT_DIR)/Makefile.common
 
 CAML_INCLUDES = -I ../basement -I ../parser -I ../typing
-CAML_FLAGS = -w A-4-9 -warn-error $(WARN_ERROR) -safe-string
+CAML_FLAGS = -w A-4-9-50 -warn-error $(WARN_ERROR) -safe-string
 
 
 

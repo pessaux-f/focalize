@@ -730,8 +730,168 @@ let gen_doc_parameters out_fmt env ~current_unit params =
 
 
 
+(* *********************************************************************** *)
+(** {b Descr}: Emit XML code for manually enforced dependencies of a proof
+    directly written in a target logical language.
+
+    {b Rem}: Not exported outside this module. *)
+(* *********************************************************************** *)
+let gen_doc_enforced_deps out_fmt env dep =
+  let (expr_idents, xmltag) =
+    match dep.Parsetree.ast_desc with
+    | Parsetree.Ed_definition eis -> (eis, "forced-def-dep")
+    | Parsetree.Ed_property eis -> (eis, "forced-decl-dep") in
+  List.iter
+    (fun ei ->
+      Format.fprintf out_fmt "@[<h 2><foc:%s>@\n" xmltag ;
+      gen_doc_expr_ident out_fmt env ei ;
+      Format.fprintf out_fmt "@]</foc:%s>@\n" xmltag)
+    expr_idents
+;;
+
+
+
+let gen_doc_node_label out_fmt (num, name) =
+  Format.fprintf out_fmt
+    "<foc:node-label num=\"%d\" name=\"%s\"></foc:node-label>@\n"
+    num (Utils_docgen.xmlify_string name)
+;;
+
+
+
+(* ******************************************* *)
+(** {b Descr}: Emit XML code for proofs.
+
+    {b Rem}: Not exported outside this module. *)
+(* ******************************************* *)
+let rec gen_doc_proof out_fmt env pr =
+  Format.fprintf out_fmt "@[<h 2><foc:proof>@\n" ;
+  (match pr.Parsetree.ast_desc with
+  | Parsetree.Pf_assumed deps ->
+      Format.fprintf out_fmt "@[<h 2><foc:pr-assumed>@\n" ;
+      Format.fprintf out_fmt "@[<h 2><foc:forced-deps>@\n" ;
+      List.iter (gen_doc_enforced_deps out_fmt env) deps ;
+      Format.fprintf out_fmt "@]</foc:forced-deps>@\n" ;
+      Format.fprintf out_fmt "@]</foc:pr-assumed>@\n"
+  | Parsetree.Pf_auto facts ->
+      Format.fprintf out_fmt "@[<h 2><foc:pr-auto>@\n" ;
+      List.iter (gen_doc_fact out_fmt env) facts ;
+      Format.fprintf out_fmt "@]</foc:pr-auto>@\n"
+  | Parsetree.Pf_coq (deps, ext_code) ->
+      Format.fprintf out_fmt "@[<h 2><foc:pr-coq>@\n" ;
+      Format.fprintf out_fmt "@[<h 2><foc:forced-deps>@\n" ;
+      List.iter (gen_doc_enforced_deps out_fmt env) deps ;
+      Format.fprintf out_fmt "@]</foc:forced-deps>@\n" ;
+      let code_as_xml = Utils_docgen.xmlify_string ext_code in
+      Format.fprintf out_fmt
+        "<foc:external-code>%s</foc:external-code>@\n" code_as_xml ;
+      Format.fprintf out_fmt "@]</foc:pr-coq>@\n"
+  | Parsetree.Pf_dk (deps, ext_code) ->
+      Format.fprintf out_fmt "@[<h 2><foc:pr-dk>@\n" ;
+      Format.fprintf out_fmt "@[<h 2><foc:forced-deps>@\n" ;
+      List.iter (gen_doc_enforced_deps out_fmt env) deps ;
+      Format.fprintf out_fmt "@]</foc:forced-deps>@\n" ;
+      let code_as_xml = Utils_docgen.xmlify_string ext_code in
+      Format.fprintf out_fmt
+        "<foc:external-code>%s</foc:external-code>@\n" code_as_xml ;
+      Format.fprintf out_fmt "@]</foc:pr-dk>@\n"
+  | Parsetree.Pf_node pnodes ->
+      Format.fprintf out_fmt "@[<h 2><foc:pr-nodes>@\n" ;
+      List.iter
+        (fun node ->
+          match node.Parsetree.ast_desc with
+          | Parsetree.PN_sub (nlabel, stmt, pr) ->
+              Format.fprintf out_fmt "@[<h 2><foc:pr-node-sub>@\n" ;
+              gen_doc_node_label out_fmt nlabel ;
+              gen_doc_statement out_fmt env stmt ;
+              gen_doc_proof out_fmt env pr ;
+              Format.fprintf out_fmt "@]</foc:pr-node-sub>@\n"
+          | Parsetree.PN_qed (nlabel, pr) ->
+              Format.fprintf out_fmt "@[<h 2><foc:pr-node-qed>@\n" ;
+              gen_doc_node_label out_fmt nlabel ;
+              gen_doc_proof out_fmt env pr ;
+              Format.fprintf out_fmt "@]</foc:pr-node-qed>@\n")
+        pnodes ;
+      Format.fprintf out_fmt "@]</foc:pr-nodes>@\n"
+  ) ;
+  Format.fprintf out_fmt "@]</foc:proof>@\n"
+
+
+
+and gen_doc_statement out_fmt env stmt =
+  Format.fprintf out_fmt "@[<h 2><foc:statement>@\n" ;
+  let stmt_desc = stmt.Parsetree.ast_desc in
+  List.iter
+    (fun hyp ->
+      match hyp.Parsetree.ast_desc with
+      | Parsetree.H_variable (vname, ty_expr) ->
+          Format.fprintf out_fmt "@[<h 2><foc:stmt-hyp-var>@\n" ;
+          Format.fprintf out_fmt
+            "<foc:fcl-name>%a</foc:fcl-name>" Utils_docgen.pp_xml_vname vname ;
+          let ty =
+            (match ty_expr.Parsetree.ast_type with
+            | Parsetree.ANTI_type t -> t
+            | Parsetree.ANTI_none | Parsetree.ANTI_irrelevant
+            | Parsetree.ANTI_scheme _ -> assert false) in
+          gen_doc_type out_fmt ty ;
+          Format.fprintf out_fmt "@]</foc:stmt-hyp-var>@\n"
+      | Parsetree.H_hypothesis (vname, logexpr) ->
+          Format.fprintf out_fmt "@[<h 2><foc:stmt-hyp-hyp>@\n" ;
+          Format.fprintf out_fmt
+            "<foc:fcl-name>%a</foc:fcl-name>" Utils_docgen.pp_xml_vname vname ;
+          gen_doc_logical_expr out_fmt env logexpr ;
+          Format.fprintf out_fmt "@]</foc:stmt-hyp-hyp>@\n"
+      | Parsetree.H_notation (vname, expr) ->
+          Format.fprintf out_fmt "@[<h 2><foc:stmt-hyp-notation>@\n" ;
+          Format.fprintf out_fmt
+            "<foc:fcl-name>%a</foc:fcl-name>" Utils_docgen.pp_xml_vname vname ;
+          gen_doc_expression out_fmt env expr ;
+          Format.fprintf out_fmt "@]</foc:stmt-hyp-notation>@\n")
+    stmt_desc.Parsetree.s_hyps ;
+  (match stmt_desc.Parsetree.s_concl with
+  | None -> ()
+  | Some logexpr -> gen_doc_logical_expr out_fmt env logexpr) ;
+  Format.fprintf out_fmt "@]</foc:statement>@\n"
+
+
+
+and gen_doc_fact out_fmt env fact =
+  match fact.Parsetree.ast_desc with
+  | Parsetree.F_definition expr_idents ->
+      List.iter
+        (fun ei ->
+          Format.fprintf out_fmt "@[<h 2><foc:fact-def>@\n" ;
+          gen_doc_expr_ident out_fmt env ei ;
+          Format.fprintf out_fmt "@]</foc:fact-def>@\n")
+        expr_idents
+  | Parsetree.F_property expr_idents ->
+      List.iter
+        (fun ei ->
+          Format.fprintf out_fmt "@[<h 2><foc:fact-prop>@\n" ;
+          gen_doc_expr_ident out_fmt env ei ;
+          Format.fprintf out_fmt "@]</foc:fact-prop>@\n")
+        expr_idents
+  | Parsetree.F_hypothesis vnames ->
+      List.iter
+        (fun vn ->
+          Format.fprintf out_fmt
+            "<foc:fact-hyp><foc:fcl-name>%a</foc:fcl-name></foc:fact-hyp>@\n"
+            Utils_docgen.pp_xml_vname vn)
+        vnames
+  | Parsetree.F_node node_labels ->
+      Format.fprintf out_fmt "@[<h 2><foc:fact-node>@\n" ;
+      List.iter (gen_doc_node_label out_fmt) node_labels ;
+      Format.fprintf out_fmt "@]</foc:fact-node>@\n"
+  | Parsetree.F_type idents ->
+      Format.fprintf out_fmt "@[<h 2><foc:fact-type>@\n" ;
+      List.iter (gen_doc_ident out_fmt env) idents ;
+      Format.fprintf out_fmt "@]</foc:fact-type>@\n"
+;;
+
+
+
 (* If [from_opt] is None, then we are called for a toplevel logical let. *)
-let gen_doc_theorem out_fmt env opt_from name lexpr doc =
+let gen_doc_theorem out_fmt env opt_from name lexpr proof doc =
   if opt_from = None then
     Format.fprintf out_fmt "@[<h 2><foc:global-theorem>@\n"
   else Format.fprintf out_fmt "@[<h 2><foc:meth-theorem>@\n" ;
@@ -739,18 +899,16 @@ let gen_doc_theorem out_fmt env opt_from name lexpr doc =
   Format.fprintf out_fmt "<foc:fcl-name>%a</foc:fcl-name>@\n"
     Utils_docgen.pp_xml_vname name ;
   (* foc:history?. *)
-  (match opt_from with Some from -> gen_doc_history out_fmt from |None -> ()) ;
+  (match opt_from with Some from -> gen_doc_history out_fmt from | None -> ()) ;
   (* foc:informations. *)
   let (_, _, i_descrip, i_mathml, i_latex, i_other) =
     Utils_docgen.extract_tagged_info_from_annotation doc in
   gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other ;
   let env' = Env_docgen.add_method name i_mathml i_latex env in
   (* foc:logexpr. *)
-  gen_doc_logical_expr out_fmt env' lexpr;
+  gen_doc_logical_expr out_fmt env' lexpr ;
   (* foc:proof. *)
-  Format.fprintf out_fmt "@[<h 2><foc:proof>@\n" ;
-  (* TODO. *)
-  Format.fprintf out_fmt "@]</foc:proof>@\n" ;
+  gen_doc_proof out_fmt env' proof ;
   if opt_from = None then Format.fprintf out_fmt "@]</foc:global-theorem>@\n"
   else Format.fprintf out_fmt "@]</foc:meth-theorem>@\n" ;
   env'
@@ -900,11 +1058,11 @@ let gen_doc_method out_fmt env species_def_fields = function
        let fake_let_defs = make_fake_let_def_from_methods meths_sub_infos in
        gen_doc_let_bindings
          out_fmt env fake_let_defs from_n_docs ~xmltag: "meth-let"
-   | Env.TypeInformation.SF_theorem (from, n, _, body, _, _) ->
+   | Env.TypeInformation.SF_theorem (from, n, _, body, proof, _) ->
        (* foc:meth-theorem. *)
        let doc =
          Utils_docgen.find_annotation_of_method n species_def_fields in
-       gen_doc_theorem out_fmt env (Some from) n body doc
+       gen_doc_theorem out_fmt env (Some from) n body proof doc
    | Env.TypeInformation.SF_property (from, n, _, body, _) ->
        (* foc:meth-property. *)
        let doc =
@@ -1098,7 +1256,7 @@ let gen_doc_pcm out_fmt env ~current_unit = function
       (* No history, hence pass [None]. *)
       gen_doc_theorem
         out_fmt env None th_desc.Parsetree.th_name th_desc.Parsetree.th_stmt
-        theo_def.Parsetree.ast_annot
+        th_desc.Parsetree.th_proof theo_def.Parsetree.ast_annot
   | Infer.PCM_expr _ ->
       (* Since toplevel expressions are not usable for any developpement, we
          do not document them. *)
