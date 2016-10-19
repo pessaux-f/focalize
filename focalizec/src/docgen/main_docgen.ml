@@ -458,9 +458,14 @@ and gen_doc_expression out_fmt env expression =
       gen_doc_expression out_fmt env expr3 ;
       Format.fprintf out_fmt "@]</foc:expr-if>@\n"
   | Parsetree.E_let (let_def, expr) ->
+      (* Build as many fake history and doc as there are bindings. *)
+      let empty_from_n_docs =
+        List.map
+          (fun _ -> (None, None))
+          let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
       let env' =
         gen_doc_let_bindings
-          out_fmt env let_def [(None, None)] ~xmltag: "expr-let-in" in
+          out_fmt env let_def empty_from_n_docs ~xmltag: "expr-let-in" in
       (* Now, generate the "in" expression. *)
       gen_doc_expression out_fmt env' expr
   | Parsetree.E_record label_exprs ->
@@ -1263,9 +1268,13 @@ let gen_doc_pcm out_fmt env ~current_unit = function
       env
   | Infer.PCM_let_def (let_def, schemes) ->
       Types.purge_type_simple_to_xml_variable_mapping () ;
-      (* foc:global-fun *)
+      (* Build as many fake history and doc as there are bindings. *)
+      let empty_from_n_docs =
+        List.map
+          (fun _ -> (None, None))
+          let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
       gen_doc_let_bindings
-        out_fmt env let_def [(None, None)] ~xmltag: "global-fun"
+        out_fmt env let_def empty_from_n_docs ~xmltag: "global-fun"
   | Infer.PCM_theorem (theo_def, _) ->
       Types.purge_type_simple_to_xml_variable_mapping () ;
       (* foc:theorem. *)
