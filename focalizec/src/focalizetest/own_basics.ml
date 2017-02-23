@@ -27,8 +27,8 @@ let focintleq = Infix "<=";;
 
 let focaddint = Infix "+";;
 let focstringconcat = Infix "^";;
-let focpred = Prefix(Some "basics", "pred");;
-let focsucc = Prefix(Some "basics", "succ");;
+let focpred = Prefix(Some "basics", "int_pred");;
+let focsucc = Prefix(Some "basics", "int_succ");;
 let focunit = Prefix(Some "basics", "()");;
 let foctrue = Prefix(Some "basics", "True");;
 let focfalse = Prefix(Some "basics", "False");;
