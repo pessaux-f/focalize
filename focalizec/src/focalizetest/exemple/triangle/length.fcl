@@ -138,8 +138,8 @@ species Length_imp_int =
   let from_int (x : int) : Self = x;
   let to_int (x : Self) : Self = x;
 
-  let min (x : Self, y : Self) : Self = min(x, y);
-  let max (x : Self, y : Self) : Self = max(x, y);
+  let min (x : Self, y : Self) : Self = int_min (x, y) ;
+  let max (x : Self, y : Self) : Self = int_max (x, y) ;
 end;;
 
 species Length_int = inherit Length_imp_int, Length_spec; end;;

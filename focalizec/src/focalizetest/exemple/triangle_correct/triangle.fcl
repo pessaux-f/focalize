@@ -1,97 +1,96 @@
-use "sets_orders";;
-open "sets_orders";;
+use "sets" ;;
+open "sets" ;;
 open "basics";;
 
-use "length";;
-open "length";;
+use "length" ;;
+open "length" ;;
 
 type triangle_type =
-| Equilateral
-| Isosceles
-| Scalene
-| Error
+  | Equilateral
+  | Isosceles
+  | Scalene
+  | Error
 ;;
 
 type edge_name =
-| A
-| B
-| C
+  | A
+  | B
+  | C
 ;;
 
 
-let rec sup_elem(e, l) =
+let rec sup_elem (e, l) =
   match l with
  | [] -> (false, l)
  | ee ::r ->
-     if e = ee then
-       (true, r)
+     if e = ee then (true, r)
      else
-       let crp = #sup_elem(e, r) in
-       let b = basics#fst(crp) in
-       let ll = basics#snd(crp) in
-       (b, ee::ll);;
+       let crp = #sup_elem (e, r) in
+       let b = basics#fst (crp) in
+       let ll = basics#snd (crp) in
+       (b, ee :: ll)
+;;
 
-let rec permute(l1, l2) =
+let rec permute (l1, l2) =
   match l1 with
-  | [] -> l2 = [] 
-  | e::r ->
-      let crp = #sup_elem(e, l2) in
-      let b = basics#fst(crp) in
-      let l2 = basics#snd(crp) in
-      if b then
-        #permute(r, l2)
-      else
-        false;;
+  | [] -> l2 = []
+  | e :: r ->
+      let crp = #sup_elem (e, l2) in
+      let b = basics#fst (crp) in
+      let l2 = basics#snd (crp) in
+      if b then #permute (r, l2)
+      else false
+;;
 
-let parse_triplet : string -> bool * (int * (int * int)) = 
-  external | caml ->
-  {*
-let rec number c = (Char.code c >= Char.code '0' && Char.code c <= Char.code '9') in
-let rec pow n m = if m = 0 then 1 else n * pow n (m - 1) in 
-let int_of_char c = Char.code c - Char.code '0' in
-let rec numbers s i max =
-   if i < max && number s.[i] then
-     let (l, n) = numbers s (i+1) max in
-     let g = int_of_char s.[i] in 
-      (l+1, g * (pow 10 l) + n)
-   else
-      (0, 0) in
-fun s ->
-  let l = String.length s in
-  if l > 0 && s.[0] = '(' then
-      let (l1, n1) = numbers s 1 l in
-      if l1 = 0 then
-        (false, (1, (1, 1)))
-      else
-        let c = l1 + 1 in
-          if c < l && s.[c] = ',' then
+let parse_triplet =
+  internal string -> bool * (int * (int * int))
+  external
+  | caml ->
+    {*
+     let rec number c =
+       (Char.code c >= Char.code '0' && Char.code c <= Char.code '9') in
+     let rec pow n m = if m = 0 then 1 else n * pow n (m - 1) in
+     let int_of_char c = Char.code c - Char.code '0' in
+     let rec numbers s i max =
+       if i < max && number s.[i] then
+         let (l, n) = numbers s (i+1) max in
+         let g = int_of_char s.[i] in
+         (l+1, g * (pow 10 l) + n)
+       else (0, 0) in
+     fun s ->
+       let l = String.length s in
+       if l > 0 && s.[0] = '(' then
+         let (l1, n1) = numbers s 1 l in
+         if l1 = 0 then (false, (1, (1, 1)))
+         else
+           let c = l1 + 1 in
+           if c < l && s.[c] = ',' then
              let (l2, n2) = numbers s (c + 1) l in
-               if l2 = 0 then
-                 (false, (1, (1, 1)))
-               else
-                 let c = c + 1 + l2 in
-                   if c < l && s.[c] = ',' then
-                     let (l3, n3) = numbers s (c + 1) l in
-                       if l2 = 0 then
-                         (false, (1, (1, 1)))
-                       else
-                         let c = c + 1 + l3 in
-                           if c < l && s.[c] = ')' then
-                             ( c + 1 = l , (n1, (n2, n3)))
-                           else
-                     (false, (1, (1, 1)))
+             if l2 = 0 then (false, (1, (1, 1)))
+             else
+               let c = c + 1 + l2 in
+               if c < l && s.[c] = ',' then
+                 let (l3, n3) = numbers s (c + 1) l in
+                 if l2 = 0 then (false, (1, (1, 1)))
+                 else
+                   let c = c + 1 + l3 in
+                   if c < l && s.[c] = ')' then
+                     ( c + 1 = l , (n1, (n2, n3)))
                    else
                      (false, (1, (1, 1)))
-          else
-            (false, (1, (1, 1)))
-  else
-    (false, (1, (1, 1)))
-    *};;
+               else
+                 (false, (1, (1, 1)))
+           else
+             (false, (1, (1, 1)))
+       else
+         (false, (1, (1, 1)))
+    *}
+;;
 
 species Triangle_spec(Edge is Length_spec) =
 (*   rep; *)
 
- (* The required methods : *) 
+ (* The required methods : *)
   signature triangle_type : Self -> triangle_type;
   signature first : Self -> Edge;
   signature scnd  : Self -> Edge;
@@ -135,21 +134,21 @@ species Triangle_spec(Edge is Length_spec) =
       Edge!leq(!min(!create_triangle(e1, e2, e3)), e1) /\
       Edge!leq(!min(!create_triangle(e1, e2, e3)), e2) /\
       Edge!leq(!min(!create_triangle(e1, e2, e3)), e3)
-    proof = assumed; 
+    proof = assumed;
 
   theorem med_is_med :
       all e1 e2 e3 : Edge,
       Edge!leq(!min(!create_triangle(e1, e2, e3)), !med(!create_triangle(e1, e2, e3)))
                                   /\
       Edge!leq(!med(!create_triangle(e1, e2, e3)), !max(!create_triangle(e1, e2, e3)))
-    proof = assumed; 
+    proof = assumed;
 
   theorem max_is_max :
       all e1 e2 e3 : Edge,
       Edge!leq(e1, !max(!create_triangle(e1, e2, e3))) /\
       Edge!leq(e2, !max(!create_triangle(e1, e2, e3))) /\
-      Edge!leq(e3, !max(!create_triangle(e1, e2, e3))) 
-    proof = assumed; 
+      Edge!leq(e3, !max(!create_triangle(e1, e2, e3)))
+    proof = assumed;
 
   theorem min_med_max_give_an_edge :
       all e1 e2 e3 : Edge,
@@ -162,22 +161,22 @@ species Triangle_spec(Edge is Length_spec) =
       (Edge!equal(!max(!create_triangle(e1, e2, e3)), e1) \/
       Edge!equal(!max(!create_triangle(e1, e2, e3)), e2) \/
       Edge!equal(!max(!create_triangle(e1, e2, e3)), e3))
-    proof = assumed; 
+    proof = assumed;
 
  (* The constructor is sound via accessor : *)
   theorem create_triangle_correct :
       all e1 e2 e3 : Edge,
       Edge!equal(!first(!create_triangle(e1, e2, e3)), e1) /\
       Edge!equal(!scnd (!create_triangle(e1, e2, e3)), e2) /\
-      Edge!equal(!thrd (!create_triangle(e1, e2, e3)), e3) 
+      Edge!equal(!thrd (!create_triangle(e1, e2, e3)), e3)
     proof =
       assumed;
 
  (* The accessors are sound each others : *)
   theorem length_tsf_correct :
       all t : Self,
-        Edge!equal(!first(t), !length(t, #A)) /\ 
-        Edge!equal(!scnd(t), !length(t, #B)) /\ 
+        Edge!equal(!first(t), !length(t, #A)) /\
+        Edge!equal(!scnd(t), !length(t, #B)) /\
         Edge!equal(!thrd(t), !length(t, #C))
     proof =
       assumed;
@@ -195,7 +194,7 @@ species Triangle_spec(Edge is Length_spec) =
       Edge!leq(!scnd(!organize(t)), !thrd(!organize(t)))
     proof =
       assumed;
-  
+
   (* organize returns a permutation : *)
   theorem organize_permute :
       all t : Self, #permute(!first(t)::!scnd(t)::!thrd(t)::[],
@@ -217,7 +216,7 @@ species Triangle_spec(Edge is Length_spec) =
 
   theorem triangle_type_correct_equi :
     all t : Self,
-    !triangle_type(t) = #Equilateral -> 
+    !triangle_type(t) = #Equilateral ->
       (Edge!equal(!first(t), !scnd(t)) /\
        Edge!equal(!first(t), !thrd(t)) /\
        Edge!equal(!scnd (t), !thrd(t)) /\
@@ -228,7 +227,7 @@ species Triangle_spec(Edge is Length_spec) =
 
   theorem triangle_type_correct_iso :
     all t : Self,
-    !triangle_type(t) = #Isosceles -> 
+    !triangle_type(t) = #Isosceles ->
      ((Edge!equal(!first(t), !scnd(t)) \/
        Edge!equal(!scnd (t), !thrd(t)) \/
        Edge!equal(!first(t), !thrd(t)))
@@ -238,7 +237,7 @@ species Triangle_spec(Edge is Length_spec) =
        ~~(Edge!equal(!first(t), !scnd(t))))
       /\
        Edge!gt(!first(t), Edge!zero) /\
-       Edge!gt(!scnd (t), Edge!zero) /\ 
+       Edge!gt(!scnd (t), Edge!zero) /\
        Edge!gt(!thrd (t), Edge!zero)
       /\
        Edge!gt(Edge!add(!min(t), !med(t)), !max(t))
@@ -247,12 +246,12 @@ species Triangle_spec(Edge is Length_spec) =
 
   theorem triangle_type_correct_scal :
     all t : Self,
-    !triangle_type(t) = #Scalene -> 
-      (~~(Edge!equal(!first(t), !scnd(t))) /\ 
+    !triangle_type(t) = #Scalene ->
+      (~~(Edge!equal(!first(t), !scnd(t))) /\
        ~~(Edge!equal(!first(t), !thrd(t))) /\
        ~~(Edge!equal(!first(t), !scnd(t))) /\
        Edge!gt(!first(t), Edge!zero) /\
-       Edge!gt(!scnd(t), Edge!zero) /\ 
+       Edge!gt(!scnd(t), Edge!zero) /\
        Edge!gt(!thrd(t), Edge!zero) /\
        Edge!lt(!max(t), Edge!add(!min(t), !med(t)))
       )
@@ -260,13 +259,13 @@ species Triangle_spec(Edge is Length_spec) =
 
   theorem triangle_type_correct_err :
     all t : Self,
-    !triangle_type(t) = #Error -> 
-      (Edge!leq(!first(t), Edge!zero) \/ 
-       Edge!leq(!scnd(t), Edge!zero) \/ 
-       Edge!leq(!thrd(t), Edge!zero) \/ 
+    !triangle_type(t) = #Error ->
+      (Edge!leq(!first(t), Edge!zero) \/
+       Edge!leq(!scnd(t), Edge!zero) \/
+       Edge!leq(!thrd(t), Edge!zero) \/
        Edge!geq(!first(t), Edge!add(!scnd(t), !thrd(t))) \/
-       Edge!geq(!scnd(t), Edge!add(!first(t), !thrd(t))) \/ 
-       Edge!geq(!thrd(t), Edge!add(!first(t), !scnd(t)))) 
+       Edge!geq(!scnd(t), Edge!add(!first(t), !thrd(t))) \/
+       Edge!geq(!thrd(t), Edge!add(!first(t), !scnd(t))))
     proof = assumed;
 
   theorem equal_reflexive :
@@ -312,7 +311,7 @@ species Triangle_imp(Edge is Length_imp_int) =
       basics#focalize_error("parse(not a parsable string " ^ s ^ ")");
 
   (* some accessor *)
-  let first(x : Self) : Edge = basics#fst(x); 
+  let first(x : Self) : Edge = basics#fst(x);
   let scnd(x : Self) : Edge = basics#fst(basics#snd(x));
   let thrd(x : Self) : Edge = basics#snd(basics#snd(x));
 
@@ -387,4 +386,3 @@ end;;
 collection Triangle_coll =
   implement Triangle(Length_int_coll);
 end;;
-
