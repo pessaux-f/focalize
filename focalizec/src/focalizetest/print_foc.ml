@@ -269,7 +269,7 @@ let rec print_myexpr : (string * string) list -> myexpr -> unit =
     | MVar(id, None) -> (if not (id = focself) then MyFormat.print_string id)
     | MVar (id, Some _t) ->
         if not (id = focself) then MyFormat.print_string id (* TODO ? *)
-    | MInt i -> print_int i
+    | MInt i -> MyFormat.print_int i
     | MString s -> MyFormat.print_string ("\"" ^ (* String.escaped *) s ^ "\"")
     | MMatch ((e, _), c_l) ->
         MyFormat.print_string "(match" ;
