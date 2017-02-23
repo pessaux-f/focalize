@@ -1,10 +1,12 @@
 # A generic Makefile
 
-FOCC=focalizec
+ROOT_DIR=../../../../..
+
+FOCC=$(ROOT_DIR)/focalizec/src/toplevel/focalizec
 FOCAL_LIB=$(shell $(FOCC) -where | cut -d ' ' -f 2)
 
 OCAMLC_FLAGS=
-FOCTEST=focalizetest
+FOCTEST=$(ROOT_DIR)/focalizec/src/focalizetest/focalizetest
 OCAMLC=ocamlc
 
 FOCCOPTS="-no-coq-code"
