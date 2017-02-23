@@ -8,115 +8,119 @@ let top_xml_coll_name = "Coll_xml" ;;
 
 let rec xml_string_of_typ t =
   match t with
-  | TAtom(_m, s) -> 
-      "<typeatom>"^ s ^ "</typeatom>" 
-  | TSpecPrm(s) ->
-      "<typeprmatom>"^ s ^ "</typeprmatom>" 
-  | TFct(t1,t2) ->
-      "<typefct><left>"^ xml_string_of_typ t1 ^ "</left><right>" ^ xml_string_of_typ t2 ^ "</right></typefct>" 
+  | TAtom (_m, s) -> "<typeatom>" ^ s ^ "</typeatom>"
+  | TSpecPrm (s) -> "<typeprmatom>"^ s ^ "</typeprmatom>"
+  | TFct (t1, t2) ->
+      "<typefct><left>" ^ xml_string_of_typ t1 ^ "</left><right>" ^
+      xml_string_of_typ t2 ^ "</right></typefct>"
   | TProp -> "<typeatom>Prop</typeatom>"
-  | TProd(t1,t2) ->
-      "<typeprod><left>"^ xml_string_of_typ t1 ^ "</left><right>" ^ xml_string_of_typ t2 ^ "</right></typeprod>" 
-  | TPrm(_m, s,t_l) ->
-      "<typeprm><prmname>"^ s ^ "</prmname>" ^
-      List.fold_left (fun s e -> s ^ "<prmlist>" ^ xml_string_of_typ e ^ "</prmlist>" ) "" t_l ^
-      "</typeprm>" 
-      ;;
+  | TProd (t1,t2) ->
+      "<typeprod><left>" ^ xml_string_of_typ t1 ^ "</left><right>" ^
+      xml_string_of_typ t2 ^ "</right></typeprod>"
+  | TPrm (_m, s, t_l) ->
+      "<typeprm><prmname>" ^ s ^ "</prmname>" ^
+      List.fold_left
+        (fun s e ->
+          s ^ "<prmlist>" ^ xml_string_of_typ e ^ "</prmlist>" ) "" t_l ^
+      "</typeprm>"
+;;
 
 let special_xml =
-  ['&', "&amp;";
-   '<', "&lt;";
-   '>', "&gt;";
+  ['&', "&amp;" ;
+   '<', "&lt;" ;
+   '>', "&gt;" ;
    '*', "&times;"
   ];;
-let safe_replace s = string_assoc s special_xml;;
+let safe_replace s = string_assoc s special_xml ;;
 
 let xml_string_of_ident =
   fun i ->
   match i with
-  | Prefix(None, s) -> "<prefix><name>" ^ safe_replace s ^ "</name></prefix>"
-  | Prefix(Some m, s) ->
-      "<prefix> <module>" ^ safe_replace m ^ "</module>" ^ 
+  | Prefix (None, s) -> "<prefix><name>" ^ safe_replace s ^ "</name></prefix>"
+  | Prefix (Some m, s) ->
+      "<prefix> <module>" ^ safe_replace m ^ "</module>" ^
                 "<name>" ^ safe_replace s ^ "</name></prefix>"
   | Infix s ->  "<infix>" ^ safe_replace s ^ "</infix>";;
 
 let rec xml_string_of_expr e =
   match e with
-  | MIfte(c,t,e) ->
+  | MIfte (c, t, e) ->
       "<exprif>" ^
-        "<cond>" ^ xml_string_of_expr c ^ "</cond>" ^
-        "<then>" ^ xml_string_of_expr t ^ "</then>" ^
-        "<else>" ^ xml_string_of_expr e ^ "</else>" ^
+      "<cond>" ^ xml_string_of_expr c ^ "</cond>" ^
+      "<then>" ^ xml_string_of_expr t ^ "</then>" ^
+      "<else>" ^ xml_string_of_expr e ^ "</else>" ^
       "</exprif>"
-  | MApp(e, _, e_l) ->
+  | MApp (e, _, e_l) ->
       "<exprapp>" ^
-        "<appleft>" ^ xml_string_of_expr e ^ "</appleft>" ^
-        List.fold_right (fun (e,_) s -> "<appright>" ^ xml_string_of_expr e ^ "</appright>" ^ s) 
-                      e_l "</exprapp>"
-  | MVar(_i, None) ->
-      failwith "xml_string_of_expr: MVar no type"
-  | MVar(i, Some t) ->
+      "<appleft>" ^ xml_string_of_expr e ^ "</appleft>" ^
+      List.fold_right
+        (fun (e,_) s ->
+          "<appright>" ^ xml_string_of_expr e ^ "</appright>" ^ s)
+        e_l
+        "</exprapp>"
+  | MVar (_i, None) -> failwith "xml_string_of_expr: MVar no type"
+  | MVar (i, Some t) ->
       "<exprvar>" ^
       "<varname>" ^ i ^ "</varname>" ^
       "<vartype>" ^ xml_string_of_typ t ^ "</vartype>" ^
       "</exprvar>"
-  | MMeth(None, f) ->
+  | MMeth (None, f) ->
       "<exprmeth><methname>" ^ f ^ "</methname></exprmeth>"
-  | MMeth(Some c, f) ->
+  | MMeth (Some c, f) ->
       "<exprmeth>" ^
-        "<collname>" ^ c ^ "</collname>" ^
-        "<methname>" ^ f ^ "</methname>" ^
+      "<collname>" ^ c ^ "</collname>" ^
+      "<methname>" ^ f ^ "</methname>" ^
       "</exprmeth>"
-  | MFun(_v, None, _e)  ->
-      failwith "xml_string_of_expr: MFun no type"
-  | MFun(v, Some t, e)  ->
+  | MFun (_v, None, _e)  -> failwith "xml_string_of_expr: MFun no type"
+  | MFun (v, Some t, e)  ->
       "<exprfun>" ^
-        "<funvar>" ^ v ^ "</funvar>" ^
-        "<funtype>" ^ xml_string_of_typ t ^ "</funtype>" ^
-        "<funexpr>" ^ xml_string_of_expr e ^ "</funexpr>" ^
+      "<funvar>" ^ v ^ "</funvar>" ^
+      "<funtype>" ^ xml_string_of_typ t ^ "</funtype>" ^
+      "<funexpr>" ^ xml_string_of_expr e ^ "</funexpr>" ^
       "</exprfun>"
-  | MMatch (p,pl) -> (* myexpr * (string * string list * myexpr) list *)
+  | MMatch (p, pl) -> (* myexpr * (string * string list * myexpr) list *)
       "<exprmatch>" ^
-        "<matchval>" ^ xml_string_of_expr (fst p) ^ "</matchval>" ^
-        List.fold_right
-          (fun (_r,l,e) s ->
-            "<exprpattern>" ^
-              List.fold_right (fun e s ->  "<patroot>" ^ (match e with | None ->
-                "_" | Some s -> s) ^ "</patroot>" ^ s) l 
-              ("<patexpr>" ^ xml_string_of_expr e ^ "</parexpr>" ^
-            "</exprpattern>" ^ s))
-                      pl  "</exprmatch>"
-  | MInt i  ->
-      "<exprint>" ^ string_of_int i ^ "</exprint>"
-  | MString s ->
-      "<exprstring>" ^ s ^ "</exprstring>"
-  | MVarloc(_b, s,e1,e2) ->
+      "<matchval>" ^ xml_string_of_expr (fst p) ^ "</matchval>" ^
+      List.fold_right
+        (fun (_r, l, e) s ->
+          "<exprpattern>" ^
+          List.fold_right
+            (fun e s ->
+              "<patroot>" ^
+              (match e with | None -> "_" | Some s -> s) ^
+              "</patroot>" ^ s)
+            l
+            ("<patexpr>" ^ xml_string_of_expr e ^ "</parexpr>" ^
+             "</exprpattern>" ^ s))
+        pl
+        "</exprmatch>"
+  | MInt i  -> "<exprint>" ^ string_of_int i ^ "</exprint>"
+  | MString s -> "<exprstring>" ^ s ^ "</exprstring>"
+  | MVarloc (_b, s, e1, e2) ->
       "<exprlet>" ^
-        "<letvar>" ^ (fst s) ^ "</letvar>" ^
-        "<letvarexpr>" ^ xml_string_of_expr e1 ^ "</letvarexpr>" ^
-        "<letexpr>" ^ xml_string_of_expr e2 ^ "</letexpr>" ^
+      "<letvar>" ^ (fst s) ^ "</letvar>" ^
+      "<letvarexpr>" ^ xml_string_of_expr e1 ^ "</letvarexpr>" ^
+      "<letexpr>" ^ xml_string_of_expr e2 ^ "</letexpr>" ^
       "</exprlet>"
-  | MGlob_id(s) -> 
-      "<exprglobid>" ^
-        xml_string_of_ident s ^
-      "</exprglobid>"
-  | MCaml_def s -> 
-      "<exprcaml_def>" ^ s ^ "</exprcaml_def>"
+  | MGlob_id s ->
+      "<exprglobid>" ^ xml_string_of_ident s ^ "</exprglobid>"
+  | MCaml_def s -> "<exprcaml_def>" ^ s ^ "</exprcaml_def>"
 ;;
 
 
 let xml_string_of_parameters_instance =
   function
-    | InstPrmColl(_,s) -> s
-    | InstPrmEnt expr -> xml_string_of_expr expr;;
+    | InstPrmColl (_, s) -> s
+    | InstPrmEnt expr -> xml_string_of_expr expr
+;;
 
 (*
 let xml_value_to_string_of_typ  t =
-  match t with 
+  match t with
   | TAtom s ->
-  | TSpecPrm s -> 
+  | TSpecPrm s ->
   | TFct(t1,t2) -> failwith "Not yet implemented (and unimplementable)"
-  | TProd(t1,t2) -> 
+  | TProd(t1,t2) ->
   | TPrm(n,p)  ->
 ;;
 *)
@@ -311,13 +315,16 @@ let top_xml_meths () =
   ];;
        (*#list_iter(!xml_print_conclu_one, l);*)
 
+
 let top_xml_def () =
-  [create_toplevel_spec(
-    spec_create top_xml_spec_name [] [] (Some (TAtom(None, foctunit))) (List.map (fun x -> Unique x) (top_xml_meths ()))
-             );
-    let m = Whattodo.get_output_module () in
-    create_toplevel_coll(coll_create top_xml_coll_name
-                                     (create_species_name m top_xml_spec_name,[]))
+  [
+   create_toplevel_spec
+     (spec_create
+        top_xml_spec_name [] [] (Some (TAtom (None, foctunit)))
+        (List.map (fun x -> Unique x) (top_xml_meths ()))) ;
+   let m = Whattodo.get_output_module () in
+   create_toplevel_coll
+     (coll_create top_xml_coll_name
+        (create_species_name m top_xml_spec_name, []))
   ]
-
-
+;;

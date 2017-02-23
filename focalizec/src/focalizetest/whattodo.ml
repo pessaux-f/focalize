@@ -61,93 +61,88 @@ let externfun opt =
 
 (* ********************************* *)
 
-let get_file_output_foc () =
-   (!file_output) ^ ".fcl";;
+let get_file_output_foc () = (!file_output) ^ ".fcl" ;;
 
-let get_file_output_fml () =
-   (!file_output) ^ ".fml";;
+let get_file_output_fml () = (!file_output) ^ ".fml" ;;
 
-let get_file_output_xml () =
-   (!file_output) ^ ".xml";;
+let get_file_output_xml () = (!file_output) ^ ".xml" ;;
 
-let get_file_output_prolog n =
-   (!file_output) ^ ".prolog_" ^ n;;
+let get_file_output_prolog n = (!file_output) ^ ".prolog_" ^ n ;;
 
-let get_output_module () =
-   (!file_output);;
+let get_output_module () = !file_output ;;
 
 let set_file_output s =
   let l = String.length s in
   if l > 4 && Filename.check_suffix s ".fcl" then
-      file_output := Filename.chop_suffix s ".fcl"
-  else
-      file_output := s;;
+    file_output := Filename.chop_suffix s ".fcl"
+  else file_output := s
+;;
 
 (* ********************************* *)
 
-let set_number_of_test = (:=) number_of_test;;
+let set_number_of_test = (:=) number_of_test ;;
 
-let get_number_of_test ()  = !number_of_test;;
-
-(* ********************************* *)
-
-let set_seq () = use_seq_function := true;;
-
-let set_let () = use_seq_function := false;;
-
-let use_seq_function () = !use_seq_function;;
+let get_number_of_test () = !number_of_test ;;
 
 (* ********************************* *)
 
-let input_lexbuf = ref None;; 
+let set_seq () = use_seq_function := true ;;
 
-let set_input_lexbuf lb = input_lexbuf := lb;;
+let set_let () = use_seq_function := false ;;
 
-let get_input_lexbuf () = !input_lexbuf;;
-
-(* ********************************* *)
-
-let int_size = ref 65536;; 
-
-let set_int_size n = int_size := n;;
-
-let get_int_size () = !int_size;;
+let use_seq_function () = !use_seq_function ;;
 
 (* ********************************* *)
 
-let get_use_report () = !use_report;;
+let input_lexbuf = ref None ;;
 
-let set_use_report s = use_report := Some s;;
+let set_input_lexbuf lb = input_lexbuf := lb ;;
 
-(* ********************************* *)
-
-let use_prolog = ref false;;
-
-let set_use_prolog b = use_prolog := b;;
-
-let get_use_prolog () = !use_prolog;;
+let get_input_lexbuf () = !input_lexbuf ;;
 
 (* ********************************* *)
 
-let prolog_path = ref "sicstus";;
+let int_size = ref 65536 ;;
 
-let set_prolog_path s = prolog_path := s;;
+let set_int_size n = int_size := n ;;
 
-let get_prolog_path () = !prolog_path;;
+let get_int_size () = !int_size ;;
 
 (* ********************************* *)
 
-let prolog_opt = ref "meta";;
+let get_use_report () = !use_report ;;
 
-let set_prolog_opt s = prolog_opt := s;;
+let set_use_report s = use_report := Some s ;;
 
-let get_prolog_opt () = !prolog_opt;;
+(* ********************************* *)
 
-let mcdc_number = ref 0;;
+let use_prolog = ref false ;;
 
-let set_mcdc_number n = mcdc_number := n;;
+let set_use_prolog b = use_prolog := b ;;
 
-let get_mcdc_number () = !mcdc_number;;
+let get_use_prolog () = !use_prolog ;;
+
+(* ********************************* *)
+
+let prolog_path = ref "sicstus" ;;
+
+let set_prolog_path s = prolog_path := s ;;
+
+let get_prolog_path () = !prolog_path ;;
+
+(* ********************************* *)
+
+let prolog_opt = ref "meta" ;;
+
+let set_prolog_opt s = prolog_opt := s ;;
+
+let get_prolog_opt () = !prolog_opt ;;
+
+let mcdc_number = ref 0 ;;
+
+let set_mcdc_number n = mcdc_number := n ;;
+
+let get_mcdc_number () = !mcdc_number ;;
 
 (* ********************************* *)
 

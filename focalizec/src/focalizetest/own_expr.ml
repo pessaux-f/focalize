@@ -387,26 +387,22 @@ let typ_get_print t (l : gen_print_typ list) =
      snd(List.assoc t l);;
 
 (* The definition of a fcl file : *)
-type fichier_foc =
-    {
-     ficopenuse : string list;
-     ficobjet : toplevel_def list;
-    };;
+type fichier_foc = {
+    ficopenuse : string list ;
+    ficobjet : toplevel_def list
+} ;;
 
 let fic_create uses toplevel_def =
-  {
-   ficopenuse = uses;
-   ficobjet = toplevel_def;
-  };;
+  { ficopenuse = uses ;
+    ficobjet = toplevel_def }
+;;
 
 
 (* The type defining a .fml file *)
 
-type import =
-   string * (string * string) list
+type import = string * (string * string) list ;;
 
-type fichier_fml =
-   import list
+type fichier_fml = import list ;;
 
 let create_import n l : import = n,l;;
 

@@ -1,5 +1,5 @@
-open Own_basics ;; 
-open Own_types ;; 
+open Own_basics ;;
+open Own_types ;;
 open Own_expr ;;
 open Whattodo ;;
 
@@ -34,11 +34,11 @@ module MyFormat :
                 current := !indent;
                 flush !file;;
 
-        
+
         let print_space () = sep := !sep + 1;;
 
         let open_box n = box := n :: !box; indent := !indent + n;;
-        
+
         let close_box () =
           match !box with
             | [] -> ()
@@ -137,111 +137,119 @@ let rec print_myexpr : (string * string) list -> myexpr -> unit =
   function
     | MIfte (cond,e1,e2) ->
         MyFormat.open_box 0;
-          MyFormat.print_string "if";
-          MyFormat.print_space ();
-          print_myexpr l_caml cond;
-          MyFormat.print_space ();
-          MyFormat.print_string "then"; (* TODO : inverts these two lines *)
-          MyFormat.open_box 2;          (* *)
-            MyFormat.force_newline ();
-            print_myexpr l_caml e1;
-          MyFormat.close_box ();
-          MyFormat.force_newline ();
-          MyFormat.print_string "else"; (* TODO : inverts these two lines *)
-          MyFormat.open_box 2;          (* *)
-            MyFormat.force_newline ();
-            print_myexpr l_caml e2;
-          MyFormat.close_box ();
+        MyFormat.print_string "if";
+        MyFormat.print_space ();
+        print_myexpr l_caml cond;
+        MyFormat.print_space ();
+        MyFormat.print_string "then"; (* TODO : inverts these two lines *)
+        MyFormat.open_box 2;          (* *)
+        MyFormat.force_newline ();
+        print_myexpr l_caml e1;
+        MyFormat.close_box ();
+        MyFormat.force_newline ();
+        MyFormat.print_string "else"; (* TODO : inverts these two lines *)
+        MyFormat.open_box 2;          (* *)
+        MyFormat.force_newline ();
+        print_myexpr l_caml e2;
+        MyFormat.close_box ();
         MyFormat.close_box ()
     | MApp  (e,_, []) ->
-            print_myexpr l_caml e;
-(*             MyFormat.print_string "()" *)
+        print_myexpr l_caml e ;
+        (* MyFormat.print_string "()" *)
     | MApp  (MFun (_,_,_) as e,_, e1::r) ->
-            MyFormat.print_string "(";
-            print_myexpr l_caml e;
-            MyFormat.print_string ")";
-            MyFormat.print_string "(";
-            MyFormat.open_box 0;
-            print_myexpr l_caml (fst e1);
-            List.iter (fun (e,_) -> MyFormat.print_string ",";MyFormat.print_space ();
-            print_myexpr l_caml e) r;
-            MyFormat.print_string ")";
-            MyFormat.close_box ();
+        MyFormat.print_string "(";
+        print_myexpr l_caml e;
+        MyFormat.print_string ")";
+        MyFormat.print_string "(";
+        MyFormat.open_box 0;
+        print_myexpr l_caml (fst e1);
+        List.iter
+          (fun (e, _) ->
+            MyFormat.print_string "," ;
+            MyFormat.print_space () ;
+            print_myexpr l_caml e)
+          r ;
+        MyFormat.print_string ")" ;
+        MyFormat.close_box () ;
     | MApp  (MGlob_id(Infix s), _, e1::e2::[]) ->
-            MyFormat.print_string "(";
-            print_myexpr l_caml (fst e1);
-            MyFormat.print_space ();
-            MyFormat.print_string s;
-            MyFormat.print_space ();
-            print_myexpr l_caml (fst e2);
-            MyFormat.print_string ")";
+        MyFormat.print_string "(";
+        print_myexpr l_caml (fst e1);
+        MyFormat.print_space ();
+        MyFormat.print_string s;
+        MyFormat.print_space ();
+        print_myexpr l_caml (fst e2);
+        MyFormat.print_string ")";
     | MApp  (e, _, e1::r) ->
-            print_myexpr l_caml e;
-            MyFormat.print_string "(";
-            MyFormat.open_box 0;
-            print_myexpr l_caml (fst e1);
-            List.iter (fun (e,_) -> MyFormat.print_string ",";MyFormat.print_space ();
-            print_myexpr l_caml e) r;
-            MyFormat.print_string ")";
-            MyFormat.close_box ()
+        print_myexpr l_caml e;
+        MyFormat.print_string "(";
+        MyFormat.open_box 0;
+        print_myexpr l_caml (fst e1);
+        List.iter
+          (fun (e, _) ->
+            MyFormat.print_string "," ;
+            MyFormat.print_space () ;
+            print_myexpr l_caml e)
+          r ;
+        MyFormat.print_string ")" ;
+        MyFormat.close_box ()
     | MMeth (None, s) ->
-            MyFormat.print_string "!";
-            MyFormat.print_string s;
+        MyFormat.print_string "!";
+        MyFormat.print_string s;
     | MMeth (Some e,s) ->
-            MyFormat.print_string e;
-            MyFormat.print_string "!";
-            MyFormat.print_string s;
+        MyFormat.print_string e;
+        MyFormat.print_string "!";
+        MyFormat.print_string s;
     | MFun  (var,_, e ) ->
-            MyFormat.print_string "function";
-            MyFormat.print_space ();
-            MyFormat.print_string var;
-            MyFormat.print_space ();
-            MyFormat.print_string "->";
-            MyFormat.print_space ();
-            MyFormat.open_box 2;
-            MyFormat.force_newline ();
-            print_myexpr l_caml e;
-            MyFormat.close_box ()
+        MyFormat.print_string "function";
+        MyFormat.print_space ();
+        MyFormat.print_string var;
+        MyFormat.print_space ();
+        MyFormat.print_string "->";
+        MyFormat.print_space ();
+        MyFormat.open_box 2;
+        MyFormat.force_newline ();
+        print_myexpr l_caml e;
+        MyFormat.close_box ()
     | MVarloc (b, var,e1,(MVarloc(_,_,_,_) as e2)) ->
-            MyFormat.print_string "let";
-            MyFormat.print_space ();
-            (if b then
-              (MyFormat.print_string "rec";
-              MyFormat.print_space ()
-              )
-            );
-            MyFormat.print_string (fst var);
-            MyFormat.print_space ();
-            MyFormat.print_string "=";
-            MyFormat.print_space ();
-            MyFormat.open_box 2;
-            (match e1 with
-            | MVarloc(_,_,_,_) -> MyFormat.force_newline() | _ -> ());
-            print_myexpr l_caml e1;
-            MyFormat.print_space ();
-            MyFormat.print_string "in";
-            MyFormat.close_box ();
-            MyFormat.force_newline ();
-            print_myexpr l_caml e2
+        MyFormat.print_string "let";
+        MyFormat.print_space ();
+        (if b then
+          (MyFormat.print_string "rec";
+           MyFormat.print_space ()
+          )
+        );
+        MyFormat.print_string (fst var);
+        MyFormat.print_space ();
+        MyFormat.print_string "=";
+        MyFormat.print_space ();
+        MyFormat.open_box 2;
+        (match e1 with
+        | MVarloc(_,_,_,_) -> MyFormat.force_newline() | _ -> ());
+        print_myexpr l_caml e1;
+        MyFormat.print_space ();
+        MyFormat.print_string "in";
+        MyFormat.close_box ();
+        MyFormat.force_newline ();
+        print_myexpr l_caml e2
     | MVarloc (b, var,e1,e2) ->
-            MyFormat.print_string "let";
-            MyFormat.print_space ();
-            (if b then
-              (MyFormat.print_string "rec";
-              MyFormat.print_space ()
-              )
-            );
-            MyFormat.print_string (fst var);
-            MyFormat.print_space ();
-            MyFormat.print_string "=";
-            MyFormat.print_space ();
-            MyFormat.open_box 2;
-            print_myexpr l_caml e1;
-            MyFormat.print_space ();
-            MyFormat.print_string "in";
-            MyFormat.force_newline ();
-            print_myexpr l_caml e2;
-            MyFormat.close_box ()
+        MyFormat.print_string "let";
+        MyFormat.print_space ();
+        (if b then
+          (MyFormat.print_string "rec";
+           MyFormat.print_space ()
+          )
+        );
+        MyFormat.print_string (fst var);
+        MyFormat.print_space ();
+        MyFormat.print_string "=";
+        MyFormat.print_space ();
+        MyFormat.open_box 2;
+        print_myexpr l_caml e1;
+        MyFormat.print_space ();
+        MyFormat.print_string "in";
+        MyFormat.force_newline ();
+        print_myexpr l_caml e2;
+        MyFormat.close_box ()
     | MGlob_id s ->
         print_indent_symb s
     | MCaml_def s ->
@@ -259,49 +267,51 @@ let rec print_myexpr : (string * string) list -> myexpr -> unit =
         MyFormat.print_string s ;
         MyFormat.print_string "*}"
     | MVar(id, None) -> (if not (id = focself) then MyFormat.print_string id)
-    | MVar(id, Some _t) -> (if not (id = focself) then MyFormat.print_string id) (* TODO ? *)
+    | MVar (id, Some _t) ->
+        if not (id = focself) then MyFormat.print_string id (* TODO ? *)
     | MInt i -> print_int i
     | MString s -> MyFormat.print_string ("\"" ^ (* String.escaped *) s ^ "\"")
-    | MMatch((e, _),c_l) -> MyFormat.print_string "(match";
-                       MyFormat.print_space ();
-                       print_myexpr l_caml e;
-                       MyFormat.print_space ();
-                       MyFormat.print_string "with";
-                       MyFormat.open_box 2;
-                       List.iter
-                         (fun (s,l,e) ->
-                           MyFormat.force_newline ();
-                           MyFormat.print_string "|";
-                           MyFormat.print_space ();
-                           (match s, l with
-                           | Prefix(_, _), _ ->
-                               print_indent_symb s;
-                               if l <> [] then
-                                 MyFormat.print_string (to_args (function None -> "_" | Some id -> id) l);
-                           | Infix s, [e1; e2] ->
-                               (match e1 with
-                               | None -> ()
-                               | Some s -> MyFormat.print_string s
-                               );
-                               MyFormat.print_space ();
-                               MyFormat.print_string s;
-                               (match e2 with 
-                               | None -> ()
-                               | Some s -> MyFormat.print_string s
-                               )
-                           | _ -> failwith "pattern: infix operator applied to <> 2 args"
-                           );
-                           MyFormat.print_space ();
-                           MyFormat.print_string "->";
-                           MyFormat.open_box 2;
-                           MyFormat.force_newline ();
-                           print_myexpr l_caml e;
-                           MyFormat.close_box ();
-                           )
-                                 c_l;
-                       MyFormat.close_box ();
-                       MyFormat.force_newline ();
-                       MyFormat.print_string ")"
+    | MMatch ((e, _), c_l) ->
+        MyFormat.print_string "(match" ;
+        MyFormat.print_space () ;
+        print_myexpr l_caml e ;
+        MyFormat.print_space () ;
+        MyFormat.print_string "with" ;
+        MyFormat.open_box 2 ;
+        List.iter
+          (fun (s,l,e) ->
+            MyFormat.force_newline () ;
+            MyFormat.print_string "|" ;
+            MyFormat.print_space () ;
+            (match s, l with
+            | Prefix (_, _), _ ->
+                print_indent_symb s ;
+                if l <> [] then
+                  MyFormat.print_string
+                    (to_args (function None -> "_" | Some id -> id) l) ;
+            | Infix s, [e1; e2] ->
+                (match e1 with
+                | None -> ()
+                | Some s -> MyFormat.print_string s
+                );
+                MyFormat.print_space () ;
+                MyFormat.print_string s ;
+                (match e2 with
+                | None -> ()
+                | Some s -> MyFormat.print_string s
+                )
+            | _ -> failwith "pattern: infix operator applied to <> 2 args"
+            );
+            MyFormat.print_space () ;
+            MyFormat.print_string "->" ;
+            MyFormat.open_box 2 ;
+            MyFormat.force_newline () ;
+            print_myexpr l_caml e ;
+            MyFormat.close_box ())
+          c_l ;
+        MyFormat.close_box () ;
+        MyFormat.force_newline () ;
+        MyFormat.print_string ")"
 ;;
 
 
@@ -413,7 +423,7 @@ let print_spec spec l =
      print_list_comma spec.specparam
                       (function
                         PrmColl(n,(s,l)) ->
-                         MyFormat.print_string n; 
+                         MyFormat.print_string n;
                          MyFormat.print_string " is ";
                          MyFormat.print_string (string_of_species_name s);
                          if not(l = [] ) then
@@ -422,7 +432,7 @@ let print_spec spec l =
                              MyFormat.print_string ")"
                            )
                         | PrmEnt(n,t,_) ->
-                         MyFormat.print_string n; 
+                         MyFormat.print_string n;
                          MyFormat.print_string " : ";
                          MyFormat.print_string (string_of_typ t);
                       );
@@ -454,25 +464,24 @@ let print_spec spec l =
 ;;
 
 let print_tlet n t e l_caml =
-  MyFormat.print_string "let";
-  MyFormat.print_space ();
-  MyFormat.print_string n;
-  MyFormat.print_space ();
-  begin
-  match t with
+  MyFormat.print_string "let" ;
+  MyFormat.print_space () ;
+  MyFormat.print_string n ;
+  MyFormat.print_space () ;
+  (match t with
   | None -> ()
-  | Some t -> MyFormat.print_string ":";
-              MyFormat.print_space ();
-              MyFormat.print_string (string_of_typ t);
-              MyFormat.print_space ()
-  end;
-  MyFormat.print_string "=";
-  MyFormat.print_space ();
-  MyFormat.open_box 2;
-  (match e with |MVarloc(_,_,_,_) -> MyFormat.force_newline() | _ -> ());
-  print_myexpr l_caml e;
-  MyFormat.print_string ";;";
-  MyFormat.close_box ();
+  | Some t ->
+      MyFormat.print_string ":" ;
+      MyFormat.print_space () ;
+      MyFormat.print_string (string_of_typ t) ;
+      MyFormat.print_space ()) ;
+  MyFormat.print_string "=" ;
+  MyFormat.print_space () ;
+  MyFormat.open_box 2 ;
+  (match e with |MVarloc(_,_,_,_) -> MyFormat.force_newline() | _ -> ()) ;
+  print_myexpr l_caml e ;
+  MyFormat.print_string ";;" ;
+  MyFormat.close_box () ;
   MyFormat.force_newline ()
 ;;
 
@@ -521,32 +530,36 @@ let print_tcall expr l=
 
 let print_toplevel_def_list ast fml =
   let f s =
-    try List.assoc s fml with 
-    | Not_found -> []
-        in 
+    try List.assoc s fml with
+    | Not_found -> [] in
   List.iter
     (function
-    | ObjCollection c -> print_coll c
-    | ObjSpecies s -> print_spec s (f s.specname)
-    | ObjToplet(n,t,e) -> print_tlet n t e (f "toplevel")
-    | ObjTopcall e -> print_tcall e (f "toplevel")
-    | ObjType(n,c_l) -> print_ttype n c_l
-    ) ast;;
+      | ObjCollection c -> print_coll c
+      | ObjSpecies s -> print_spec s (f s.specname)
+      | ObjToplet (n, t, e) -> print_tlet n t e (f "toplevel")
+      | ObjTopcall e -> print_tcall e (f "toplevel")
+      | ObjType (n, c_l) -> print_ttype n c_l)
+    ast
+;;
+
 
 let print_foc_file f ast (fml : Own_expr.fichier_fml) =
   MyFormat.set_margin 120;
-  if not(f = "") then (* default is stdout *)
-    MyFormat.set_formatter_out_channel (open_out f);
-  List.iter (fun m ->
-              MyFormat.print_string "open \"";
-              MyFormat.print_string m;
-              MyFormat.print_string "\";;";
-              MyFormat.force_newline ()
-           ) ("basics" :: Whattodo.get_open ());
-  List.iter print_uses ast.ficopenuse;
-  MyFormat.force_newline ();
-  print_toplevel_def_list ast.ficobjet fml;
-  MyFormat.force_newline ();;
+  if f <> "" then (* default is stdout *)
+    MyFormat.set_formatter_out_channel (open_out f) ;
+  List.iter
+    (fun m ->
+      MyFormat.print_string "open \"" ;
+      MyFormat.print_string m ;
+      MyFormat.print_string "\";;" ;
+      MyFormat.force_newline ()
+    )
+    ("basics" :: Whattodo.get_open ()) ;
+  List.iter print_uses ast.ficopenuse ;
+  MyFormat.force_newline () ;
+  print_toplevel_def_list ast.ficobjet fml ;
+  MyFormat.force_newline ()
+;;
   (* if there no property to test, don't execute test *)
 (*  match l_coll_test with
   | [] -> ()

@@ -2,16 +2,12 @@ open Focalize_inter;;
 open Whattodo;;
 open Whattodo2;;
 open Own_basics;;
-open Useful_parsing;;
 open Own_prop;;
 
 open Test_prop;;
-open Print_foc;;
 
 open Rewrite_prop;;
 open Own_expr;;
-(* open Instru_species;; *)
-open Foc_predef;;
 
 
 type tested_proposition =
@@ -78,7 +74,7 @@ let parse_file fun_parse fic =
 
 
 let test_prop library =
-        function
+  function
 (*
           | Prop_list(p,species) -> (* instrumentate the species *)
               if is_complete (fst species) then
@@ -109,28 +105,36 @@ let test_prop library =
                   exit 32
                 end
 *)
-        | Test_context(p, tc) ->
-            let type_to_generate =
-              List.fold_left (fun s (_,e) -> get_forall_types e ++ s) [] p in
-            let spec_harness,specs_colls_instru =
-              Species_harness.species_harness tc type_to_generate in 
-            (* obtain the species and collection testing the property *)
-            let l_nfs = List.map (fun p -> normalise p, To_strings.string_of_prop (snd p)) p in
-            let colllist,speccoll_test = ast_testprop_list l_nfs tc spec_harness in
-            let file_foc = fic_create [library] (top_preambule @ specs_colls_instru @
-            speccoll_test @ top_postambule colllist) in
-                  file_foc
-        | Report (test_context,prop_l) ->
-            let get_var_l l = List.fold_left (fun s ((e,_),_) ->
-                                               snd (List.split (variables_to_list e)) ++ s) [] l in
-            let type_to_generate =
-              List.fold_left (fun s (_,_,l) -> get_var_l l ++ s) [] prop_l in
-            let spec_harness,specs_colls_instru =
-              Species_harness.species_harness test_context type_to_generate in 
-            let colllist,speccoll_test = ast_testprop_reinject_list prop_l spec_harness in
-            let file_foc = fic_create [library] (top_preambule @ specs_colls_instru @
-            speccoll_test @ top_postambule colllist) in
-               file_foc
+    | Test_context (p, tc) ->
+        let type_to_generate =
+          List.fold_left (fun s (_ ,e) -> get_forall_types e ++ s) [] p in
+        let (spec_harness, specs_colls_instru) =
+          Species_harness.species_harness tc type_to_generate in
+        (* obtain the species and collection testing the property *)
+        let l_nfs =
+          List.map
+            (fun p -> normalise p, To_strings.string_of_prop (snd p)) p in
+        let (colllist, speccoll_test) =
+          ast_testprop_list l_nfs tc spec_harness in
+        fic_create
+          [library] (Foc_predef.top_preambule @ specs_colls_instru @
+                     speccoll_test @ Foc_predef.top_postambule colllist)
+    | Report (test_context, prop_l) ->
+        let get_var_l l =
+          List.fold_left (fun s ((e, _), _) ->
+            snd (List.split (variables_to_list e)) ++ s) [] l in
+        let type_to_generate =
+          List.fold_left (fun s (_, _, l) -> get_var_l l ++ s) [] prop_l in
+        let (spec_harness,specs_colls_instru) =
+          Species_harness.species_harness test_context type_to_generate in
+        let colllist, speccoll_test =
+          ast_testprop_reinject_list prop_l spec_harness in
+        fic_create
+          [library] (Foc_predef.top_preambule @ specs_colls_instru @
+                     speccoll_test @ Foc_predef.top_postambule colllist)
+;;
+
+
 
 (** [test_prop p] tests a property [p] which can be a list of property or a test report (a test
 report contain a list of property in elementary forms). *)
@@ -139,13 +143,16 @@ report contain a list of property in elementary forms). *)
 (* Take a list of proposition and a file_name, create the file with source code
    testing prop *)
 let proceed p library =
-      print_verbose "Generating .fcl abstract syntax tree ...\n";
-      let file_foc = test_prop library p in
-      print_verbose "Writing .fcl file ...\n";
-      let file_fml = add_import (top_import (get_file_output_xml())) [] in
-      print_foc_file (get_file_output_foc ()) file_foc file_fml;;
+  print_verbose "Generating .fcl abstract syntax tree ...\n" ;
+  let file_foc = test_prop library p in
+  print_verbose "Writing .fcl file ...\n" ;
+  let file_fml =
+    add_import (Foc_predef.top_import (get_file_output_xml())) [] in
+  Print_foc.print_foc_file (get_file_output_foc ()) file_foc file_fml
+;;
 (*       print_verbose "Writing .fml file ...\n"; *)
 (*       print_fml_file (get_file_output_fml ()) (add_import (top_import (get_file_output_xml ())) []) *)
+
 
 let remove_suffixe s =
   let len = String.length s in
@@ -272,7 +279,7 @@ let parse_args () = Arg.parse
                  "spc set which species to test";
 *)
       "-s", Arg.String (fun s ->
-                          set_test_context (parse_test_context s)),
+                          set_test_context (Useful_parsing.parse_test_context s)),
                  "spc Set which species to test";
       "-p", Arg.String (fun s ->
                          set_property_test (parse_string Own_parser.properties_test s)
