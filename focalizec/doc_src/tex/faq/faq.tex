@@ -266,6 +266,60 @@ end ;;
 \noindent where \lstinline"~" is the ``not'' on booleans, whereas
 \lstinline"~~" is the ``not'' on logical propositions.
 \end{faqitem}
+
+
+\bigskip
+\begin{faqitem}
+\noindent {\bf $\bullet$ Q:}
+I get the error message:
+\verb+Zenon error: cannot infer a value for a variable of type XYZ+
+
+%%%%%%%%%%%%%%%
+\medskip
+\noindent {\bf $\bullet$ A:}
+Make sure that you are not using a theorem/property with variables not
+used in your goal. This sometimes arise with theorem/property
+``too general''.
+
+For instance, suppose a theorem \lstinline"p_foo" being a conjunction of 3
+cases with 3 variables used to prove a goal only using 2 of these cases
+(hence and of these variables) like below.
+
+{\small
+\begin{lstlisting}
+open "basics";;
+
+species Dummy =
+  signature foo : int -> int ;
+  property p_foo: all x y z : int, foo (x) = foo (y) /\ foo (y) = foo (z) ;
+
+  theorem junk: all a b : int, foo (a) = foo (b)
+  proof = by property p_foo ;
+end ;;
+\end{lstlisting}}
+
+\zenon\ complains:
+\begin{verbatim}
+File "gloups.fcl", line 8, characters 10-27:
+Zenon error: cannot infer a value for a variable of type basics.int__t
+\end{verbatim}
+Indeed, the variable \lstinline"z" of the property \lstinline"p_foo" is not
+used but must be instantiated by a value by \zenon. \zenon\ does not yet have
+any way to find values of a type.
+
+You may rewrite without loss of generally the property \lstinline"p_foo".
+Instead of quantifiying all the variables at once then stating the
+conjunction of cases, simply put the needed quantifications inside each
+case of the conjunction:
+
+{\small
+\begin{lstlisting}
+  property p_foo:
+    (all x y : int, foo (x) = foo (y)) /\
+    (all y z : int, foo (y) = foo (z)) ;
+\end{lstlisting}}
+\end{faqitem}
+
 \end{document}
 
 
