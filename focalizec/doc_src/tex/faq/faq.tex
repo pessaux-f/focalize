@@ -9,7 +9,9 @@
 \begin{document}
 
 \begin{center}
-{\Huge \textbf{\focal} FAQ}
+  {\Huge \textbf{\focal} FAQ}\\
+  {\large For version 0.9.1}\\
+  {March 2017}
 \end{center}
 
 
@@ -41,7 +43,7 @@ when \focalizec\ compiles.
 %%%%%%%%%%%%%%%
 \medskip
 \noindent {\bf $\bullet$ A:}
-You probably have created a def-dedendency on the
+You probably have created a def-dependency on the
 representation in the statement of a property or a theorem, like in:
 {\small
 \begin{lstlisting}
@@ -56,7 +58,7 @@ This statement reveals that the representation is indeed {\tt int} since to
 have \lstinline"x + 0" well-typed, {\tt Self} must exactly be {\tt int}. This
 makes the interface of the species impossible to be typed as a collection
 since the representation will be abstracted. You may need to add extra methods
-hidding the dependency on representation.
+hiding the dependency on representation.
 \end{faqitem}
 
 
@@ -103,11 +105,11 @@ A constructor with one argument being a tuple is defined using the ``tupling''
 type constructor \lstinline{*}:
 {\small
 \begin{lstlisting}
-type with_1_tuple_arg = 
+type with_1_tuple_arg =
   | A (int * bool * string) ;;   (* Note the stars. *)
 \end{lstlisting}}
 
-A valid usage of this construtor is:
+A valid usage of this constructor is:
 {\small
 \begin{lstlisting}
 let ok = A ( (1, false, "") ) ;;
@@ -140,7 +142,7 @@ type with_several_args =
   | B (int, bool, string) ;;   (* Note the comas. *)
 \end{lstlisting}}
 
-A valid usage of this construtor is:
+A valid usage of this constructor is:
 {\small
 \begin{lstlisting}
 let ok = B (1, false, "") ;;
@@ -272,7 +274,8 @@ end ;;
 \begin{faqitem}
 \noindent {\bf $\bullet$ Q:}
 I get the error message:
-\verb+Zenon error: cannot infer a value for a variable of type XYZ+
+\verb+Zenon error: cannot infer a value for a variable of+
+\verb+type XYZ+.
 
 %%%%%%%%%%%%%%%
 \medskip
@@ -308,7 +311,7 @@ used but must be instantiated by a value by \zenon. \zenon\ does not yet have
 any way to find values of a type.
 
 You may rewrite without loss of generally the property \lstinline"p_foo".
-Instead of quantifiying all the variables at once then stating the
+Instead of quantifying all the variables at once then stating the
 conjunction of cases, simply put the needed quantifications inside each
 case of the conjunction:
 
