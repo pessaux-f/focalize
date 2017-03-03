@@ -73,12 +73,12 @@ $(focal)
   environment to develop certified programs. The environment is based on
   a functional programming language with object-oriented features. The
   language allows the programmer to write formal specifications and
-  proofs of the program in a unified and consistent setting. 
+  proofs of the program in a unified and consistent setting.
 </p>
 
 <p>
   From a $(focal) source code development, the
-  <code>$(focalizec)</code> compiler produces three source files: 
+  <code>$(focalizec)</code> compiler produces three source files:
 </p>
   <ul>
     <li>
@@ -97,6 +97,12 @@ $(focal)
   refine a development from the coarse-grain specification to the fully
   defined executable program.
   <br><br>
+  Proofs are written in a hierarchical style in the $(focal) Proof
+  Language and are then independent from the target logical verification
+  system. Leaves of a proof tree are solved by providing "<I>hints</I>"
+  (definition, theorem, proof step etc. names) which are sent to the
+  Zenon automatic theorem prover.
+  <br><br>
   The $(focal) distribution includes a library of
   mathematical algebraic structures up to multivariate polynomial
   rings, a library of security policies and various examples contributed
@@ -104,8 +110,22 @@ $(focal)
   efficient; for instance, the complex algorithms of the algebraic library
   provide runtime performances comparable to the best Computer
   Algebra Systems available.
+  <br><br>
+  $(focal) is developped by François Pessaux. Zenon is developped by Damien
+  Doligez.
   </p>
   </h3>
+</div>
+
+<div class="spacer"></div>
+
+<div id="main">
+<h3>FAQ started (2017-03-03)</h3><h3>
+<p>
+  A currently short but growing FAQ about common errors is now available
+  from the <a href="documentation/">Documentation</a> page.
+</p>
+</h3>
 </div>
 
 <div class="spacer"></div>

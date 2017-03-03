@@ -26,6 +26,14 @@ Documentation
 </ul>
 </p>
 
+<div id="main">
+<h3>A short (but growing) FAQ aout common errors<h3>
+<p>The FAQ:
+<ul>
+ <li><a href="faq.pdf">faq.pdf</a>, (in PDF format).</li>
+</ul>
+</p>
+
 <h3>Programming and Proving: Practice with FoCaLiZe<h3>
 <p>A course in $(focal) given in May 2014 at Ecole des Jeunes Chercheurs en Programmation (EJCP, doctoral summer school) :
 <ul>
