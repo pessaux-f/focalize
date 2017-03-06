@@ -40,6 +40,7 @@ type recursive_representation('r, 'd) =
 (* ; *)
 
 (** Unfolding of polynomial equality *)
+(* @rr TODO]: Candidate to be killed ???
 let distr_eq (i_eq, e_eq) =
   let rec equal (x, y) = match x with
     | Null ->
@@ -59,6 +60,7 @@ let distr_eq (i_eq, e_eq) =
           else false)
    in function x -> function y -> equal (x, y)
 ;;
+*)
 
 
 let distr_output(i_print, c_print) =
@@ -99,6 +101,7 @@ species Recursive_indexed_set (E is Setoid_with_zero,
 
 
   (* [rr]: once equality up_eq is abstracted there is no recursivity *)
+(* @rr TODO]: Candidate to be killed ???
   let my_equal (up_eq : (distributed_representation (Self, I)
                          -> distributed_representation (Self, I)
                              -> bool),
@@ -122,6 +125,40 @@ species Recursive_indexed_set (E is Setoid_with_zero,
          r_eq(x: Self, y: Self) = my_equal(d_eq, x, y)
      and d_eq(x_d, y_d) = distr_eq(I!equal, r_eq)(x_d, y_d)
      in function p -> function q -> r_eq(p, q);
+  *)
+
+  let rec equal (x : Self, y : Self) =
+    let rec distr_eq (x1, y1) =
+      match x1 with
+      | Null ->
+          (match y1 with
+            | Null  ->               true
+            | NonNull (_, _,  _) -> false
+           )
+      | NonNull (cx1, dx1, xx1) ->
+          (match y1 with
+            | Null   ->     false
+            | NonNull (cy1, dy1, yy1) ->
+                (if I!equal (dx1, dy1)
+                  then (if equal (cx1, cy1) then distr_eq (xx1, yy1) else false)
+                  else false)
+            ) in
+    match x with
+     | Base (xb) ->
+       (match y with
+         | Base (yb) ->  E!equal (xb, yb)
+         | Composed (_, _) -> false
+         )
+      | Composed (sx,  xx) ->
+          (match y with
+            | Base (_) -> false
+            | Composed (sy, yy) ->
+                if sx <^ sy then false
+                else
+                  if sy <^ sx then false
+                  else distr_eq ( xx, yy))
+  termination proof = structural x
+;
 
   proof of equal_reflexive = assumed;
   proof of equal_symmetric = assumed;
