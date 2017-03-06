@@ -39,43 +39,6 @@ type recursive_representation('r, 'd) =
 (* | Composed (_v, _p_d) ->  false *)
 (* ; *)
 
-(** Unfolding of polynomial equality *)
-(* @rr TODO]: Candidate to be killed ???
-let distr_eq (i_eq, e_eq) =
-  let rec equal (x, y) = match x with
-    | Null ->
-        (match y with
-        | Null -> true
-        | NonNull (_, _, _) -> false)
-    | NonNull (cx, dx, xx) ->
-        (match y with
-        | Null -> false
-        | NonNull (cy, dy, yy) ->
-          if i_eq (dx, dy)
-          then
-            if e_eq (cx, cy)
-            then
-              equal (xx, yy)
-            else false
-          else false)
-   in function x -> function y -> equal (x, y)
-;;
-*)
-
-
-let distr_output(i_print, c_print) =
-   let rec my_out(p, c, d, v) = match p with
-   | Null -> c_print(c) ^ v ^ "**" ^ i_print(d)
-   | NonNull(cc, dd, pp) ->
-       c_print(c) ^ v ^ "**" ^ i_print(d) ^ "+"  ^
-       my_out(pp, cc, dd, v)
-   termination proof = structural p
-   in function p -> function v -> match p with
-   | Null -> "0"
-   | NonNull(cp, dp, rp) -> my_out(rp, cp, dp, v)
-;;
-
-
 
 (**
    I am not the sure of the correct name,
@@ -100,44 +63,17 @@ species Recursive_indexed_set (E is Setoid_with_zero,
     termination proof = structural x ;
 
 
-  (* [rr]: once equality up_eq is abstracted there is no recursivity *)
-(* @rr TODO]: Candidate to be killed ???
-  let my_equal (up_eq : (distributed_representation (Self, I)
-                         -> distributed_representation (Self, I)
-                             -> bool),
-               x : Self,
-               y : Self) =
-    match x with
-    | Base(xb) ->
-      (match y with
-      | Base (yb) -> E!equal(xb, yb)
-      | Composed (_, _) -> false)
-      | Composed (sx, xx) ->
-        (match y with
-        | Base(_) -> false
-        | Composed (sy, yy) ->
-           if (sx <^ sy) then false
-         else
-           if (sy <^ sx) then false else up_eq(xx, yy)) ;
-
-  let equal =
-     let rec
-         r_eq(x: Self, y: Self) = my_equal(d_eq, x, y)
-     and d_eq(x_d, y_d) = distr_eq(I!equal, r_eq)(x_d, y_d)
-     in function p -> function q -> r_eq(p, q);
-  *)
-
   let rec equal (x : Self, y : Self) =
     let rec distr_eq (x1, y1) =
       match x1 with
       | Null ->
           (match y1 with
-            | Null  ->               true
+            | Null  -> true
             | NonNull (_, _,  _) -> false
            )
       | NonNull (cx1, dx1, xx1) ->
           (match y1 with
-            | Null   ->     false
+            | Null -> false
             | NonNull (cy1, dy1, yy1) ->
                 (if I!equal (dx1, dy1)
                   then (if equal (cx1, cy1) then distr_eq (xx1, yy1) else false)
@@ -156,7 +92,7 @@ species Recursive_indexed_set (E is Setoid_with_zero,
                 if sx <^ sy then false
                 else
                   if sy <^ sx then false
-                  else distr_eq ( xx, yy))
+                  else distr_eq (xx, yy))
   termination proof = structural x
 ;
 
@@ -164,16 +100,22 @@ species Recursive_indexed_set (E is Setoid_with_zero,
   proof of equal_symmetric = assumed;
   proof of equal_transitive = assumed;
 
-  let print =
-    let rec my_print(x) = match x with
-    | Base(xx) -> E!print(xx)
-    | Composed(v, p) -> d_out(p, v)
-    and
-     d_out(p, v) = distr_output(I!print, my_print, p, v)
-    in function x -> my_print(x);
+  let rec print (x) =
+    let rec my_out (p, c, d, v) =
+      match p with
+      | Null -> print (c) ^ v ^ "**" ^ I!print (d)
+      | NonNull(cc, dd, pp) ->
+          print (c) ^ v ^ "**" ^ I!print (d) ^ "+"  ^
+          my_out (pp, cc, dd, v) in
+    match x with
+    | Base(xx) -> E!print (xx)
+    | Composed (v, p) ->
+        (match p with
+        | Null -> "0"
+        | NonNull (cp, dp, rp) -> my_out (rp, cp, dp, v))
+   termination proof = structural x ;
 
-
-  let zero : Self = Base(E!zero);
+  let zero : Self = Base (E!zero) ;
 
 (*   let is_zero(x : Self) = match x with *)
 (*   | Base(m) -> E!is_zero(m) *)
