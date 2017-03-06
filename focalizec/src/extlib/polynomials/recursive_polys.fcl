@@ -73,16 +73,30 @@ let distr_output(i_print, c_print) =
    | NonNull(cp, dp, rp) -> my_out(rp, cp, dp, v)
 ;;
 
+
+
 (**
    I am not the sure of the correct name,
    nor if it has some sense in the literature.
  *)
 species Recursive_indexed_set (E is Setoid_with_zero,
-              I is Ordered_set_with_zero) = 
+              I is Ordered_set_with_zero) =
 
   inherit Setoid_with_zero;
 
   representation = recursive_representation (E, I);
+
+
+  let rec r_size (x : Self) : int =
+    let rec d_size (x) =
+      match x with
+      | Null -> 0
+      | NonNull (cx, dx, xx) -> r_size (cx) + d_size (xx) in
+    match x with
+    | Base (xb) -> 1
+    | Composed (sx, xx) -> 1 + d_size (xx)
+    termination proof = structural x ;
+
 
   (* [rr]: once equality up_eq is abstracted there is no recursivity *)
   let my_equal (up_eq : (distributed_representation (Self, I)
@@ -92,22 +106,19 @@ species Recursive_indexed_set (E is Setoid_with_zero,
                y : Self) =
     match x with
     | Base(xb) ->
-	(match y with
-	| Base(yb) -> E!equal(xb, yb)
-	| Composed(_, _) -> false)
-    | Composed(sx, xx) ->
-	(match y with
-	| Base(_) -> false
-	| Composed(sy, yy) ->
-	    if (sx <^ sy)
-	    then false
-	    else
-	      if (sy <^ sx)
-	      then false
-	      else up_eq(xx, yy));
+      (match y with
+      | Base (yb) -> E!equal(xb, yb)
+      | Composed (_, _) -> false)
+      | Composed (sx, xx) ->
+        (match y with
+        | Base(_) -> false
+        | Composed (sy, yy) ->
+           if (sx <^ sy) then false
+         else
+           if (sy <^ sx) then false else up_eq(xx, yy)) ;
 
   let equal =
-     let rec 
+     let rec
          r_eq(x: Self, y: Self) = my_equal(d_eq, x, y)
      and d_eq(x_d, y_d) = distr_eq(I!equal, r_eq)(x_d, y_d)
      in function p -> function q -> r_eq(p, q);
@@ -121,9 +132,9 @@ species Recursive_indexed_set (E is Setoid_with_zero,
     | Base(xx) -> E!print(xx)
     | Composed(v, p) -> d_out(p, v)
     and
-     d_out(p, v) = distr_output(I!print, my_print, p, v) 
+     d_out(p, v) = distr_output(I!print, my_print, p, v)
     in function x -> my_print(x);
-    
+
 
   let zero : Self = Base(E!zero);
 
@@ -293,7 +304,7 @@ species Recursive_indexed_sum (M is Additive_group,
   proof of plus_right_substitution_rule = assumed;
 
   let opposite =
-    let rec d_opp(p: recursive_representation(M, D)): 
+    let rec d_opp(p: recursive_representation(M, D)):
              recursive_representation(M, D) =
        match p with
        | Base(c) -> Base(M!opposite(c))
@@ -315,7 +326,7 @@ end;;
  *)
 
 let distr_mon_mult (r_mult, r_is_0, d_plus) =
-   let rec monomial_mult (p, c, d) = 
+   let rec monomial_mult (p, c, d) =
       match p with
       | Null -> Null
       | NonNull(cp, dp, pp) ->
@@ -393,14 +404,14 @@ species Recursive_polynomials_commutative_ring
           else Composed(vy, pr))
      | Composed(vx, px) ->
        (match y with
-        | Base(_) -> 
+        | Base(_) ->
           let pr = p_mult(px, p_lift(y)) in
           if p_is_const(pr)
           then p_lc(pr)
           else Composed(vx, pr)
         | Composed(vy, py) ->
           if (vx <^ vy)
-          then 
+          then
             let pr = p_mult(p_lift(x), py) in
             if p_is_const(pr)
             then p_lc(pr)
@@ -487,8 +498,8 @@ let distr_exquo (( <_d ), ( -_d ), ( /_r ), d_sup) =
 
 species Recursive_polynomials_Domain
       (R is Integral_domain, D is Monomial_ordering) =
-  inherit Torsion_free_algebra (R), 
-          Integral_domain, 
+  inherit Torsion_free_algebra (R),
+          Integral_domain,
           Recursive_polynomials_commutative_ring (R, D);
 
 
@@ -510,7 +521,7 @@ species Recursive_polynomials_Domain
 	       else Unfailed (Composed (v, non_failed (res)))
      in function x -> function c -> s_equo (x, c)
    ;
-  
+
   (*[rr]: not the weakest idea opf how though *)
   proof of module_exquo_divides = assumed ;
 
