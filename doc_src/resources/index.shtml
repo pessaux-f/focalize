@@ -20,16 +20,16 @@ Resources
 <p>
 <ul>
 <li>
-Julien Blond and Charles Morisset. Un moniteur de r&eacute;f&eacute;rence 
-s&ucirc;r d'une base de donn&eacute;es. 
+Julien Blond and Charles Morisset. Un moniteur de r&eacute;f&eacute;rence
+s&ucirc;r d'une base de donn&eacute;es.
 TSI (Technique et Science Informatiques), 2007.
 <br />
 <a href="http://pagesperso-systeme.lip6.fr/Mathieu.Jaume/blondmorisset.pdf"> Pdf</a>
 </li>
 <li>
-Catherine Dubois and Th&eacute;r&egrave;se Hardin and 
-V&eacute;ronique Vigui&eacute; Donzeau Gouge. 
-Building certified components within FOCAL. 
+Catherine Dubois and Th&eacute;r&egrave;se Hardin and
+V&eacute;ronique Vigui&eacute; Donzeau Gouge.
+Building certified components within FOCAL.
 Trends in Functional Programming, Volume 5, pp 33-48. February 2006.
 </li>
 <li>
@@ -39,8 +39,8 @@ D&eacute;veloppement de logiciels s&ucirc;rs. <span style="font-style:
 italic;">Technique et Science Informatique</span>, 24(9):1139-1160,
 2005. (in French)<br />
 <a href="http://focal.inria.fr/site/images/stories/articles/delahayetsi05.pdf"
-target="_self">Pdf</a> - 
-<a 
+target="_self">Pdf</a> -
+<a
 href="http://focal.inria.fr/site/images/stories/articles/delahayetsi05.bibtex"
 target="_self">Bibtex</a>
 </li>
@@ -54,7 +54,7 @@ href="http://focal.inria.fr/site/images/stories/articles/lobjet.ps">Postscript
 target="_self">Bibtex</a>
 </li>
 <li>Virgile Prevosto and Damien Doligez. Algorithms and proof
-inheritance in the foc language. <em>Journal of Automated Reasoning</em>, 
+inheritance in the foc language. <em>Journal of Automated Reasoning</em>,
 29(3-4):337-363, December 2002.<br />
 <a target="_self"
 href="http://focal.inria.fr/site/images/stories/articles/rr02.ps.gz">
@@ -74,10 +74,17 @@ target="_self">Bibtex</a>
 <ul>
 
 <li>
+  Catherine Dubois, François Pessaux. Termination Proofs for Recursive
+  Functions in FoCaLiZe, Trends in Functional Programming (TFP 2015),
+  Lecture Notes in Computer Science, vol 9547.
+  <a href="TFP2015_term_proofs.pdf">Pdf</a>
+</li>
+
+<li>
   François Pessaux. FoCaLiZe: Inside an F-IDE, 1st Workshop on Formal Integrated
   Development Environment (F-IDE 2014), Satellite workshop of ETAPS 2014,
   Electronic Proceedings in Theoretical in Computer Science 149, pp 64-78. 2014.
-  <a href="http://francois.pessaux.perso.sfr.fr/files/FIDE2014-FoCaLiZe.pdf">Pdf</a>
+  <a href="FIDE2014-FoCaLiZe.pdf">Pdf</a>
 </li>
 <li>
   Mathieu Jaume and Théo Laurent. Teaching formal methods and discrete mathematics, 1st Workshop on Formal Integrated Development Environment (F-IDE 2014), Satellite workshop of ETAPS 2014, Electronic Proceedings in Theoretical in Computer Science 149, pp 30-43. 2014.
@@ -150,7 +157,7 @@ Pages 84-98. Springer, 2008.<br />
   <a href="http://pagesperso-systeme.lip6.fr/Mathieu.Jaume/esop07.pdf">Pdf</a>
   </li>
 <li>
-  Eric Jaeger and Catherine Dubois. Why Would You Trust B?. 
+  Eric Jaeger and Catherine Dubois. Why Would You Trust B?.
   Conference on Logic Programming Artificial Intelligence and
   Reasoning, LPAR 2007, LNCS.
   <br />
@@ -158,7 +165,7 @@ Pages 84-98. Springer, 2008.<br />
 </li>
 <li>
   David Delahaye, Jean-Fr&eacute;d&eacute;ric
-  &Eacute;tienne, and V&eacute;ronique Vigui&eacute; Donzeau-Gouge. 
+  &Eacute;tienne, and V&eacute;ronique Vigui&eacute; Donzeau-Gouge.
   Reasoning about Airport Security Regulations using the Focal Environment. In
   <span style="font-style: italic;">International Symposium on
   Leveraging Applications of Formal
@@ -177,7 +184,7 @@ Pdf</a>
 </li>
 <li>
   David Delahaye, Jean-Fr&eacute;d&eacute;ric
-  &Eacute;tienne, and V&eacute;ronique Vigui&eacute; Donzeau-Gouge. 
+  &Eacute;tienne, and V&eacute;ronique Vigui&eacute; Donzeau-Gouge.
   Certifying Airport Security Regulations using the Focal Environment. In
   <span style="font-style: italic;">Formal Methods (FM)</span>, volume
   4085 of <span style="font-style: italic;">LNCS</span>, pages 48--63,
@@ -203,7 +210,7 @@ Pdf</a>
 </li>
 <li>
   Julien Blond and Charles Morisset. Formalisation et implantation
-  d'une politique de s&eacute;curit&eacute; d'une base de donn&eacute;es. 
+  d'une politique de s&eacute;curit&eacute; d'une base de donn&eacute;es.
   Journ&eacute;es Francophones des Langages Applicatifs (JFLA) 2006, Pauillac,
   France.<br /><a target="_self"
   href="http://focal.inria.fr/site/images/stories/articles/blond.pdf">Pdf</a>
@@ -211,7 +218,7 @@ Pdf</a>
 </li>
 <li>
   Virgile Prevosto and Sylvain Boulm&eacute;. Proof contexts with late binding.
-  In <em>Typed Lambda Calculi and Applications</em>, volume 3461 of 
+  In <em>Typed Lambda Calculi and Applications</em>, volume 3461 of
   <em>LNCS</em>, pages 324-338. Springer, April 2005
   <br/>
   <a href="http://focal.inria.fr/site/images/stories/articles/prevostotlca05.pdf">Pdf</a>-
@@ -249,8 +256,8 @@ Pdf</a>
 </li>
 <li>
   Virgile Prevosto, Damien Doligez, and Th&eacute;r&egrave;se Hardin. Algebraic
-  structures and dependent records. In Sofi&egrave;ne Tahar, 
-  C&eacute;sar Mu&ntilde;oz and V&iacute;ctor Carre&ntilde;o, editors, 
+  structures and dependent records. In Sofi&egrave;ne Tahar,
+  C&eacute;sar Mu&ntilde;oz and V&iacute;ctor Carre&ntilde;o, editors,
   <em>Proceedings of TPHOLs 02</em>. Springer-Verlag, August 2002.<br />
   <a href="http://focal.inria.fr/site/images/stories/articles/tphol02.ps.gz">
   Postscript</a>-
@@ -260,15 +267,15 @@ Pdf</a>
 <li>
   St&eacute;phane Fechter. An object-oriented model for the certified
   computer algebra library. Paper presented at FMOODS 2002 PhD workshop, March
-  2002.<br /> 
+  2002.<br />
   <a href="http://focal.inria.fr/site/images/stories/articles/fechter02.ps.gz">
   Postscript</a>-
   <a href="http://focal.inria.fr/site/images/stories/articles/fechter02.bibtex">
   Bibtex</a>
 </li>
 <li>
-  Sylvain Boulm&eacute;, Th&eacute;r&egrave;se Hardin, and Renaud Rioboo. 
-  Some hints for polynomials in the Foc project. 
+  Sylvain Boulm&eacute;, Th&eacute;r&egrave;se Hardin, and Renaud Rioboo.
+  Some hints for polynomials in the Foc project.
   In <em>Calculemus 2001 Proceedings</em>, June 2001.<br />
   <a href="http://focal.inria.fr/site/images/stories/articles/BHR01.ps">
   Postscript</a>-
@@ -277,9 +284,9 @@ Pdf</a>
 </li>
 <li>
   Virgile Pr&eacute;vosto. Prototype d'interface utilisateur de la
-  librairie foc. In 
-  <em>Actes des Journ&eacute;es Francophones des Langages Applicatifs</em>, 
-  2001.<br /> 
+  librairie foc. In
+  <em>Actes des Journ&eacute;es Francophones des Langages Applicatifs</em>,
+  2001.<br />
   <a href="http://focal.inria.fr/site/images/stories/articles/vp_jfla01.ps.gz">
   Postscript</a>-
   <a href="http://focal.inria.fr/site/images/stories/articles/vp_jfla01.bibtex">
@@ -287,8 +294,8 @@ Pdf</a>
 </li>
 <li>
   Sylvain Boulm&eacute;. Op&eacute;rateurs de raffinement sur les structures
-  alg&eacute;briques. In 
-  <em>Actes des Journ&eacute;es Francophones des Langages Applicatifs</em>, 
+  alg&eacute;briques. In
+  <em>Actes des Journ&eacute;es Francophones des Langages Applicatifs</em>,
   2000.<br />
   <a href="http://focal.inria.fr/site/images/stories/articles/BoulmeJFLA00.ps.gz">
   Postscript</a>-
@@ -307,9 +314,9 @@ Pdf</a>
   Bibtex</a>
 </li>
 <li>
-  S. Boulm&eacute;, T. Hardin, and R. Rioboo. Modules, objets et calcul formel. 
-  In <em>Actes des Journ&eacute;es Francophones des Langages Applicatifs</em>, 
-  1999.<br /> 
+  S. Boulm&eacute;, T. Hardin, and R. Rioboo. Modules, objets et calcul formel.
+  In <em>Actes des Journ&eacute;es Francophones des Langages Applicatifs</em>,
+  1999.<br />
   <a href="http://focal.inria.fr/site/images/stories/articles/BHRJFLA99.ps">
   Postscript</a>-
   <a href="http://focal.inria.fr/site/images/stories/articles/BHRJFLA99.bibtex">
@@ -359,7 +366,7 @@ Pdf</a>
 <li>
   Virgile Prevosto. Conception et implantation du langage FoC pour le
   d&eacute;veloppement de logiciels certifi&eacute;s. Th&egrave;se de
-  doctorat, Universit&eacute; 
+  doctorat, Universit&eacute;
   Paris 6, 2003.<br />
   <a href="http://focal.inria.fr/site/images/stories/articles/prevosto_these.ps.gz">
   Postscript</a>-
@@ -370,8 +377,8 @@ Pdf</a>
   Sylvain Boulm&eacute;.
   <em>Sp&eacute;cification d'un environnement d&eacute;di&eacute;
   &agrave; la programmation certifi&eacute;e de biblioth&egrave;ques de
-  Calcul Formel</em>. Th&egrave;se de doctorat, 
-  Universit&eacute; Paris 6, 2000.<br /> 
+  Calcul Formel</em>. Th&egrave;se de doctorat,
+  Universit&eacute; Paris 6, 2000.<br />
   <a href="http://focal.inria.fr/site/images/stories/articles/boulme_these.ps.gz">
   Postscript</a>-
   <a href="http://focal.inria.fr/site/images/stories/articles/boulme_these.bibtex">
@@ -380,7 +387,7 @@ Pdf</a>
 <li>
   Lionel Habib. Formalisation, comparaison et implantation d'un
   mod&egrave;le de contr&ocirc;le d'acc&egrave;s &agrave; base de
-  r&ocirc;les. Master thesis, September 2007. 
+  r&ocirc;les. Master thesis, September 2007.
   <br />
   <a href="http://pagesperso-systeme.lip6.fr/Mathieu.Jaume/Rapport_M2_Lionel_Habib.pdf">Pdf</a>
 </li>
@@ -404,12 +411,12 @@ Pdf</a>
 <li>
   J&eacute;r&ocirc;me Grandguillot. R&eacute;utilisation de preuves: une
   &eacute;tude pour le syst&egrave;me foc. rapport de stage de D.E.A,
-  Universit&eacute; d'&Eacute;vry Val d'Essone, 2002.<br /> 
+  Universit&eacute; d'&Eacute;vry Val d'Essone, 2002.<br />
   <a href="http://focal.inria.fr/site/images/stories/articles/grandguillot_dea.bibtex">
   Bibtex</a>
 </li>
 <li>
-  Manuel Maarek. Conception d'une  librarie OMDoc pour FoC. 
+  Manuel Maarek. Conception d'une  librarie OMDoc pour FoC.
   Rapport de stage de D.E.A, Universit&eacute; Paris 6, 2002.
   <!-- <br /> -->
   <!-- <a href="http://www-spi.lip6.fr/~maarek/StageDEA/rapport_dea.ps.gz"> -->
@@ -424,7 +431,7 @@ Universit&eacute; Paris 6, juin 2002.
 </li>
 <li>
   St&eacute;phane Fechter. Une s&eacute;mantique pour foc. Rapport de
-  D.E.A., Universit&eacute; Paris 6, September 2001.<br /> 
+  D.E.A., Universit&eacute; Paris 6, September 2001.<br />
   <a href="http://focal.inria.fr/site/images/stories/articles/fechter_dea.ps.gz">
   Postscript</a>-
   <a href="http://focal.inria.fr/site/images/stories/articles/fechter_dea.bibtex">
@@ -434,7 +441,7 @@ Universit&eacute; Paris 6, juin 2002.
 Manuel Maarek. Ecriture d'un parser pour Foc en Camlp4. Travail
 d'initiation &agrave; la recherche, Universit&eacute; Paris 6, Juin 2001.<br />
 <a href="http://focal.inria.fr/site/images/stories/articles/maarek_tir.ps.gz">
-Postscript</a>- 
+Postscript</a>-
 <a href="http://focal.inria.fr/site/images/stories/articles/maarek_tir.bibtex">
 Bibtex</a>
 </li>
@@ -448,10 +455,10 @@ Bibtex</a>
 </li>
 <li>V. Prevosto. Vers une interface utilisateur pour foc. Rapport
 de D.E.A., Universit&eacute; Paris 6, September 2000.<br />
-<a 
+<a
 href="http://focal.inria.fr/site/images/stories/articles/prevosto_dea.ps.gz">
 Postscript</a>-
-<a 
+<a
 href="http://focal.inria.fr/site/images/stories/articles/prevosto_dea.bibtex">
 Bibtex</a>
 </li>
@@ -477,7 +484,7 @@ Bibtex</a>
 <li>
 Sylvain Boulm&eacute;. Specifying in coq inheritance used in computer
 algebra. Research report, LIP6, 2000.<br />
-<a 
+<a
 href="http://focal.inria.fr/site/images/stories/articles/boulme_rr00a.ps.gz">
 Postscript</a>-
 <a
@@ -488,10 +495,10 @@ Bibtex</a>
 Sylvain Boulm&eacute;, Th&eacute;r&egrave;se Hardin, and Renaud
 Rioboo. Polymorphic data types, objects, modules and functors: is it
 too much? Research report, LIP6, 2000.<br />
-<a 
+<a
 href="http://focal.inria.fr/site/images/stories/articles/boulme_rr00b.ps.gz">
 Postscript</a>-
-<a 
+<a
 href="http://focal.inria.fr/site/images/stories/articles/boulme_rr00b.bibtex">
 Bibtex</a>
 </li>
