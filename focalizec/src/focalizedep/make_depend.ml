@@ -116,6 +116,12 @@ let make_targets deps =
     (fun (n, _) -> Printf.printf " %s.v" n)
     deps.fd_dependencies ;
   Printf.printf "\n" ;
+  (* Handle dependencies for .sk files. *)
+  Printf.printf "%s.sk:" basename ;
+  CompUnitSet.iter
+    (fun (n, k) -> if k <> DK_coq_require then Printf.printf " %s.sk" n)
+    deps.fd_dependencies ;
+  Printf.printf "\n" ;
   (* No dependencies for .cmi files since we do not generate .mli files. *)
   (* Handle dependencies for .cmo files. *)
   Printf.printf "%s.cmo:" basename ;
