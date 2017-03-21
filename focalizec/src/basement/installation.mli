@@ -25,4 +25,6 @@ val dedukti_compiler : string;;
 val sukerujo_compiler : string;;
 val zvtov_compiler : string;;
 val zenon_compiler : string;;
+val zenon_modulo_compiler : string;;
 val zenon_libdir : string;;
+val zenon_modulo_libdir : string;;

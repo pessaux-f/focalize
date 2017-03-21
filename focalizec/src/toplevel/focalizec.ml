@@ -166,8 +166,9 @@ let compile_ml input_file_name =
 
 let compile_zv input_file_name =
   let cmd =
-    Printf.sprintf "%s -new %s -z '-x induct' %s"
-      Installation.zvtov_compiler (* Installation.zenon_compiler *)
+    Printf.sprintf "%s -zenon %s -new %s -z '-x induct' %s"
+      Installation.zvtov_compiler
+      Installation.zenon_compiler
       (Configuration.get_zvtov_extra_opts ())
       input_file_name in
   Format.eprintf "Invoking zvtov...@\n" ;
@@ -200,8 +201,9 @@ let compile_coq input_file_name =
 
 let compile_zdk input_file_name =
   let cmd =
-    Printf.sprintf "%s -idedukti -new %s %s.zv && mv %s.v %s"
-      Installation.zvtov_compiler (* Installation.zenon_compiler *)
+    Printf.sprintf "%s -zenon %s -idedukti -new %s %s.zv && mv %s.v %s"
+      Installation.zvtov_compiler
+      Installation.zenon_modulo_compiler
       (Configuration.get_zvtov_extra_opts ())
       input_file_name
       input_file_name (Filename.basename input_file_name)
@@ -215,7 +217,7 @@ let compile_zdk input_file_name =
 
 
 let compile_dk input_file_name =
-  let for_zenon = " -I " ^ Installation.zenon_libdir in
+  let for_zenon = " -I " ^ Installation.zenon_modulo_libdir in
   let includes =
     String.concat " -I " ("" :: (Files.get_lib_paths ())) in
   let cmd =

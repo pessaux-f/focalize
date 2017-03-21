@@ -112,12 +112,9 @@ CAMLBYT=ocamlc
 CAML_FLAGS=-w A -warn-error  $(WARN_ERROR) -dtypes -I $(STDLIB_DIR)
 CAML_INCLUDES=-I $(STDLIB_DIR)
 
-ZVTOV=zvtov
-ZVTOV_COMP_FLAGS=-zenon $(ZENON_COMPILER) -new
-
-ZENON_LIB_DIR=$(shell zenon -where)
+ZENON_LIB_DIR=$(shell $(ZENON) -where)
 COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
-DK_INCLUDES=-I $(shell zenon_modulo -where) -I $(STDLIB_DIR)
+DK_INCLUDES=-I $(shell $(ZENONM) -where) -I $(STDLIB_DIR)
 
 lib: all
 

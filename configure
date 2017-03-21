@@ -291,6 +291,108 @@ else
 fi
 
 # #############################################################################
+# Commands stuff.
+# Look for Zenon
+if [ $TOOLS_PREFIX_GIVEN != true ]
+then
+    ZENON=`which zenon`
+    if [ "$ZENON" != "" ] ;
+    then
+        if [ $INTERACTIVE = true ]
+        then
+            echo $BOLDTAG"zenon found in $ZENON."$NORMALTAG
+            echo "Press enter to use default or specify another location."
+            read USER_INPUT
+            if [ "$USER_INPUT" != "" ] ;
+            then
+                ZENON=$USER_INPUT
+            else
+                # Default path kept: trim it to just let the PATH acting.
+                ZENON=zenon
+            fi
+        else
+            # Default path: trim it
+            ZENON=zenon
+        fi
+    else
+        # No zenon command found and no explicit prefix given.
+        echo $BOLDTAG"zenon not found."$NORMALTAG
+        echo "Specify where to find zenon."
+        read USER_INPUT
+        ZENON=$USER_INPUT
+        # Finally check that a path was entered by the user.
+        if [ "$ZENON" = "" ] ;
+        then
+            echo "Error. zenon not available. Install it first."
+            exit 1
+        fi
+    fi
+else
+    # Explicit tools prefix given, keep it blindly.
+    ZENON=$TOOLS_PREFIX/bin/zenon
+fi
+
+# Look for Zenon Modulo
+if [ $TOOLS_PREFIX_GIVEN != true ]
+then
+    ZENONM=`which zenon_modulo`
+    if [ "$ZENONM" != "" ] ;
+    then
+        if [ $INTERACTIVE = true ]
+        then
+            echo $BOLDTAG"Zenon Modulo found in $ZENONM."$NORMALTAG
+            echo "Press enter to use default or specify another location."
+            read USER_INPUT
+            if [ "$USER_INPUT" != "" ] ;
+            then
+                ZENONM=$USER_INPUT
+            else
+                # Default path kept: trim it to just let the PATH acting.
+                ZENONM=zenon_modulo
+            fi
+        else
+            # Default path: trim it
+            ZENONM=zenon_modulo
+        fi
+    else
+        # No zenon_modulo command found and no explicit prefix given.
+        echo $BOLDTAG"Zenon Modulo not found."$NORMALTAG
+        echo "Specify where to find Zenon Modulo."
+        read USER_INPUT
+        ZENONM=$USER_INPUT
+        # Finally check that a director was entered by the user.
+        if [ "$ZENONM" == "" ] ;
+        then
+            echo "Error. Zenon Modulo not available. Install it first."
+            exit 1
+        fi
+    fi
+else
+    # Explicit tools prefix given, keep it blindly.
+    ZENONM=$TOOLS_PREFIX/bin/zenon_modulo
+fi
+
+# Find zenon's libraries directly using the -where option of zenon.
+ZENON_LIB_DIR=`${ZENON} -where`
+if [ "$ZENON_LIB_DIR" = "" ] ;
+then
+    echo "Error. zenon libraries not available."
+    echo "May be zenon is not installed. Install it first."
+    exit 1
+fi
+
+# Find zenon modulo's libraries directly using the -where option of zenon.
+ZENONM_LIB_DIR=`${ZENONM} -where`
+if [ "$ZENONM_LIB_DIR" = "" ] ;
+then
+    echo "Error. zenon modulo libraries not available."
+    echo "May be zenon modulo is not installed. Install it first."
+    exit 1
+fi
+
+
+
+# #############################################################################
 # Generate the installation and configuration file containing tools vars.
 CONFIGURATION_VARS_FILE=.config_var
 
@@ -306,6 +408,10 @@ echo "COQDEP=$COQDEP" >> $CONFIGURATION_VARS_FILE
 echo "DKCHECK=$DKCHECK" >> $CONFIGURATION_VARS_FILE
 echo "SKDEP=$SKDEP" >> $CONFIGURATION_VARS_FILE
 echo "SKCHECK=$SKCHECK" >> $CONFIGURATION_VARS_FILE
+echo "ZENON=$ZENON" >> $CONFIGURATION_VARS_FILE
+echo "ZENONM=$ZENONM" >> $CONFIGURATION_VARS_FILE
+echo "ZENON_LIB_DIR=$ZENON_LIB_DIR" >> $CONFIGURATION_VARS_FILE
+echo "ZENONM_LIB_DIR=$ZENONM_LIB_DIR" >> $CONFIGURATION_VARS_FILE
 echo "WARN_ERROR=a" >> $CONFIGURATION_VARS_FILE
 chmod a-w $CONFIGURATION_VARS_FILE
 
@@ -323,4 +429,6 @@ echo "  coqdep = $COQDEP"
 echo "  dkcheck = $DKCHECK"
 echo "  skdep = $SKDEP"
 echo "  skcheck = $SKCHECK"
+echo "  zenon = $ZENON"
+echo "  zenon_modulo = $ZENONM"
 echo "Done"
