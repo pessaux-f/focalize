@@ -215,7 +215,7 @@ then
     then
         if [ $INTERACTIVE = true ]
         then
-            echo $BOLDTAG"zenon found in $ZENON."$NORMALTAG
+            echo $BOLDTAG"Zenon found in $ZENON."$NORMALTAG
             echo "Press enter to use default or specify another location."
             read USER_INPUT
             if [ "$USER_INPUT" != "" ] ;
@@ -231,12 +231,12 @@ then
         fi
     else
         # No zenon command found and no explicit prefix given.
-        echo $BOLDTAG"zenon not found."$NORMALTAG
-        echo "Specify where to find zenon."
+        echo $BOLDTAG"Zenon not found."$NORMALTAG
+        echo "Specify where to find Zenon."
         read USER_INPUT
         ZENON=$USER_INPUT
         # Finally check that a director was entered by the user.
-        if [ "$ZENON" == "" ] ;
+        if [ "$ZENON" = "" ] ;
         then
             echo "Error. zenon not available. Install it first."
             exit 1
@@ -257,53 +257,6 @@ then
     exit 1
 fi
 
-
-if false
-then                 # Temporary de-activation of Dedukti.
-# Look for Zenon Modulo
-if [ $TOOLS_PREFIX_GIVEN != true ]
-then
-    ZENONM=`which zenon_modulo`
-    if [ "$ZENONM" != "" ] ;
-    then
-        if [ $INTERACTIVE = true ]
-        then
-            echo $BOLDTAG"Zenon Modulo found in $ZENONM."$NORMALTAG
-            echo "Press enter to use default or specify another location."
-            read USER_INPUT
-            if [ "$USER_INPUT" != "" ] ;
-            then
-                ZENONM=$USER_INPUT
-            else
-                # Default path kept: trim it to just let the PATH acting.
-                ZENONM=zenon_modulo
-            fi
-        else
-            # Default path: trim it
-            ZENONM=zenon_modulo
-        fi
-    else
-        # No zenon_modulo command found and no explicit prefix given.
-        echo $BOLDTAG"Zenon Modulo not found."$NORMALTAG
-        echo "Specify where to find Zenon Modulo."
-        read USER_INPUT
-        ZENONM=$USER_INPUT
-        # Finally check that a director was entered by the user.
-        if [ "$ZENONM" == "" ] ;
-        then
-            echo "Error. Zenon Modulo not available. Install it first."
-            exit 1
-        fi
-    fi
-else
-    # Explicit tools prefix given, keep it blindly.
-    ZENONM=$TOOLS_PREFIX/bin/zenon_modulo
-fi
-fi                 # End of temporary de-activation of Dedukti.
-
-
-if false
-then                 # Temporary de-activation of Dedukti.
 if [ $TOOLS_PREFIX_GIVEN != true ]
 then
     DKWITNESS=`which dkcheck`
@@ -329,25 +282,37 @@ then
     else
         # No dkcheck command found and no explicit prefix given.
         echo $BOLDTAG"Dedukti installation not found."$NORMALTAG
-        echo "Specify the path where to find Dedukti commands."
+        echo "Dedukti is an optional dependency."
+        echo "If you want to use FoCaLiZe without Dedukti, leave this blank."
+        echo "Otherwise please specify the path to the directory containing the Dedukti commands."
         read USER_INPUT
         DKDIR=$USER_INPUT
         # Finally check that a director was entered by the user.
         if [ "$DKDIR" = "" ] ;
         then
-            echo "Error. Dedukti not available. Install it first."
-            exit 1
+            echo "Warning. Compiling without Dedukti."
         fi
     fi
 else
     # Explicit tools prefix given, keep it blindly.
     DKDIR=$TOOLS_PREFIX
 fi
-fi                 # End of temporary de-activation of Dedukti.
 
+# If path to Dedukti is empty here, then ocaml was found but using the PATH.
+# So do not prefix it explicitly, letting PATH finding the commands.
+if [ "$DKDIR" != "" ] ;
+then
+    DKCHECK=$DKDIR/dkcheck
+else
+    DKCHECK=dkcheck
+fi
 
-if false
-then                 # Temporary de-activation of Dedukti.
+# Check that the file $DKCHECK is executable
+if [ ! `which $DKCHECK` ] ;
+then
+    DKCHECK=""
+fi
+
 if [ $TOOLS_PREFIX_GIVEN != true ]
 then
     SKWITNESS=`which skcheck`
@@ -373,38 +338,22 @@ then
     else
         # No skcheck command found and no explicit prefix given.
         echo $BOLDTAG"Sukerujo installation not found."$NORMALTAG
-        echo "Specify the path where to find Sukerujo commands."
+        echo "Dedukti is an optional dependency."
+        echo "If you want to use FoCaLiZe without Sukerujo, leave this blank."
+        echo "Otherwise please specify the path to the directory containing the Sukerujo commands."
         read USER_INPUT
         SKDIR=$USER_INPUT
         # Finally check that a director was entered by the user.
         if [ "$SKDIR" = "" ] ;
         then
-            echo "Error. Sukerujo not available. Install it first."
-            exit 1
+            echo "Warning. Compiling without Sukerujo."
         fi
     fi
 else
     # Explicit tools prefix given, keep it blindly.
     SKDIR=$TOOLS_PREFIX
 fi
-fi                 # End of temporary de-activation of Dedukti.
 
-
-if false
-then                 # Temporary de-activation of Dedukti.
-# If path to Dedukti is empty here, then ocaml was found but using the PATH.
-# So do not prefix it explicitly, letting PATH finding the commands.
-if [ "$DKDIR" != "" ] ;
-then
-    DKCHECK=$DKDIR/dkcheck
-else
-    DKCHECK=dkcheck
-fi
-fi                 # End of temporary de-activation of Dedukti.
-
-
-if false
-then                 # Temporary de-activation of Dedukti.
 # If path to Sukerujo is empty here, then ocaml was found but using the PATH.
 # So do not prefix it explicitly, letting PATH finding the commands.
 if [ "$SKDIR" != "" ] ;
@@ -415,9 +364,76 @@ else
     SKCHECK=skcheck
     SKDEP=skdep
 fi
-fi                 # End of temporary de-activation of Dedukti.
+
+# Check that the file $SKCHECK is executable
+if [ ! `which $SKCHECK` ] ;
+then
+    SKCHECK=""
+fi
+
+# Check that the file $SKDEP is executable
+if [ ! `which $SKDEP` ] ;
+then
+    SKDEP=""
+fi
 
 
+
+# Look for Zenon Modulo
+if [ $TOOLS_PREFIX_GIVEN != true ]
+then
+    ZENONM=`which zenon_modulo`
+    if [ "$ZENONM" != "" ] ;
+    then
+        if [ $INTERACTIVE = true ]
+        then
+            echo $BOLDTAG"Zenon Modulo found in $ZENONM."$NORMALTAG
+            echo "Press enter to use default or specify another location."
+            read USER_INPUT
+            if [ "$USER_INPUT" != "" ] ;
+            then
+                ZENONM=$USER_INPUT
+            else
+                # Default path kept: trim it to just let the PATH acting.
+                ZENONM=zenon_modulo
+            fi
+        else
+            # Default path: trim it
+            ZENONM=zenon_modulo
+        fi
+    else
+        # No zenon_modulo command found and no explicit prefix given.
+        echo $BOLDTAG"Zenon Modulo installation not found."$NORMALTAG
+        echo "Zenon Modulo is an optional dependency."
+        echo "If you want to use FoCaLiZe without Zenon Modulo, leave this blank."
+        echo "Otherwise please specify the path to the zenon_modulo command."
+        read USER_INPUT
+        ZENONM=$USER_INPUT
+        # Finally check that a director was entered by the user.
+        if [ "$ZENONM" = "" ] ;
+        then
+            echo "Warning. Compiling without Zenon Modulo."
+        fi
+    fi
+else
+    # Explicit tools prefix given, keep it blindly.
+    ZENONM=$TOOLS_PREFIX/bin/zenon_modulo
+fi
+
+# Check that the file $ZENONM is executable
+if [ ! `which $ZENONM` ] ;
+then
+    ZENONM=""
+    ZENONM_LIB_DIR=""
+else
+    # Find zenon modulo's libraries directly using the -where option of zenon.
+    ZENONM_LIB_DIR=`${ZENONM} -where`
+    if [ "$ZENONM_LIB_DIR" = "" ] ;
+    then
+        echo "Error. Zenon Modulo was found but its libraries are not available."
+        exit 1
+    fi
+fi
 
 # #############################################################################
 # Installation administrativia
@@ -550,10 +566,11 @@ echo "let dedukti_compiler = \"$DKCHECK\" ;;" >> $CONFIG_SUMMARY_DOT_ML
 echo "let sukerujo_compiler = \"$SKCHECK\" ;;" >> $CONFIG_SUMMARY_DOT_ML
 echo "let zvtov_compiler = \"$INSTALL_BIN_DIR/zvtov\" ;;" >> $CONFIG_SUMMARY_DOT_ML
 echo "let zenon_compiler = \"$ZENON\" ;;" >> $CONFIG_SUMMARY_DOT_ML
+echo "let zenon_modulo_compiler = \"$ZENONM\" ;;" >> $CONFIG_SUMMARY_DOT_ML
 echo "let zenon_libdir = \"$ZENON_LIB_DIR\" ;;" >> $CONFIG_SUMMARY_DOT_ML
+echo "let zenon_modulo_libdir = \"$ZENONM_LIB_DIR\" ;;" >> $CONFIG_SUMMARY_DOT_ML
 echo "(* End of generated source file. *)" >> $CONFIG_SUMMARY_DOT_ML
 chmod a-w $CONFIG_SUMMARY_DOT_ML
-
 
 
 # #############################################################################
@@ -576,9 +593,12 @@ echo "COQ_VERSION=$COQ_VERSION" >> $CONFIGURATION_VARS_FILE
 echo "DKCHECK=$DKCHECK" >> $CONFIGURATION_VARS_FILE
 echo "SKDEP=$SKDEP" >> $CONFIGURATION_VARS_FILE
 echo "SKCHECK=$SKCHECK" >> $CONFIGURATION_VARS_FILE
+echo "ZENON=$ZENON" >> $CONFIGURATION_VARS_FILE
+echo "ZENONM=$ZENONM" >> $CONFIGURATION_VARS_FILE
+echo "ZENON_LIB_DIR=$ZENON_LIB_DIR" >> $CONFIGURATION_VARS_FILE
+echo "ZENONM_LIB_DIR=$ZENONM_LIB_DIR" >> $CONFIGURATION_VARS_FILE
 echo "WARN_ERROR=a" >> $CONFIGURATION_VARS_FILE
 echo "ZVTOV=$INSTALL_BIN_DIR/zvtov" >> $CONFIGURATION_VARS_FILE
-echo "ZENON=$ZENON" >> $CONFIGURATION_VARS_FILE
 echo "MAKE_DOC=$MAKE_DOC" >> $CONFIGURATION_VARS_FILE
 echo "INSTALL_BIN_DIR=$INSTALL_BIN_DIR" >> $CONFIGURATION_VARS_FILE
 echo "INSTALL_LIB_DIR=$INSTALL_LIB_DIR" >> $CONFIGURATION_VARS_FILE
@@ -631,14 +651,19 @@ echo "  coqdep = $COQDEP"
 echo "  dkcheck = $DKCHECK"
 echo "  skdep = $SKDEP"
 echo "  skcheck = $SKCHECK"
+echo "  zenon = $ZENON"
+echo "  zenon_modulo = $ZENONM"
+echo "  zenon libraries directory = $ZENON_LIB_DIR"
+echo "  zenon modulo libraries directory = $ZENONM_LIB_DIR"
 echo "  Must generate PDF documentation files: $MAKE_DOC"
 echo "  binaries -> $INSTALL_BIN_DIR"
 echo "  libraries -> $INSTALL_LIB_DIR"
 echo "  man pages -> $INSTALL_MAN_DIR"
 echo "  other documentation -> $INSTALL_DOC_DIR"
 echo "  git = $GIT  (not important if not available)"
-echo "  zenon libraries directory = $ZENON_LIB_DIR"
 echo "  Use sudo to install -> $SUDO"
+echo "Done"
+
 if [ "$LATEX" != "" ] ;
 then
     echo "  LaTeX found, PDF docs will be generated."
@@ -654,7 +679,8 @@ fi
 if [ "$COQ_VERSION" \< "8.5" ] ;
 then
     echo $BOLDTAG"ATTENTION:$NORMALTAG you are using a version of Coq < 8.5. FoCaliZeC must be called with"
-    echo "the $BOLDTAG$$COQ_VERSION_OPTION$NORMALTAG option."
+    echo "the $BOLDTAG\$COQ_VERSION_OPTION$NORMALTAG option."
 fi
 
 echo "Done. Now, please invoke: 'make all'"
+

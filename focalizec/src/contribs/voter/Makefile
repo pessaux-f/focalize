@@ -27,16 +27,16 @@ ALGEBRALIB_DIR=../../extlib/algebra
 UTILSLIB_DIR=../utils
 
 FOCALIZEC=../../toplevel/focalizec
+FOCALIZEDEP=../../focalizedep/focalizedep
 
 FOCALIZE_COMP_FLAGS=\
   -no-stdlib-path -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR)\
-  -I $(UTILSLIB_DIR) -no-dedukti-code \
-	-coq-version $(COQ_VERSION) -focalize-doc
+  -I $(UTILSLIB_DIR) -coq-version $(COQ_VERSION) -focalize-doc
 
 CAML_FLAGS= -w A -warn-error $(WARN_ERROR) -dtypes
 CAML_INCLUDES=-I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR)
 
-ZENON_LIB_DIR= $(shell zenon -where)
+ZENON_LIB_DIR= $(shell $(ZENON) -where)
 
 ifeq ($(shell test "$(COQ_VERSION)" != "" -a "$(COQ_VERSION)" \< "8.5"; echo $$?),0)
 	COQ_INCLUDES=\
@@ -49,6 +49,9 @@ else
 endif
 
 include $(ROOT_DIR)/Makefile.common
+
+ZVTOV=zvtov
+ZVTOV_COMP_FLAGS=-new -z '-x induct'
 
 FOCALIZE_SRC=\
  etat_vote.fcl\
@@ -77,6 +80,19 @@ FOCALIZE_ZVS=$(FOCALIZE_SRC:.fcl=.zv)
 FOCALIZE_VS=$(FOCALIZE_ZVS:.zv=.v)
 
 FOCALIZE_VOS=$(FOCALIZE_VS:.v=.vo)
+
+ifneq ($(SKCHECK),)
+ifneq ($(DKCHECK),)
+ifneq ($(ZENONM),)
+FOCALIZE_ZSKS=$(FOCALIZE_SRC:.fcl=.sk.zv)
+FOCALIZE_SKS=$(FOCALIZE_SRC:.fcl=.sk)
+FOCALIZE_DKOS=$(FOCALIZE_SKS:.sk=.dko)
+ZENONM_LIB_DIR= $(shell $(ZENONM) -where)
+DK_INCLUDES=-I $(ZENONM_LIB_DIR) -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR)
+FOCALIZE_COMP_FLAGS += -dedukti-code
+endif
+endif
+endif
 
 EXTERNAL_BYT_OBJS=\
  ../utils/pair.cmo\
@@ -108,12 +124,14 @@ lib: all
 byt:\
  $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
  $(FOCALIZE_MLS) $(FOCALIZE_ZVS)\
- $(FOCALIZE_BYT_OBJS) $(FOCALIZE_VS) $(FOCALIZE_VOS)
+ $(FOCALIZE_BYT_OBJS) $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+ $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
 
 bin:\
  $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
  $(FOCALIZE_MLS) $(FOCALIZE_ZVS)\
- $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VS) $(FOCALIZE_VOS)
+ $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+ $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
 
 $(BIN_EXE): byt bin
 	$(CAMLBIN) -o $@\
@@ -153,12 +171,22 @@ install:
 	fi &&\
 	if [ "$(EXTERNAL_VOS)" != "" ] ; then\
 	  $(CP) $(EXTERNAL_VOS) $(INSTALL_LIB_DIR)/;\
+	fi &&\
+	if [ "$(EXTERNAL_DKOS)" != "" ] ; then\
+	  $(CP) $(EXTERNAL_DKOS) $(INSTALL_LIB_DIR)/;\
 	fi
 
 clean:
-	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
-	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.zv *.vo
-	$(RM) *.glob *.fcd *.pfc *.fo
+	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) \
+	$(FOCALIZE_ZDKS) $(FOCALIZE_DKS)
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.zv *.vo *.dko *.sk.*
+	$(RM) *.glob *.fcd *.pfc *.fo .depend
 
-# Currently not handled.
-depend:
+depend: .depend
+
+# No need to call skdep because there are no external sk files
+.depend:
+	$(CAMLDEP) *.mli *.ml > ./.depend
+	$(FOCALIZEDEP) *.fcl >> ./.depend
+
+-include .depend

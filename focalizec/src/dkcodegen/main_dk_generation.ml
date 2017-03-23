@@ -21,99 +21,6 @@
 (* ************************************************************************** *)
 
 
-
-(* ************************************************************************** *)
-(** {b Descr}: Exception raised when a toplevel let-definition is tagged
-    "logical".
-
-    {b Rem}: Exported outside this module.                                    *)
-(* ************************************************************************** *)
-exception Logical_methods_only_inside_species of Location.t ;;
-
-
-
-(* ************************************************************************** *)
-(** {b Descr}: Generates code for a toplevel function.                        *)
-(* ************************************************************************** *)
-let toplevel_let_def_compile ctx env let_def =
-  if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
-    raise (Logical_methods_only_inside_species let_def.Parsetree.ast_loc) ;
-  let out_fmter = ctx.Context.scc_out_fmter in
-  let rec_status =
-    (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
-     | Parsetree.RF_no_rec -> Env.DkGenInformation.RC_non_rec
-     | Parsetree.RF_rec -> Env.DkGenInformation.RC_rec
-    ) in
-  let in_recursive_let_section_of =
-    if rec_status <> Env.DkGenInformation.RC_non_rec then  (* Is rec. *)
-      List.map
-        (fun b -> b.Parsetree.ast_desc.Parsetree.b_name)
-        let_def.Parsetree.ast_desc.Parsetree.ld_bindings
-    else [] in
-  Format.fprintf out_fmter "@[<2>" ;
-  (* Recover pre-compilation info and extended environment in case of
-     recursivity for all the bindings. *)
-  let (env, pre_comp_infos) =
-    Species_record_type_dk_generation.pre_compute_let_bindings_infos_for_rec
-      ~rec_status ~toplevel: true env
-      let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
-  (* Now generate each bound definition. Remark that there is no local idents
-     in the scope because we are at toplevel. In the same way, because we are
-     not under the scope of a species, the way "Self" must be printed is
-     non-relevant. We use [SMS_from_species] by default. *)
-  let env' =
-    (match (let_def.Parsetree.ast_desc.Parsetree.ld_bindings, pre_comp_infos)
-    with
-     | ([], _) ->
-         (* The "let" construct should always at least bind one identifier ! *)
-         assert false
-     | ([one_bnd], [one_pre_comp_info]) ->
-         Species_record_type_dk_generation.let_binding_compile
-           ctx ~local_idents: []
-           ~in_recursive_let_section_of
-           (* Or whatever since "Self" does not exist anymore. *)
-           ~self_methods_status: Species_record_type_dk_generation.SMS_from_record
-           ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
-           ~toplevel: true ~rec_status env one_bnd one_pre_comp_info
-     | ((first_bnd :: next_bnds),
-        (first_pre_comp_info :: next_pre_comp_infos)) ->
-         let accu_env =
-           ref
-             (Species_record_type_dk_generation.let_binding_compile
-                ctx ~local_idents: []
-                ~in_recursive_let_section_of
-                (* Or whatever since "Self" does not exist anymore. *)
-                ~self_methods_status:
-                  Species_record_type_dk_generation.SMS_from_record
-                ~recursive_methods_status:
-                  Species_record_type_dk_generation.RMS_regular
-                ~toplevel: true ~rec_status env first_bnd
-                first_pre_comp_info) in
-         List.iter2
-           (fun binding pre_comp_info ->
-             Format.fprintf out_fmter "@]@\n@[<2>" ;
-             accu_env :=
-               Species_record_type_dk_generation.let_binding_compile
-                 ctx ~local_idents: []
-                 ~in_recursive_let_section_of
-                 (* Or whatever since "Self" does not exist anymore. *)
-                 ~self_methods_status:
-                   Species_record_type_dk_generation.SMS_from_record
-                 ~recursive_methods_status:
-                   Species_record_type_dk_generation.RMS_regular
-                 ~toplevel: true ~rec_status !accu_env binding pre_comp_info)
-           next_bnds next_pre_comp_infos ;
-         !accu_env
-     | (_, _) ->
-         (* Case where we would not have the same number og pre-compiled infos
-            and of bindings. Should never happen. *)
-         assert false) in
-  Format.fprintf out_fmter "@]" ;
-  env'
-;;
-
-
-
 (* ********************************************************************* *)
 (** {b Descr} : Dispatch the Dedukti code generation of a toplevel structure
     to the various more specialized code generation routines.
@@ -208,10 +115,10 @@ let toplevel_compile env ~current_unit out_fmter = function
         (* Empty, since not under a species. *)
         Context.scc_dependency_graph_nodes = [] ;
         Context.scc_out_fmter = out_fmter } in
-      let env' = toplevel_let_def_compile ctx env let_def in
+      let env' = Let_dk_generation.toplevel_let_def_compile ctx env let_def in
       Format.fprintf out_fmter ".@\n@\n" ;
       env'
-  | Infer.PCM_theorem (theorem_def, found_type_variables) ->
+  | Infer.PCM_theorem (theorem_def, _) ->
       Dk_pprint.purge_type_simple_to_dk_variable_mapping () ;
       let ctx = {
         Context.scc_current_unit = current_unit ;
@@ -226,8 +133,7 @@ let toplevel_compile env ~current_unit out_fmter = function
         (* Empty, since not under a species. *)
         Context.scc_dependency_graph_nodes = [] ;
         Context.scc_out_fmter = out_fmter } in
-      let _ =
-        Species_dk_generation.toplevel_theorem_compile ctx env theorem_def in
+      Proof_dk_generation.toplevel_theorem_compile ctx env theorem_def;
       (* Be careful, the ending . is generated by the proof code. *)
       Format.fprintf out_fmter "@\n@\n";
       (* Must now extend the value environment. Since the theorem is toplevel,
@@ -235,11 +141,10 @@ let toplevel_compile env ~current_unit out_fmter = function
          [toplevel_theorem_compile].
          We need to bind the theorem's ident to a [VB_toplevel_property] and
          determine the number of polymorphic type variables it has. *)
-      let num_vars = List.length found_type_variables in
       let env_binding =
-        (num_vars,
-         Env.DkGenInformation.VB_toplevel_property
-           theorem_def.Parsetree.ast_desc.Parsetree.th_stmt) in
+        Env.DkGenInformation.VB_toplevel_property
+          theorem_def.Parsetree.ast_desc.Parsetree.th_stmt
+      in
       (* Return the extended environmenent. *)
       Env.DkGenEnv.add_value
         ~toplevel: (Some theorem_def.Parsetree.ast_loc)
@@ -262,10 +167,10 @@ let toplevel_compile env ~current_unit out_fmter = function
         (* Empty, since not under a species. *)
         Context.scc_dependency_graph_nodes = [] ;
         Context.scc_out_fmter = out_fmter } in
-      Species_record_type_dk_generation.generate_expr
+      Expr_dk_generation.generate_expr
         ctx ~local_idents: [] ~in_recursive_let_section_of: []
-        ~self_methods_status: Species_record_type_dk_generation.SMS_from_record
-        ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
+        ~self_methods_status: Expr_dk_generation.SMS_from_record
+        ~recursive_methods_status: Expr_dk_generation.RMS_regular
         env expr ;
       Format.fprintf out_fmter ").@]@\n@\n" ;
       (* Nothing to extend the environment. *)

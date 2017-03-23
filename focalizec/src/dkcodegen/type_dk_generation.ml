@@ -61,16 +61,24 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrow
     tys
 ;;
 
-(* Same but commas between parameters instead of spaces.
-   Useful for Dedukti rewrite contexts.
-*)
-let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas
-    print_ctx out_fmter tys =
-  List.iter
-    (fun ty ->
-      Format.fprintf out_fmter "%a : cc.uT,@ "
-        (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
-    tys
+(* Same but commas between parameters instead of spaces.  Useful for
+   Dedukti rewrite contexts.  optional argument final_comma indicates
+   whether or not we should output a trailing comma
+ *)
+let rec print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas
+     ?(final_comma = true) print_ctx as_zenon_fact out_fmter tys =
+  match tys with
+  | [] -> ()
+  | [ty] when not final_comma ->
+     Format.fprintf out_fmter "%a%t"
+        (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
+        (fun out -> if as_zenon_fact then Format.fprintf out " :@ cc.uT")
+  | ty :: tys ->
+     Format.fprintf out_fmter "%a%t,@ "
+        (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
+        (fun out -> if as_zenon_fact then Format.fprintf out " :@ cc.uT");
+     print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas
+       print_ctx as_zenon_fact ~final_comma out_fmter tys
 ;;
 
 let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces
@@ -86,8 +94,8 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_space
 let print_types_parameters_with_arrows print_ctx out_fmter tys =
   List.iter
     (fun ty ->
-      Format.fprintf out_fmter "cc.eT %a ->@ "
-        (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
+      Format.fprintf out_fmter "(%a) ->@ "
+        (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) ty)
     tys
 ;;
 
@@ -100,10 +108,7 @@ let print_types_parameters_with_spaces print_ctx out_fmter tys =
     tys
 ;;
 
-(** [nb_extra_args] : the number of extra argument of type "Set" used to
-     represent the polymorphism in case where the constructor belongs to a
-     polymorphic type. *)
-let extend_dk_gen_env_with_type_external_mapping env nb_extra_args
+let extend_dk_gen_env_with_type_external_mapping env
     external_mapping =
   let rec rec_extend rec_env = function
     | [] -> rec_env
@@ -114,16 +119,12 @@ let extend_dk_gen_env_with_type_external_mapping env nb_extra_args
            | Parsetree.Vlident _ ->
                (* Starting by a lowercase letter means record field name. *)
                let label_mapping_info = {
-                 Env.DkGenInformation.lmi_num_polymorphics_extra_args =
-                   nb_extra_args ;
                  Env.DkGenInformation.lmi_external_translation =
                    Some external_translation.Parsetree.ast_desc } in
                Env.DkGenEnv.add_label bound_name label_mapping_info rec_env
            | Parsetree.Vuident _ | Parsetree.Viident _ | Parsetree.Vpident _ ->
                (* Starting by an uppercase letter means sum constructor. *)
                let cstr_mapping_info = {
-                 Env.DkGenInformation.cmi_num_polymorphics_extra_args =
-                   nb_extra_args ;
                  Env.DkGenInformation.cmi_external_translation =
                    Some external_translation.Parsetree.ast_desc } in
                Env.DkGenEnv.add_constructor
@@ -183,9 +184,6 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
   let type_def_params = type_descr.Env.TypeInformation.type_params in
   let (_, tydef_body) =
     Types.scheme_split type_descr.Env.TypeInformation.type_identity in
-  (* Compute the number of extra polymorphic-induced arguments to the
-     constructor. *)
-  let nb_extra_args = List.length type_def_params in
   (* Now, generates the type definition's body. *)
   match type_descr.Env.TypeInformation.type_kind with
    | Env.TypeInformation.TK_abstract ->
@@ -234,7 +232,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
           what to map them when we will see them. *)
        let env_with_external_mapping =
          extend_dk_gen_env_with_type_external_mapping
-           env nb_extra_args external_mapping in
+           env external_mapping in
        if not as_zenon_fact then
          (* Finally add the type definition in the returned environment. *)
          Env.DkGenEnv.add_type
@@ -271,16 +269,41 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
 
              (sum_cstr_name, sum_cstr_ty, sum_cstr_args))
            cstrs in
-       Format.fprintf out_fmter "(; Inductive definition ;)@\n@[<2>%a__t : "
-         Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
-       (* Print the parameter(s) stuff if any. Do it only now the unifications
-          have been done with the sum constructors to be sure that thanks to
-          unifications, "sames" variables will have the "same" name everywhere
-          (i.e. in the the parameters enumeration of the type and in the sum
-          constructors definitions). *)
+       Format.fprintf out_fmter "(; Inductive definition ;)@\n";
+       if not as_zenon_fact then
+         begin
+           (* First a static version in Type *)
+           Format.fprintf out_fmter "@[<2>__%a__t : "
+             Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
+           (* Print the parameter(s) stuff if any. Do it only now the
+              unifications have been done with the sum constructors to
+              be sure that thanks to unifications, "sames" variables
+              will have the "same" name everywhere (i.e. in the the
+              parameters enumeration of the type and in the sum
+              constructors definitions). *)
+           print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
+             print_ctx out_fmter type_def_params;
+           Format.fprintf out_fmter "Type.@\n"
+         end;
+       (* Now the useful version in cc.uT *)
+       Format.fprintf out_fmter "%s%a__t : "
+           (if as_zenon_fact then "" else "def ")
+           Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
          print_ctx out_fmter type_def_params;
-       Format.fprintf out_fmter "cc.uT.@\n(; Constructors ;)";
+       Format.fprintf out_fmter "cc.uT.@\n";
+       if not as_zenon_fact then
+         (* Link both types *)
+         Format.fprintf out_fmter "[%a] cc.eT (%a__t %a) --> __%a__t %a.@\n"
+           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas print_ctx false ~final_comma:false)
+           type_def_params
+           Parsetree_utils.pp_vname_with_operators_expanded type_def_name
+           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
+           type_def_params
+           Parsetree_utils.pp_vname_with_operators_expanded type_def_name
+           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
+           type_def_params;
+       Format.fprintf out_fmter "(; Constructors ;)";
        (* Qualify constructor if we are printing a fact for Zenon and the
           location where we generate it is not in the compilation unit
           hosting the type definition. Drop the file-system full path (was
@@ -291,7 +314,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
               (type_descr.Env.TypeInformation.type_loc.Location.
                  l_beg.Location.pos_fname)) in
        let qualif =
-         if ctx.Context.rcc_current_unit <> tydef_comp_unit && as_zenon_fact
+         if ctx.Context.rcc_current_unit <> tydef_comp_unit || as_zenon_fact
          then tydef_comp_unit ^ "."
          else "" in
        (* Then really print the constructors declarations. *)
@@ -305,8 +328,8 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
               Parameterized as the inductive. *)
            print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
              print_ctx out_fmter type_def_params;
-           Format.fprintf out_fmter "cc.eT (@[<1>%a@])@]."
-             (Dk_pprint.pp_type_simple_to_dk print_ctx) cstr_ty)
+           Format.fprintf out_fmter "%a@]."
+             (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) cstr_ty)
          sum_constructors_to_print;
        (* And finally, the destructors. *)
        Format.fprintf out_fmter "@\n(; Destructors ;)";
@@ -331,18 +354,24 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                       if (sum_cstr_name = curr_sum_cstr_name) then
                         begin
                           Format.fprintf out_fmter
-                          "[%a%aRet_type : cc.uT,@ pattern : (@[%acc.eT Ret_type@]),@ default : cc.eT Ret_type] %smatch__%a@ %aRet_type@ (%a@ %a@ %a)@ pattern@ default -->@ pattern%a.@\n"
-                          (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas print_ctx)
+                          "[%a%aRet_type%t,@ pattern%t,@ default%t] %smatch__%a@ %aRet_type@ (%s%a@ %a@ %a)@ pattern@ default -->@ pattern%a.@\n"
+                          (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas print_ctx as_zenon_fact)
                           type_def_params
-                          (fun out -> List.iteri (fun i -> Format.fprintf out "x_%d_ : cc.eT (%a),@ "
-                                                       i
-                                                       (Dk_pprint.pp_type_simple_to_dk print_ctx)))
+                          (fun out ->
+                           List.iteri (fun i ty -> Format.fprintf out "x_%d_" i;
+                                                 if as_zenon_fact then
+                                                   Format.fprintf out " :@ %a"
+                                                     (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) ty;
+                                                 Format.fprintf out ",@ "))
                           cstr_args
-                          (print_types_parameters_with_arrows print_ctx) cstr_args
+                          (fun out -> if as_zenon_fact then Format.fprintf out " :@ cc.uT")
+                          (fun out -> if as_zenon_fact then Format.fprintf out " :@ @[%acc.eT Ret_type@]" (print_types_parameters_with_arrows print_ctx) cstr_args)
+                          (fun out -> if as_zenon_fact then Format.fprintf out " :@ cc.eT Ret_type")
                           qualif
                           Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name
                           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
                           type_def_params
+                          qualif
                           Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name
                           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
                           type_def_params
@@ -352,18 +381,24 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                           cstr_args;
                         end else begin
                           Format.fprintf out_fmter
-                          "[%a%aRet_type : cc.uT,@ pattern : (@[%acc.eT Ret_type@]),@ default : cc.eT Ret_type] %smatch__%a@ %aRet_type@ (%a@ %a@ %a)@ pattern@ default -->@ default.@\n"
-                          (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas print_ctx)
+                          "[%a%aRet_type%t,@ pattern%t,@ default%t] %smatch__%a@ %aRet_type@ (%s%a@ %a@ %a)@ pattern@ default -->@ default.@\n"
+                          (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas print_ctx as_zenon_fact)
                           type_def_params
-                          (fun out -> List.iteri (fun i -> Format.fprintf out "x_%d_ : cc.eT (%a),@ "
-                                                       i
-                                                       (Dk_pprint.pp_type_simple_to_dk print_ctx)))
+                          (fun out ->
+                           List.iteri (fun i ty -> Format.fprintf out "x_%d_" i;
+                                                 if as_zenon_fact then
+                                                   Format.fprintf out " :@ %a"
+                                                     (Dk_pprint.pp_type_simple_to_dk_with_eps print_ctx) ty;
+                                                 Format.fprintf out ",@ "))
                           curr_cstr_args
-                          (print_types_parameters_with_arrows print_ctx) cstr_args
+                          (fun out -> if as_zenon_fact then Format.fprintf out " :@ cc.uT" else ())
+                          (fun out -> if as_zenon_fact then Format.fprintf out " :@ @[%acc.eT Ret_type@]" (print_types_parameters_with_arrows print_ctx) cstr_args)
+                          (fun out -> if as_zenon_fact then Format.fprintf out " :@ cc.eT Ret_type" else ())
                           qualif
                           Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name
                           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
                           type_def_params
+                          qualif
                           Parsetree_utils.pp_vname_with_operators_expanded curr_sum_cstr_name
                           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
                           type_def_params
@@ -419,23 +454,18 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
              Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name;
            Format.fprintf out_fmter "@[[";
            print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas
-             print_ctx out_fmter type_def_params;
-           Format.fprintf out_fmter "R : cc.uT, f : cc.eT (@[<1>%a__t%a@]) ->@ cc.eT R"
-                          Parsetree_utils.pp_vname_with_operators_expanded type_def_name
-                          (print_types_parameters_with_spaces print_ctx) type_def_params;
+             print_ctx as_zenon_fact out_fmter type_def_params;
+           Format.fprintf out_fmter "R,@ f";
            List.iteri
-             (fun i -> Format.fprintf out_fmter ",@ x_%d_ : cc.eT (%a)"
-                                   i
-                                   (Dk_pprint.pp_type_simple_to_dk print_ctx))
+             (fun i _ -> Format.fprintf out_fmter ",@ x_%d_" i)
              cstr_args;
-           Format.fprintf out_fmter "] call_by_value_%a__t@ "
+           Format.fprintf out_fmter "] dk_builtins.call_by_value (%a__t"
                           Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
-           List.iter (Format.fprintf out_fmter "%a " (Dk_pprint.pp_type_simple_to_dk print_ctx))
-                     type_def_params;
-           Format.fprintf out_fmter "R@ f@ (%a"
-             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name;
            List.iter (Format.fprintf out_fmter "@ %a" (Dk_pprint.pp_type_simple_to_dk print_ctx))
                      type_def_params;
+           Format.fprintf out_fmter ") R@ f@ (%a"
+             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name;
+           List.iter (fun _ -> Format.fprintf out_fmter "@ _") type_def_params;
            List.iteri
              (fun i _ -> Format.fprintf out_fmter "@ x_%d_" i)
              cstr_args;
@@ -469,9 +499,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
              (fun accu_env (sum_cstr_name, _, _) ->
                Env.DkGenEnv.add_constructor
                  sum_cstr_name
-                 { Env.DkGenInformation.cmi_num_polymorphics_extra_args =
-                     nb_extra_args ;
-                   Env.DkGenInformation.cmi_external_translation = None }
+                 { Env.DkGenInformation.cmi_external_translation = None }
                  accu_env)
              env
              sum_constructors_to_print in
@@ -537,9 +565,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
              (fun accu_env (label_name, _, _) ->
                Env.DkGenEnv.add_label
                  label_name
-                 { Env.DkGenInformation.lmi_num_polymorphics_extra_args =
-                     nb_extra_args ;
-                   Env.DkGenInformation.lmi_external_translation = None }
+                 { Env.DkGenInformation.lmi_external_translation = None }
                  accu_env)
              env
              record_fields_to_print in

@@ -167,8 +167,9 @@ let compile_ml input_file_name =
 
 let compile_zv input_file_name =
   let cmd =
-    Printf.sprintf "%s -new %s -z '-x induct' %s"
-      Installation.zvtov_compiler (* Installation.zenon_compiler *)
+    Printf.sprintf "%s -zenon %s -new %s -z '-x induct' %s"
+      Installation.zvtov_compiler
+      Installation.zenon_compiler
       (Configuration.get_zvtov_extra_opts ())
       input_file_name in
   Format.eprintf "Invoking zvtov...@\n" ;
@@ -232,9 +233,12 @@ let compile_coq input_file_name =
 
 
 let compile_zdk input_file_name =
+  if Installation.zenon_modulo_compiler == "" then
+    raise (Missing_external_tool "Zenon Modulo") ;
   let cmd =
-    Printf.sprintf "%s -idedukti -new %s %s.zv && mv %s.v %s"
-      Installation.zvtov_compiler (* Installation.zenon_compiler *)
+    Printf.sprintf "%s -zenon %s -idedukti -new %s %s.zv && mv %s.v %s"
+      Installation.zvtov_compiler
+      Installation.zenon_modulo_compiler
       (Configuration.get_zvtov_extra_opts ())
       input_file_name
       input_file_name (Filename.basename input_file_name)
@@ -250,11 +254,13 @@ let compile_zdk input_file_name =
 let compile_dk input_file_name =
   if Installation.sukerujo_compiler == "" then
     raise (Missing_external_tool "Sukerujo") ;
-  let for_zenon = " -I " ^ Installation.zenon_libdir in
+  if Installation.zenon_modulo_libdir == "" then
+    raise (Missing_external_tool "Zenon Modulo") ;
+  let for_zenon = " -I " ^ Installation.zenon_modulo_libdir in
   let includes =
     String.concat " -I " ("" :: (Files.get_lib_paths ())) in
   let cmd =
-    Printf.sprintf "%s -e %s %s %s"
+    Printf.sprintf "%s -e -nl %s %s %s"
       Installation.sukerujo_compiler
       for_zenon includes input_file_name
   in

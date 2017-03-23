@@ -45,7 +45,6 @@ FOCALIZE_SRC=\
 FOCALIZE_SRC_UNSAFE= \
 big_integers.fcl
 
-
 FOCALIZE_FOS=$(FOCALIZE_SRC:.fcl=.fo)
 FOCALIZE_FOS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.fo)
 
@@ -70,15 +69,6 @@ FOCALIZE_VS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.v)
 FOCALIZE_VOS=$(FOCALIZE_VS:.v=.vo)
 FOCALIZE_VOS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.vo)
 
-#FOCALIZE_ZSKS=$(FOCALIZE_SRC:.fcl=.sk.zv)
-#FOCALIZE_ZSKS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.sk.zv)
-
-#FOCALIZE_SKS=$(FOCALIZE_SRC:.fcl=.sk)
-#FOCALIZE_SKS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.sk)
-
-#FOCALIZE_DKOS=$(FOCALIZE_SKS:.sk=.dko)
-#FOCALIZE_DKOS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.dko)
-
 FOCALIZE_DOCS=$(FOCALIZE_SRC:.fcl=.fcd)
 FOCALIZE_DOCS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.fcd)
 
@@ -96,22 +86,19 @@ EXTERNAL_VOS=\
  weak_structures_externals.vo\
  randoms_externals.vo arrays_externals.vo
 
-# EXTERNAL_DKOS=\
-#  weak_structures_externals.dko
-# randoms_externals.dko arrays_externals.dko
-
 include $(ROOT_DIR)/Makefile.common
 
 FOCALIZEC=../../toplevel/focalizec
-FOCALIZE_COMP_FLAGS= -no-stdlib-path -I $(STDLIB_DIR) -no-dedukti-code \
+FOCALIZE_COMP_FLAGS= -no-stdlib-path -I $(STDLIB_DIR) \
 	-coq-version $(COQ_VERSION) -focalize-doc
 
+CAMLBIN=ocamlopt
+CAMLBYT=ocamlc
 CAML_FLAGS=-w A -warn-error  $(WARN_ERROR) -dtypes -I $(STDLIB_DIR)
 CAML_INCLUDES=-I $(STDLIB_DIR)
 
 ZVTOV_COMP_FLAGS=-script -zenon $(ZENON_COMPILER) -new
-
-ZENON_LIB_DIR=$(shell zenon -where)
+ZENON_LIB_DIR=$(shell $(ZENON) -where)
 
 ifeq ($(shell test "$(COQ_VERSION)" != "" -a "$(COQ_VERSION)" \< "8.5"; echo $$?),0)
 	COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
@@ -119,7 +106,31 @@ else
 	COQ_INCLUDES=-Q $(ZENON_LIB_DIR) "" -Q $(STDLIB_DIR) ""
 endif
 
-#DK_INCLUDES=-I $(shell zenon_modulo -where) -I $(STDLIB_DIR)
+SKDEP_CALL=true
+ifneq ($(SKCHECK),)
+ifneq ($(DKCHECK),)
+ifneq ($(ZENONM),)
+FOCALIZE_ZSKS=$(FOCALIZE_SRC:.fcl=.sk.zv)
+FOCALIZE_ZSKS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.sk.zv)
+
+FOCALIZE_SKS=$(FOCALIZE_SRC:.fcl=.sk)
+FOCALIZE_SKS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.sk)
+
+FOCALIZE_DKOS=$(FOCALIZE_SKS:.sk=.dko)
+FOCALIZE_DKOS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.dko)
+
+EXTERNAL_DKOS=\
+ weak_structures_externals.dko\
+ randoms_externals.dko arrays_externals.dko
+
+SKDEP_CALL= $(SKDEP) $(EXTERNAL_DKOS:.dko=.sk) >> .depend
+
+FOCALIZE_COMP_FLAGS += -dedukti-code
+
+DK_INCLUDES=-I $(shell $(ZENONM) -where) -I $(STDLIB_DIR)
+endif
+endif
+endif
 
 lib: all
 
@@ -128,19 +139,23 @@ focalizedoc:\
 
 byt:\
  $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
+ $(EXTERNAL_DKOS)\
+ $(FOCALIZE_FOS)\
  $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
  $(FOCALIZE_ZVS)\
  $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BYT_OBJS_UNSAFE)\
- $(FOCALIZE_VS) $(FOCALIZE_VOS)
-# $(FOCALIZE_SKS) $(FOCALIZE_DKOS) $(EXTERNAL_DKOS)
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+ $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
 
 bin:\
  $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
+ $(EXTERNAL_DKOS)\
+ $(FOCALIZE_FOS)\
  $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
  $(FOCALIZE_ZVS)\
  $(FOCALIZE_BIN_OBJS) $(FOCALIZE_BIN_OBJS_UNSAFE)\
- $(FOCALIZE_VS) $(FOCALIZE_VOS)
-# $(FOCALIZE_SKS) $(FOCALIZE_DKOS) $(EXTERNAL_DKOS)
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+ $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
 
 install:
 	@$(MKDIR) $(INSTALL_LIB_DIR) &&\
@@ -191,7 +206,7 @@ install:
 clean:
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) $(FOCALIZE_ZSKS) $(FOCALIZE_SKS)
 	$(RM) $(FOCALIZE_MLS_UNSAFE) $(FOCALIZE_ZVS_UNSAFE) $(FOCALIZE_VS_UNSAFE) $(FOCALIZE_ZSKS_UNSAFE) $(FOCALIZE_SKS_UNSAFE)
-	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.vo *.zv *.dko *.glob *.pfc *~ .*~ *.fo
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.vo *.zv *.dko *.glob *.pfc *~ .*~ *.fo .depend
 
 # Do not yet compile in Coq
 big_integers.ml: big_integers.fcl
@@ -205,7 +220,7 @@ arrays_externals.vo: $(STDLIB_DIR)/basics.vo
 
 depend:
 	../../focalizedep/focalizedep $(FOCALIZE_SRC) iterators.fcl > .depend
-#	skdep $(EXTERNAL_DKOS:.dko=.sk) >> .depend
+	$(SKDEP_CALL)
 
 .depend: depend
 

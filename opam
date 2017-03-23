@@ -1,0 +1,22 @@
+opam-version: "1.2"
+name: "focalize"
+version: "master"
+maintainer: "François Pessaux <francois.pessaux@ensta-paristech.fr>"
+author: "François Pessaux <francois.pessaux@ensta-paristech.fr>"
+homepage: "http://focalize.inria.fr"
+dev-repo: "http://focalize.inria.fr/focalize.git"
+bug-reports: "http://focalize.inria.fr/bugzilla"
+
+build: [make "OPAM_PREFIX=%{prefix}%" "opam_build"]
+
+install: [make "OPAM_PREFIX=%{prefix}%" "opam_install"]
+
+remove: [make "OPAM_PREFIX=%{prefix}%" "opam_remove"]
+
+depends: ["coq" {< "8.6"} "zenon" {>= "0.8.0"} ]
+
+depopts: ["dedukti" "sukerujo" "zenon_modulo_focalide"]
+
+conflicts: ["dedukti" {< "2.5"}
+            "sukerujo" {< "2.5"}
+            "zenon_modulo_focalide" {< "0.4.3"}]

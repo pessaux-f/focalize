@@ -605,6 +605,128 @@ let get_free_local_vnames_from_expr_desc initial_e_descr =
 
 
 
+(* ************************************************************************* *)
+(** {b Descr} : Same but returning expr_idents
+    {b Exported} : Yes.                                                      *)
+(* ************************************************************************* *)
+let (get_free_local_idents_from_expr_desc,
+     get_free_local_idents_from_logical_expr,
+     get_free_local_idents_from_binding_body) =
+  (* Remind in [bound_vnames] the identifiers bound in the expression ... by
+     binding constructs (fun and patterns) to ignore them. *)
+  let rec rec_get_descr bound_vnames = function
+  | Parsetree.E_self | Parsetree.E_const _ | Parsetree.E_external _ -> []
+  | Parsetree.E_fun (args, body) -> rec_get_expr (args @ bound_vnames) body
+  | Parsetree.E_var ({ Parsetree.ast_desc = Parsetree.EI_local vname }) when List.mem vname bound_vnames -> []
+  | Parsetree.E_var v -> [v]
+  | Parsetree.E_app (e1, e2) ->
+      let e2s_vnames = rec_get_exprs bound_vnames e2 in
+      Handy.list_concat_uniq (rec_get_expr bound_vnames e1) e2s_vnames
+  | Parsetree.E_match (e1, pat_exprs) ->
+      let e1s_vnames = rec_get_expr bound_vnames e1 in
+      List.fold_left
+        (fun accu (pat, expr) ->
+          (* Extend bound identifiers by those of the pattern. *)
+          let bound_vnames' =
+            (get_local_idents_from_pattern pat) @ bound_vnames in
+          Handy.list_concat_uniq (rec_get_expr bound_vnames' expr) accu)
+        e1s_vnames
+        pat_exprs
+  | Parsetree.E_let (let_def, expr) ->
+      (* Recover the new names the let-definition binds to "ignore" then when
+         we will descend in the "in" part of the definition. We expect just
+         an "extension", i.e. just the new bound names, hence, we append them
+         to the already known. *)
+      let (bound_vnames', defs_vnames) = rec_get_let_def bound_vnames let_def in
+      Handy.list_concat_uniq
+        (rec_get_expr (bound_vnames' @ bound_vnames) expr) defs_vnames
+  | Parsetree.E_if (e1, e2, e3) ->
+      Handy.list_concat_uniq (rec_get_expr bound_vnames e1)
+        (Handy.list_concat_uniq
+           (rec_get_expr bound_vnames e2) (rec_get_expr bound_vnames e3))
+  | Parsetree.E_tuple exprs | Parsetree.E_constr (_, exprs)
+  | Parsetree.E_sequence exprs -> rec_get_exprs bound_vnames exprs
+  | Parsetree.E_paren e -> rec_get_expr bound_vnames e
+  | Parsetree.E_record fields -> rec_get_fields bound_vnames fields
+  | Parsetree.E_record_access (expr, _) -> rec_get_expr bound_vnames expr
+  | Parsetree.E_record_with (expr, fields) ->
+      Handy.list_concat_uniq
+        (rec_get_expr bound_vnames expr) (rec_get_fields bound_vnames fields)
+
+  and rec_get_expr bound_vnames e =
+    rec_get_descr bound_vnames e.Parsetree.ast_desc
+
+  and rec_get_fields bound_vnames exprs =
+    List.fold_left
+      (fun accu (_, e) ->
+        Handy.list_concat_uniq (rec_get_expr bound_vnames e) accu)
+      [] exprs
+
+  and rec_get_exprs bound_vnames exprs =
+    List.fold_left
+      (fun accu e ->
+        Handy.list_concat_uniq (rec_get_expr bound_vnames e) accu)
+      [] exprs
+
+  and rec_get_binding_body bound_vnames accu binding_body =
+    match binding_body with
+    | Parsetree.BB_logical lexpr ->
+       (rec_get_log_expr bound_vnames lexpr) @ accu
+    | Parsetree.BB_computational expr ->
+       (rec_get_expr bound_vnames expr) @ accu
+
+  and rec_get_binding bound_vnames accu binding =
+    let b_descr = binding.Parsetree.ast_desc in
+    (* Add the parameters of the definition to the bound [vnames]. *)
+    let bound_vnames' =
+      (List.map (fun (n, _) -> n) b_descr.Parsetree.b_params) @
+        bound_vnames in
+    rec_get_binding_body bound_vnames' accu b_descr.Parsetree.b_body
+
+  (* In term of bound names, we just return an "extension", i.e. just the new
+     bound names, hence, the caller will append them to its already known. *)
+  and rec_get_let_def bound_vnames let_def =
+    (* Remind the idents that the let binds. It will serve in case of recursive
+       definition and also will be returned so that the caller known the new
+       names to "ignore" when it will descend in the "in" part of the
+       let-definition. *)
+    let let_bound_names =
+      List.map
+        (fun b -> b.Parsetree.ast_desc.Parsetree.b_name)
+        let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
+    (* If let definition is/are recursive, then pre-insert all the bound names
+       in the list. *)
+    let bound_vnames' =
+      if let_def.Parsetree.ast_desc.Parsetree.ld_rec = Parsetree.RF_rec then
+        let_bound_names @ bound_vnames
+      else bound_vnames in
+    (* Descend in each binding. *)
+    let found_free_vnames =
+      List.fold_left
+        (rec_get_binding bound_vnames')
+        [] let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
+    (* Return the names bound by the let and those free found. *)
+    (let_bound_names, found_free_vnames)
+
+  and rec_get_log_expr bound_vnames log_expr =
+    match log_expr.Parsetree.ast_desc with
+    | Parsetree.Pr_forall (names, _, l_expr)
+    | Parsetree.Pr_exists (names, _, l_expr) ->
+        rec_get_log_expr (names @ bound_vnames) l_expr
+    | Parsetree.Pr_imply (l_expr1, l_expr2) | Parsetree.Pr_or (l_expr1, l_expr2)
+    | Parsetree.Pr_and (l_expr1, l_expr2)
+    | Parsetree.Pr_equiv (l_expr1, l_expr2) ->
+        Handy.list_concat_uniq
+          (rec_get_log_expr bound_vnames l_expr1)
+          (rec_get_log_expr bound_vnames l_expr2)
+    | Parsetree.Pr_expr expr -> rec_get_expr bound_vnames expr
+    | Parsetree.Pr_not l_expr | Parsetree.Pr_paren l_expr ->
+        rec_get_log_expr bound_vnames l_expr in
+
+  (* Finally do the job, descending on the initial [expr_desc]. *)
+  (rec_get_descr [], rec_get_log_expr [], (fun params -> rec_get_binding_body params []))
+;;
+
 (** Creates an AST node out of some annotations and an expression. *)
 let make_annot annot desc = {
   Parsetree.ast_loc = Location.none;

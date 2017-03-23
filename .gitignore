@@ -24,4 +24,6 @@
 *.dko
 *.sk
 .DS_Store
-
+*.*time
+*.err
+*.sk.*

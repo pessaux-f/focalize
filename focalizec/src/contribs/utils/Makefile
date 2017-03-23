@@ -26,14 +26,14 @@ FOCALIZE_COMPILER=$(ROOT_DIR)/src/toplevel/focalizec
 STDLIB_DIR=../../stdlib
 
 FOCALIZEC=../../toplevel/focalizec
+FOCALIZEDEP=../../focalizedep/focalizedep
 
-FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR) -no-dedukti-code \
-	-coq-version $(COQ_VERSION)
+FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR) -coq-version $(COQ_VERSION)
 
 CAML_FLAGS=-w A -warn-error $(WARN_ERROR) -dtypes
 CAML_INCLUDES=-I $(STDLIB_DIR)
 
-ZENON_LIB_DIR= $(shell zenon -where)
+ZENON_LIB_DIR= $(shell $(ZENON) -where)
 
 ifeq ($(shell test "$(COQ_VERSION)" != "" -a "$(COQ_VERSION)" \< "8.5"; echo $$?),0)
   COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
@@ -59,6 +59,18 @@ FOCALIZE_ZVS=$(FOCALIZE_SRC:.fcl=.zv)
 FOCALIZE_VS=$(FOCALIZE_ZVS:.zv=.v)
 FOCALIZE_VOS=$(FOCALIZE_VS:.v=.vo)
 
+ifneq ($(SKCHECK),)
+ifneq ($(DKCHECK),)
+ifneq ($(ZENONM),)
+FOCALIZE_ZSKS=$(FOCALIZE_SRC:.fcl=.sk.zv)
+FOCALIZE_SKS=$(FOCALIZE_SRC:.fcl=.sk)
+FOCALIZE_DKOS=$(FOCALIZE_SKS:.sk=.dko)
+DK_INCLUDES=-I $(shell $(ZENONM) -where) -I $(STDLIB_DIR)
+FOCALIZE_COMP_FLAGS += -dedukti-code
+endif
+endif
+endif
+
 
 lib: all
 
@@ -66,14 +78,17 @@ byt:\
  $(FOCALIZE_MLS)\
  $(FOCALIZE_ZVS)\
  $(FOCALIZE_BYT_OBJS)\
- $(FOCALIZE_VS) $(FOCALIZE_VOS)
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+ $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
 
 bin:\
  $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
  $(FOCALIZE_MLS)\
  $(FOCALIZE_ZVS)\
  $(FOCALIZE_BIN_OBJS)\
- $(FOCALIZE_VS) $(FOCALIZE_VOS)
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+ $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
+
 
 install:
 	@$(MKDIR) $(INSTALL_LIB_DIR) &&\
@@ -96,13 +111,23 @@ install:
 	if [ "$(FOCALIZE_VOS)" != "" ] ; then\
 	  echo "Installing (Coq) compiled certified libs." &&\
 	  $(CP) $(FOCALIZE_VOS) $(INSTALL_LIB_DIR)/;\
+	fi &&\
+	if [ "$(FOCALIZE_DKOS)" != "" ] ; then\
+	  echo "Installing (Dedukti) compiled certified libs." &&\
+	  $(CP) $(FOCALIZE_DKOS) $(INSTALL_LIB_DIR)/;\
 	fi
 
 clean:
 	$(RM) $(FOCALIZE_FOS) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
-	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS)
-	$(RM) $(FOCALIZE_CMIS) *.annot *.glob *.fcd *.pfc
-	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.vo *.zv
+	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS) $(FOCALIZE_DKOS)
+	$(RM) $(FOCALIZE_CMIS) *.annot *.glob *.fcd *.pfc .depend
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.vo *.zv *.dko *.sk.*
 
-# Currently not handled.
-depend:
+depend: .depend
+
+# No need to call skdep because there are no external sk files
+.depend:
+	$(CAMLDEP) *.mli *.ml > ./.depend
+	$(FOCALIZEDEP) *.fcl >> ./.depend
+
+-include .depend

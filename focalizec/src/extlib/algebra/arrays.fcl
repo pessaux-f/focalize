@@ -25,6 +25,7 @@ type array ('a) =
   external
   | caml -> {* 'a array *}
   | coq -> {* arrays_externals.bi__array __var_a *}
+  | dedukti -> {* arrays_externals.bi__array __var_a *}
 ;;
 
 let array_set =
@@ -32,6 +33,7 @@ let array_set =
   external
   | caml -> {* Array.set *}
   | coq -> {* arrays_externals.bi__array_set __var_a *}
+  | dedukti -> {* arrays_externals.bi__array_set __var_a *}
 ;;
 
 let array_create =
@@ -39,6 +41,7 @@ let array_create =
   external
   | caml -> {* Array.create *}
   | coq -> {* arrays_externals.bi__array_create __var_a *}
+  | dedukti -> {* arrays_externals.bi__array_create __var_a *}
 ;;
 
 let array_get =
@@ -46,4 +49,5 @@ let array_get =
   external
   | caml -> {* Array.get *}
   | coq -> {* arrays_externals.bi__array_get __var_a *}
+  | dedukti -> {* arrays_externals.bi__array_get __var_a *}
 ;;

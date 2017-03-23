@@ -158,7 +158,7 @@ species Spe_int_imp_value_tol2 =
   Coll_int_value!pos (Coll_int_value!of_int (2))
   assumed (* By definition *)
 
-  <1>f conclude
+  <1>f qed by step <1>1 property Coll_int_value!pos, Coll_int_value!of_int
 ;
 
 end ;;

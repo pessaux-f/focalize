@@ -20,9 +20,7 @@ def prop : cc.uT := dk_logic.prop.
 unit : cc.uT.
 tt : cc.eT unit.
 
-def call_by_value_unit : R : cc.uT -> (cc.eT unit -> cc.eT R) -> cc.eT unit -> cc.eT R.
-[ R : cc.uT, f : cc.eT unit -> cc.eT R ]
-    call_by_value_unit R f tt --> f tt.
+weak_poly_var_ty : cc.uT.
 
 (; Float ;)
 float : cc.uT.
@@ -33,3 +31,40 @@ refl : T : cc.uT -> t : cc.eT T -> dk_logic.Istrue (eq T t t).
 
 (; Assumed proves ;)
 magic_prove : P : cc.eT prop -> dk_logic.eP P.
+
+def call_by_value_unit : R : cc.uT -> (cc.eT unit -> cc.eT R) -> cc.eT unit -> cc.eT R.
+[R,f] call_by_value_unit R f tt --> f tt.
+
+(; Generic call_by_value function, defined using ad-hoc polymorphism. ;)
+def call_by_value :
+  A : cc.uT ->
+  R : cc.uT ->
+  (cc.eT A -> cc.eT R) ->
+  cc.eT A -> cc.eT R.
+[R,f,a]     call_by_value unit                R f a --> call_by_value_unit              R f a
+[R,f,a]     call_by_value nat                 R f a --> dk_nat.call_by_value_nat        R f a
+[R,f,a]     call_by_value dk_int.int          R f a --> dk_int.call_by_value_int        R f a
+[R,f,a]     call_by_value dk_bool.bool        R f a --> dk_bool.call_by_value_bool      R f a
+[R,f,a]     call_by_value char                R f a --> dk_char.call_by_value_char      R f a
+[R,f,a]     call_by_value string              R f a --> dk_string.call_by_value_string  R f a
+[A,R,f,a]   call_by_value (dk_opt.option A)   R f a --> dk_opt.call_by_value_option A   R f a
+[A,R,f,a]   call_by_value (list A)            R f a --> dk_list.call_by_value_list A    R f a
+[A,B,R,f,a] call_by_value (dk_tuple.prod A B) R f a --> dk_tuple.call_by_value_prod A B R f a
+[A,B,R,f,a] call_by_value (cc.Pi A B)         R f a --> f a.
+
+def cbv_eq : A : cc.uT -> R : cc.uT -> f : (cc.eT A -> cc.eT R) -> a : cc.eT A -> dk_logic.eP (dk_logic.equal R (call_by_value A R f a) (f a)).
+[R,f]         cbv_eq unit                R f tt                      --> dk_logic.refl R (f tt)
+[R,f]         cbv_eq nat                 R f 0                       --> dk_logic.refl R (f 0)
+[R,f,n]       cbv_eq nat                 R f (S n)                   --> dk_logic.refl R (f (S n))
+[R,f,m,n]     cbv_eq dk_int.int          R f (dk_int.make m n)       --> dk_logic.refl R (f (dk_int.make m n))
+[R,f]         cbv_eq dk_bool.bool        R f dk_bool.true            --> dk_logic.refl R (f dk_bool.true)
+[R,f]         cbv_eq dk_bool.bool        R f dk_bool.false           --> dk_logic.refl R (f dk_bool.false)
+[R,f,n]       cbv_eq char                R f (char_of_nat n)         --> dk_logic.refl R (f (char_of_nat n))
+[R,f]         cbv_eq string              R f ""                      --> dk_logic.refl R (f "")
+[R,f,c,s]     cbv_eq string              R f (string_cons c s)       --> dk_logic.refl R (f (string_cons c s))
+[A,R,f]       cbv_eq (dk_opt.option A)   R f (dk_opt.None _)         --> dk_logic.refl R (f (dk_opt.None A))
+[A,R,f,a]     cbv_eq (dk_opt.option A)   R f (dk_opt.Some _ a)       --> dk_logic.refl R (f (dk_opt.Some A a))
+[A,R,f]       cbv_eq (list A)            R f (nil _)                 --> dk_logic.refl R (f (nil A))
+[A,R,f,a,l]   cbv_eq (list A)            R f (cons _ a l)            --> dk_logic.refl R (f (cons A a l))
+[A,B,R,f,a,b] cbv_eq (dk_tuple.prod A B) R f (dk_tuple.pair _ _ a b) --> dk_logic.refl R (f (dk_tuple.pair A B a b))
+[A,B,R,f,a]   cbv_eq (cc.Pi A B)         R f a                       --> dk_logic.refl R (f a).

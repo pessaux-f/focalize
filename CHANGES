@@ -1,4 +1,19 @@
 
+# Focalize 0.9.2
+################
+
+- Zenon Modulo is now used instead of Zenonide for Dedukti output so
+  proofs can now benefit from deduction modulo.
+- Sukerujo is used instead of the regular Dedukti parser so that
+  integer and string literals can be printed in a readable manner and
+  local let binding is available on the Dedukti side.
+- Support for pattern matching and algebraic datatypes in Dedukti
+  backend has been improved.
+- Support for recursive definitions in Dedukti backend has benn
+  developped.
+- The targeted Dedukti version has been updated to v2.4
+- Various bug fixes
+
 # Focalize 0.9.1
 ################
 
