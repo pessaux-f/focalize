@@ -215,19 +215,35 @@ then
     else
         # No dkcheck command found and no explicit prefix given.
         echo $BOLDTAG"Dedukti installation not found."$NORMALTAG
-        echo "Specify the path where to find Dedukti commands."
+        echo "Dedukti is an optional dependency."
+        echo "If you want to use FoCaLiZe without Dedukti, leave this blank."
+        echo "Otherwise please specify the path to the directory containing the Dedukti commands."
         read USER_INPUT
         DKDIR=$USER_INPUT
         # Finally check that a director was entered by the user.
         if [ "$DKDIR" = "" ] ;
         then
-            echo "Error. Dedukti not available. Install it first."
-            exit 1
+            echo "Warning. Compiling without Dedukti."
         fi
     fi
 else
     # Explicit tools prefix given, keep it blindly.
     DKDIR=$TOOLS_PREFIX
+fi
+
+# If path to Dedukti is empty here, then ocaml was found but using the PATH.
+# So do not prefix it explicitly, letting PATH finding the commands.
+if [ "$DKDIR" != "" ] ;
+then
+    DKCHECK=$DKDIR/dkcheck
+else
+    DKCHECK=dkcheck
+fi
+
+# Check that the file $DKCHECK is executable
+if [ ! `which $DKCHECK` ] ;
+then
+    DKCHECK=""
 fi
 
 if [ $TOOLS_PREFIX_GIVEN != true ]
@@ -255,28 +271,20 @@ then
     else
         # No skcheck command found and no explicit prefix given.
         echo $BOLDTAG"Sukerujo installation not found."$NORMALTAG
-        echo "Specify the path where to find Sukerujo commands."
+        echo "Dedukti is an optional dependency."
+        echo "If you want to use FoCaLiZe without Sukerujo, leave this blank."
+        echo "Otherwise please specify the path to the directory containing the Sukerujo commands."
         read USER_INPUT
         SKDIR=$USER_INPUT
         # Finally check that a director was entered by the user.
         if [ "$SKDIR" = "" ] ;
         then
-            echo "Error. Sukerujo not available. Install it first."
-            exit 1
+            echo "Warning. Compiling without Sukerujo."
         fi
     fi
 else
     # Explicit tools prefix given, keep it blindly.
     SKDIR=$TOOLS_PREFIX
-fi
-
-# If path to Dedukti is empty here, then ocaml was found but using the PATH.
-# So do not prefix it explicitly, letting PATH finding the commands.
-if [ "$DKDIR" != "" ] ;
-then
-    DKCHECK=$DKDIR/dkcheck
-else
-    DKCHECK=dkcheck
 fi
 
 # If path to Sukerujo is empty here, then ocaml was found but using the PATH.
@@ -289,6 +297,19 @@ else
     SKCHECK=skcheck
     SKDEP=skdep
 fi
+
+# Check that the file $SKCHECK is executable
+if [ ! `which $SKCHECK` ] ;
+then
+    SKCHECK=""
+fi
+
+# Check that the file $SKDEP is executable
+if [ ! `which $SKDEP` ] ;
+then
+    SKDEP=""
+fi
+
 
 # #############################################################################
 # Commands stuff.
@@ -332,6 +353,15 @@ else
     ZENON=$TOOLS_PREFIX/bin/zenon
 fi
 
+# Find zenon's libraries directly using the -where option of zenon.
+ZENON_LIB_DIR=`${ZENON} -where`
+if [ "$ZENON_LIB_DIR" = "" ] ;
+then
+    echo "Error. zenon libraries not available."
+    echo "May be zenon is not installed. Install it first."
+    exit 1
+fi
+
 # Look for Zenon Modulo
 if [ $TOOLS_PREFIX_GIVEN != true ]
 then
@@ -356,15 +386,16 @@ then
         fi
     else
         # No zenon_modulo command found and no explicit prefix given.
-        echo $BOLDTAG"Zenon Modulo not found."$NORMALTAG
-        echo "Specify where to find Zenon Modulo."
+        echo $BOLDTAG"Zenon Modulo installation not found."$NORMALTAG
+        echo "Zenon Modulo is an optional dependency."
+        echo "If you want to use FoCaLiZe without Zenon Modulo, leave this blank."
+        echo "Otherwise please specify the path to the zenon_modulo command."
         read USER_INPUT
         ZENONM=$USER_INPUT
         # Finally check that a director was entered by the user.
         if [ "$ZENONM" == "" ] ;
         then
-            echo "Error. Zenon Modulo not available. Install it first."
-            exit 1
+            echo "Warning. Compiling without Zenon Modulo."
         fi
     fi
 else
@@ -372,22 +403,19 @@ else
     ZENONM=$TOOLS_PREFIX/bin/zenon_modulo
 fi
 
-# Find zenon's libraries directly using the -where option of zenon.
-ZENON_LIB_DIR=`${ZENON} -where`
-if [ "$ZENON_LIB_DIR" = "" ] ;
+# Check that the file $ZENONM is executable
+if [ ! `which $ZENONM` ] ;
 then
-    echo "Error. zenon libraries not available."
-    echo "May be zenon is not installed. Install it first."
-    exit 1
-fi
-
-# Find zenon modulo's libraries directly using the -where option of zenon.
-ZENONM_LIB_DIR=`${ZENONM} -where`
-if [ "$ZENONM_LIB_DIR" = "" ] ;
-then
-    echo "Error. zenon modulo libraries not available."
-    echo "May be zenon modulo is not installed. Install it first."
-    exit 1
+    ZENONM=""
+    ZENONM_LIB_DIR=""
+else
+    # Find zenon modulo's libraries directly using the -where option of zenon.
+    ZENONM_LIB_DIR=`${ZENONM} -where`
+    if [ "$ZENONM_LIB_DIR" = "" ] ;
+    then
+        echo "Error. Zenon Modulo was found but its libraries are not available."
+        exit 1
+    fi
 fi
 
 
