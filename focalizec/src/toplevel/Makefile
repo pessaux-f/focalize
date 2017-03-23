@@ -125,7 +125,7 @@ CAML_INCLUDES =\
  -I ../dkcodegen\
  -I ../testing\
  -I ../relation_extraction
-CAML_FLAGS = -w A-4 -warn-error $(WARN_ERROR) -safe-string
+CAML_FLAGS = -w A-4-50 -warn-error $(WARN_ERROR) -safe-string
 
 EXE_NAME=focalizec
 

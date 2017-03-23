@@ -15,6 +15,7 @@
 (* ************************************************************************** *)
 
 exception Bad_file_suffix of string ;;
+exception Missing_external_tool of string ;;
 
 
 
@@ -247,6 +248,8 @@ let compile_zdk input_file_name =
 
 
 let compile_dk input_file_name =
+  if Installation.sukerujo_compiler == "" then
+    raise (Missing_external_tool "Sukerujo") ;
   let for_zenon = " -I " ^ Installation.zenon_libdir in
   let includes =
     String.concat " -I " ("" :: (Files.get_lib_paths ())) in
@@ -255,8 +258,8 @@ let compile_dk input_file_name =
       Installation.sukerujo_compiler
       for_zenon includes input_file_name
   in
-  Format.eprintf "Invoking dkcheck...@\n";
-  Format.eprintf ">> %s@." cmd;
+  Format.eprintf "Invoking skcheck...@\n" ;
+  Format.eprintf ">> %s@." cmd ;
   let ret_code = Sys.command cmd in
   if ret_code <> 0 then exit ret_code
 ;;
@@ -307,7 +310,7 @@ let dispatch_compilation files =
           (*   end); *)
       | "ml" | "mli" -> compile_ml input_file_name
       | "zv" ->
-          compile_zv input_file_name;
+          compile_zv input_file_name ;
           (* Finally, pass it to Coq or Dedukti. *)
           let input_file_no_suffix = Filename.chop_extension input_file_name in
           let suffix2 = String.lowercase
@@ -328,7 +331,10 @@ let dispatch_compilation files =
 (* The main procedure. *)
 let main () =
   Arg.parse
-   [ ("-coq-version",
+    [("-coq-code",
+       Arg.Unit Configuration.set_generate_coq,
+       "  Enable the Coq code generation.");
+      ("-coq-version",
       Arg.String Configuration.set_coq_version,
        "<version>  Generate Coq code for a specific version.\n\
      \    By default, the latest version of Coq supported by FoCaLiZe\
@@ -336,7 +342,10 @@ let main () =
      \    least 8.5pl1). Since Coq version 8.5, the -I option is replaced\
      \ by the -Q\n\
      \    one to specify the loadpath.");
-     ("-dot-non-rec-dependencies",
+      ("-dedukti-code",
+       Arg.Unit Configuration.set_generate_dk,
+       "  Enable the Dedukti code generation.");
+      ("-dot-non-rec-dependencies",
        Arg.String Configuration.set_dotty_dependencies,
        "  Dump species non-let-rec dependencies as dotty\n\
      \    files into the argument directory.");
@@ -388,6 +397,9 @@ let main () =
        Arg.Unit Configuration.unset_use_default_lib,
        "  Do not include by default the standard library installation\n\
      \    directory in the search path.");
+      ("-ocaml-code",
+       Arg.Unit Configuration.set_generate_ocaml,
+       "  Enable the OCaml code generation.");
       ("-ocaml-comp-mode",
        Arg.String Configuration.set_ml_compiler,
        "  Specify the OCaml compiler mode. Can be \"byt\" for bytecode\n\
