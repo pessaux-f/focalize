@@ -198,7 +198,6 @@ let zenon_loc file (_: string * string) data loc oc =
     close_out tmpoc;
     let ifmt = match !input_format with I_coq -> "coq" | I_dk -> "dk" in
     let zenon_ifmt = match !input_format with I_coq -> " -ifocal" | I_dk -> "-idk" in
-    zcmd := (match !input_format with I_coq -> "zenon" | I_dk -> "zenon_modulo");
     let cmd =
       if !use_coqterm then
         Printf.sprintf "%s -p%d -o%sterm -x %s %s %s %s -wout %s %s >%s"

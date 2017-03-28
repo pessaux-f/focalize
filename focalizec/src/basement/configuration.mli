@@ -70,12 +70,15 @@ val set_raw_ast_dump : unit -> unit
 
 val get_generate_ocaml : unit -> bool
 val unset_generate_ocaml : unit -> unit
+val set_generate_ocaml : unit -> unit
 
 val get_generate_coq : unit -> bool
 val unset_generate_coq : unit -> unit
+val set_generate_coq : unit -> unit
 
 val get_generate_dk : unit -> bool
 val unset_generate_dk : unit -> unit
+val set_generate_dk : unit -> unit
 
 val get_fancy_ansi : unit -> bool
 val unset_fancy_ansi : unit -> unit

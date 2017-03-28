@@ -25,6 +25,7 @@ let random_seed =
   external
   | caml -> {* Randoms_externals.random_seed *}
   | coq -> {* randoms_externals.random_seed *}
+  | dedukti -> {* (__ : cc.eT basics.int__t => dk_builtins.tt) *}
 ;;
 
 let random_int =
@@ -32,6 +33,7 @@ let random_int =
   external
   | caml -> {* Randoms_externals.random_int *}
   | coq -> {* randoms_externals.random_int *}
+  | dedukti -> {* (x : cc.eT basics.int__t  => x) *}
 ;;
 
 let random_self_init =
@@ -39,4 +41,5 @@ let random_self_init =
   external
   | caml -> {* Randoms_externals.random_self_init *}
   | coq -> {* randoms_externals.random_self_init *}
+  | dedukti -> {* (x : cc.eT basics.unit__t => x) *}
 ;;

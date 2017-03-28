@@ -1364,24 +1364,17 @@ module DkGenInformation = struct
     cgi_generator_parameters : collection_generator_parameters
   }
 
-  (** In Dk generation environment ALL the sum types value constructors are
-      entered in the environment because we always need to know their number
-      of extra leading "_" due to polymorphics. If the constructor does not
-      have an external mapping, we simply put "None" in the field
-      [cmi_external_translation]. *)
+  (** In Dk generation environment ALL the sum types value
+      constructors are entered in the environment. If the constructor
+      does not have an external mapping, we simply put "None" in the
+      field [cmi_external_translation]. *)
   type constructor_mapping_info = {
-    (** The number of extra argument the constructor has due to its
-        polymorphism. *)
-    cmi_num_polymorphics_extra_args : int ;
     cmi_external_translation : Parsetree.external_translation_desc option
     }
 
   (** The list of mappings according to external languages to know to which
       string the record type field name corresponds. *)
   type label_mapping_info = {
-    (** The number of extra argument the label has due to its
-        polymorphism. *)
-    lmi_num_polymorphics_extra_args : int ;
     lmi_external_translation : Parsetree.external_translation_desc option
   }
 
@@ -1416,23 +1409,6 @@ module DkGenInformation = struct
     | RPK_struct of Parsetree.vname
     | RPK_other
 
-
-
-  (* ************************************************************************ *)
-  (** {b Descr}: Tells if a definition is recursive or not. Allows embedding
-      the kind of termination proof the definition has if it as one.
-      Since we currently have 2 Dk generation models: "Fixpoint" and "Function"
-      we need to remind which one was used in case a proof is done
-      "by definition" of a recursive definition. In effect, depending on the
-      used model, we must not generate the same code for Zenon.
-
-      {b Visibility}: Exported outside this module.                           *)
-  (* ************************************************************************ *)
-  type rec_status =
-    | RC_non_rec
-    | RC_rec
-
-
   type value_body =
     | VB_non_toplevel
     | VB_toplevel_let_bound of
@@ -1440,12 +1416,7 @@ module DkGenInformation = struct
          Parsetree.binding_body)
     | VB_toplevel_property of Parsetree.logical_expr
 
-  type value_mapping_info = (int * (** The number of polymorphic type variables
-                                       in the scheme of the ident. This will
-                                       lead to extra "_" following the ident
-                                       when it is used in applicative
-                                       position. *)
-                             value_body) (** The expression bound to the
+  type value_mapping_info = value_body (** The expression bound to the
                                              ident. *)
 
 
@@ -2629,7 +2600,7 @@ module DkGenEMAccess = struct
     let values_bucket =
       List.map
         (fun { mi_name = field_name } ->
-          (field_name, (BO_absolute (0, DkGenInformation.VB_non_toplevel))))
+          (field_name, (BO_absolute (DkGenInformation.VB_non_toplevel))))
         meths_info in
     { constructors = []; labels = []; types = []; values = values_bucket;
       species = [] }

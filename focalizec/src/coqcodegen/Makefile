@@ -27,7 +27,7 @@ include $(ROOT_DIR)/Makefile.common
 
 CAML_INCLUDES = -I ../basement -I ../parser -I ../typing\
 	-I ../commoncodegen
-CAML_FLAGS = -w A-4-9 -warn-error $(WARN_ERROR) -safe-string
+CAML_FLAGS = -w A-4-9-50 -warn-error $(WARN_ERROR) -safe-string
 
 depend:
 	$(CAMLDEP) $(CAML_INCLUDES) *.mli *.ml > ./.depend

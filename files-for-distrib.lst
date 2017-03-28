@@ -37,7 +37,6 @@
 ./focalize/focalizec/doc_src/tex/refman/recursion.tex
 ./focalize/focalizec/doc_src/tex/refman/refman.hva
 ./focalize/focalizec/doc_src/tex/refman/refman.tex
-./focalize/focalizec/doc_src/tex/refman/refman001.png
 ./focalize/focalizec/doc_src/tex/refman/syntaxdef.hva
 ./focalize/focalizec/doc_src/tex/refman/syntaxdef.sty
 ./focalize/focalizec/doc_src/tex/tuto_proofs/and_or.fcl
@@ -84,8 +83,6 @@
 ./focalize/focalizec/doc_src/tex/tuto_proofs/tree_mirror2bis.fcl
 ./focalize/focalizec/doc_src/tex/tuto_proofs/tuto_proofs.bbl
 ./focalize/focalizec/doc_src/tex/tuto_proofs/tuto_proofs.blg
-./focalize/focalizec/doc_src/tex/tuto_proofs/tuto_proofs.haux
-./focalize/focalizec/doc_src/tex/tuto_proofs/tuto_proofs.htoc
 ./focalize/focalizec/doc_src/tex/tuto_proofs/tuto_proofs.hva
 ./focalize/focalizec/doc_src/tex/tuto_proofs/tuto_proofs.tex
 ./focalize/focalizec/doc_src/tex/tuto_proofs/zero1.fcl
@@ -172,8 +169,14 @@
 ./focalize/focalizec/src/coqcodegen/type_coq_generation.mli
 ./focalize/focalizec/src/dkcodegen/dk_pprint.ml
 ./focalize/focalizec/src/dkcodegen/dk_pprint.mli
+./focalize/focalizec/src/dkcodegen/expr_dk_generation.ml
+./focalize/focalizec/src/dkcodegen/expr_dk_generation.mli
+./focalize/focalizec/src/dkcodegen/let_dk_generation.ml
+./focalize/focalizec/src/dkcodegen/let_dk_generation.mli
 ./focalize/focalizec/src/dkcodegen/main_dk_generation.ml
 ./focalize/focalizec/src/dkcodegen/Makefile
+./focalize/focalizec/src/dkcodegen/proof_dk_generation.ml
+./focalize/focalizec/src/dkcodegen/proof_dk_generation.mli
 ./focalize/focalizec/src/dkcodegen/rec_let_dk_gen.ml
 ./focalize/focalizec/src/dkcodegen/rec_let_dk_gen.mli
 ./focalize/focalizec/src/dkcodegen/species_dk_generation.ml
@@ -228,6 +231,7 @@
 ./focalize/focalizec/src/extlib/algebra/additive_law.fcl
 ./focalize/focalizec/src/extlib/algebra/arrays.fcl
 ./focalize/focalizec/src/extlib/algebra/arrays_externals.v
+./focalize/focalizec/src/extlib/algebra/arrays_externals.sk
 ./focalize/focalizec/src/extlib/algebra/big_integers.fcl
 ./focalize/focalizec/src/extlib/algebra/constants.fcl
 ./focalize/focalizec/src/extlib/algebra/integers.fcl
@@ -242,6 +246,7 @@
 ./focalize/focalizec/src/extlib/algebra/randoms.fcl
 ./focalize/focalizec/src/extlib/algebra/randoms_externals.ml
 ./focalize/focalizec/src/extlib/algebra/randoms_externals.v
+./focalize/focalizec/src/extlib/algebra/randoms_externals.sk
 ./focalize/focalizec/src/extlib/algebra/rings_fields.fcl
 ./focalize/focalizec/src/extlib/algebra/small_integers.fcl
 ./focalize/focalizec/src/extlib/algebra/weak_structures.fcl
@@ -453,6 +458,7 @@
 ./focalize/focalizec/src/stdlib/dk_nat.sk
 ./focalize/focalizec/src/stdlib/dk_opt.sk
 ./focalize/focalizec/src/stdlib/dk_string.sk
+./focalize/focalizec/src/stdlib/dk_sum.sk
 ./focalize/focalizec/src/stdlib/dk_tuple.sk
 ./focalize/focalizec/src/stdlib/fix.fcl
 ./focalize/focalizec/src/stdlib/focal.sk

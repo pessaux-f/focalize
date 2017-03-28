@@ -59,6 +59,8 @@ bin: $(BIN_OBJS)
 	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) $<
 .fcl.zv:
 	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) $<
+%.sk.zv: %.fcl
+	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) -dedukti-code $<
 
 .zv.v:
 	$(ZVTOV) $(ZVTOV_COMP_FLAGS) $<
@@ -66,8 +68,9 @@ bin: $(BIN_OBJS)
 .v.vo:
 	$(COQC) $(COQ_INCLUDES) $<
 
-.fcl.sk:
-	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) $<
+%.sk: %.sk.zv
+	$(ZVTOV) -idedukti -zenon $(ZENONM) $<
+	mv $@.v $@
 
 %.dko:
 	skcheck -e -nl $(DK_INCLUDES) $<

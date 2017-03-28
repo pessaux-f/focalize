@@ -16,6 +16,7 @@ def Prop := dk_logic.Prop.
 def eP := dk_logic.eP.
 def eeP : Prop -> cc.uT := dk_logic.eeP.
 def Is_true : Bool -> Prop := dk_logic.ebP.
+def is_true := Is_true.
 def True := dk_logic.True.
 def False := dk_logic.False.
 def TrueT := dk_logic.TrueT.
@@ -662,3 +663,23 @@ def zenon_not_syntactic_equal : A : cc.uT ->
                                 y : cc.eT A ->
                                 eP (NotNot (equal A x y)) ->
                                 eP (NotNot (Is_true (syntactic_equal A x y))).
+
+
+def zenon_focal_not_all_bool (P : Bool -> Prop)
+                             (h1 : eP (NotNot (P true)))
+                             (h2 : eP (NotNot (P false)))
+                             (hc : eP (Not (dk_logic.forall bool P)))
+:=
+  hc (match
+       (b : Bool => eeP (P b))
+       (zen.nnpp (P true) h1)
+       (zen.nnpp (P false) h2)).
+
+
+def zenon_focal_ex_bool (P : Bool -> Prop)
+                        (h1 : eP (Not (P true)))
+                        (h2 : eP (Not (P false)))
+                        (hc : eP (dk_logic.exists bool P))
+                        : eP False
+:=
+  hc False (match (b : Bool => eeP (Not (P b))) h1 h2).

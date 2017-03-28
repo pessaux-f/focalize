@@ -1,6 +1,6 @@
-\def\month{June}
-\def\year{2016}
-\def\focalizeversion{\sf 0.9.1}
+\def\month{March}
+\def\year{2017}
+\def\focalizeversion{\sf 0.9.2}
 
 \def\focalizeversiondate{\sf {\month} {\year}}
 

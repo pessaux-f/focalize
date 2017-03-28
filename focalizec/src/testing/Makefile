@@ -22,7 +22,7 @@ BYT_OBJS = testing.cmo
 include $(ROOT_DIR)/Makefile.common
 
 CAML_INCLUDES = -I ../basement -I ../parser
-CAML_FLAGS = -w A-4 -warn-error $(WARN_ERROR)
+CAML_FLAGS = -w A-4-50 -warn-error $(WARN_ERROR)
 
 depend:
 	$(CAMLDEP) $(CAML_INCLUDES) *.mli *.ml > ./.depend

@@ -19,10 +19,11 @@ type dk_print_context = {
 } ;;
 
 
+exception Can_only_print_type_arguments_of_sum_types of Types.type_simple_view;;
+
 let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
-     purge_type_simple_to_dk_variable_mapping, has_cbv, pp_for_cbv_type_simple_to_dk
-     (* DEBUG
-     , debug_variable_mapping *)) =
+     purge_type_simple_to_dk_variable_mapping, pp_for_cbv_type_simple_to_dk,
+     pp_type_simple_to_dk_with_eps, pp_type_simple_to_dk_with_eps_and_prio) =
   (* ************************************************************** *)
   (* ((type_simple * string) list) ref                              *)
   (** {b Descr} : The mapping giving for each variable already seen
@@ -104,9 +105,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
   let internal_pp_var_to_dk ppf ty_var =
     let ty_variable_name = get_or_make_type_variable_name_to_dk ty_var in
     Format.fprintf ppf "%s" ty_variable_name
-    (* DEBUG
-    ; Format.fprintf ppf "(*%d,l:%d*)" ty_var.tv_debug ty_var.tv_level *)
-    in
+  in
 
   let to_dk_module ctx ty =
     match ty with
@@ -115,8 +114,9 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
     | Types.ST_arrow _ -> None (* We don't put "cc" here because parens get in the way *)
     | Types.ST_sum_arguments _ -> None
     | Types.ST_tuple _ -> None (* Same as arrow *)
-    | Types.ST_construct (ty_name, _) ->
+    | Types.ST_construct (ty_name, []) ->
        type_module ~current_unit: ctx.dpc_current_unit ty_name
+    | Types.ST_construct (_, _) -> None (* parens again *)
     | Types.ST_prop -> Some "dk_builtins"
     | Types.ST_self_rep -> None
     | Types.ST_species_rep (module_name, _) ->
@@ -157,6 +157,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
                   (rec_pp_to_dk ctx 0)) arg_tys
         end)
     | Types.ST_prop -> Format.fprintf ppf "prop"
+        (* This must be higher-order, it is used for induction schemes *)
     | Types.ST_self_rep ->
         (begin
         match ctx.dpc_current_species with
@@ -252,7 +253,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
 
 
 
-  and rec_pp_to_dk_args ctx ppf t n =
+  and rec_pp_to_dk_args ctx ppf t =
     match t with
     | Types.ST_construct (_, arg_tys) ->
        Format.fprintf ppf " %a" (Handy.pp_generic_separated_list ""
@@ -261,21 +262,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
        List.iter (fun t -> Format.fprintf ppf "@ %a"
                                        (rec_pp_to_dk ctx 0) t)
                  l
-    | t ->
-       (* In Dedukti, we cannot print underscores
-          instead of inferable type variables.
-          Printing the type will not be satisfactory,
-          it may be replaced by an error.
-        *)
-       Format.fprintf ppf "@ %a (; from %d underscores ;)"
-                      (rec_pp_to_dk ctx 0) t n
-  in
-
-  let has_cbv ty =
-    match ty with
-    | Types.ST_tuple _ | Types.ST_construct _ -> true
-    | Types.ST_var _ | Types.ST_arrow _ | Types.ST_sum_arguments _ | Types.ST_prop
-    | Types.ST_self_rep | Types.ST_species_rep _ -> false
+    | t -> raise (Can_only_print_type_arguments_of_sum_types t)
   in
 
   let rec_pp_cbv_to_dk_tuple ctx prio ppf = function
@@ -283,13 +270,13 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
     | [last] ->
         Format.fprintf ppf "%a" (rec_pp_to_dk ctx prio) last
     | ty1 :: ty2 :: rem ->
-        Format.fprintf ppf "dk_tuple.call_by_value_prod@ %a@ %a"
+        Format.fprintf ppf "dk_builtins.call_by_value (dk_tuple.prod@ %a@ %a)"
           (rec_pp_to_dk ctx prio) ty1
           (rec_pp_to_dk_tuple ctx 0)
           (ty2 :: rem)
   in
 
-  let rec_pp_cbv_to_dk_no_module ctx prio ppf ty =
+  let rec_pp_cbv_to_dk ctx prio ppf ty =
     match ty with
     | Types.ST_tuple tys ->
         (* Tuple priority: 3. *)
@@ -297,28 +284,27 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
         Format.fprintf ppf "@[<2>(%a)@]"
           (rec_pp_cbv_to_dk_tuple ctx 3) tys ;
         if prio >= 3 then Format.fprintf ppf ")@]"
-    | Types.ST_construct (type_name, arg_tys) ->
-        (begin
-        (* Priority of arguments of a sum type constructor : like an regular
-           application : 0. *)
-        match arg_tys with
-         | [] -> Format.fprintf ppf "call_by_value_%a"
-               pp_type_name_to_dk_no_module type_name
-         | _ ->
-             Format.fprintf ppf "@[<1>(call_by_value_%a@ %a)@]"
-               pp_type_name_to_dk_no_module type_name
-               (Handy.pp_generic_separated_list " "
-                  (rec_pp_to_dk ctx 0)) arg_tys
-        end)
-    | _ -> assert false
-                 (* rec_pp_cbv_to_dk should only be called when has_cbv returns true *)
+    | ty -> Format.fprintf ppf "@[<1>(dk_builtins.call_by_value (%a))@]"
+               (rec_pp_to_dk ctx 0) ty
   in
 
-  let rec_pp_cbv_to_dk ctx prio ppf ty =
-    match to_dk_module ctx ty with
-    | None -> rec_pp_cbv_to_dk_no_module ctx prio ppf ty
-    | Some m -> Format.fprintf ppf "%s.%a" m
-                 (rec_pp_cbv_to_dk_no_module ctx prio) ty
+  let rec rec_pp_to_dk_with_eps ctx prio ppf ty =
+    match ty with
+    | Types.ST_prop -> Format.fprintf ppf "dk_logic.Prop"
+    | Types.ST_arrow (Types.ST_sum_arguments tys, ty2) ->
+       if prio > 0 then Format.fprintf ppf "@[<1>(";
+       List.iter
+         (Format.fprintf ppf "%a ->@ " (rec_pp_to_dk_with_eps ctx 3))
+         tys;
+       rec_pp_to_dk_with_eps ctx prio ppf ty2;
+       if prio > 0 then Format.fprintf ppf ")@]"
+    | Types.ST_arrow (ty1, ty2) ->
+       if prio > 0 then Format.fprintf ppf "@[<1>(";
+       Format.fprintf ppf "@[<2>%a ->@ %a@]"
+          (rec_pp_to_dk_with_eps ctx 2) ty1
+          (rec_pp_to_dk_with_eps ctx prio) ty2 ;
+       if prio > 0 then Format.fprintf ppf ")@]"
+    | ty -> Format.fprintf ppf "cc.eT %a" (rec_pp_to_dk ctx prio) ty
   in
 
   (* ************************************************** *)
@@ -328,21 +314,23 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
    (* pp_type_variable_to_dk *)
    (fun ppf ty_var -> internal_pp_var_to_dk ppf ty_var),
    (* pp_type_simple_args_to_dk *)
-   (fun ctx ppf ty n -> rec_pp_to_dk_args ctx ppf (Types.view_type_simple ty) n),
+   (fun ctx ppf ty -> rec_pp_to_dk_args ctx ppf (Types.view_type_simple ty)),
    (* purge_type_simple_to_dk_variable_mapping *)
    (fun () -> reset_type_variables_mapping_to_dk ()),
-   (* has_cbv *)
-   (fun ty -> has_cbv (Types.view_type_simple ty)),
    (* pp_for_cbv_type_simple_to_dk *)
-   (fun ctx ppf ty -> rec_pp_cbv_to_dk ctx 0 ppf (Types.view_type_simple ty))
-   (* DEBUG
-   ,
-   (* debug_variable_mapping *)
-   (fun () ->
-     List.iter
-       (fun (var, name) ->
-         Format.eprintf "(%d, %s) " var.tv_debug name)
-       !type_variable_names_mapping ;
-     Format.eprintf "@.") *)
+   (fun ctx ppf ty -> rec_pp_cbv_to_dk ctx 0 ppf (Types.view_type_simple ty)),
+   (* pp_type_simple_to_dk_with_eps *)
+   (fun ctx ppf ty -> rec_pp_to_dk_with_eps ctx 0 ppf (Types.view_type_simple ty)),
+   (* pp_type_simple_to_dk_with_eps_and_prio *)
+   (fun ctx ppf ty -> rec_pp_to_dk_with_eps ctx 1 ppf (Types.view_type_simple ty))
   )
+;;
+
+
+let pp_type_scheme_to_dk ctx ppf sch =
+  let (vars, ty) = Types.scheme_split sch in
+  List.iter
+    (Format.fprintf ppf "%a : cc.uT ->@ " pp_type_variable_to_dk)
+    vars;
+  pp_type_simple_to_dk_with_eps ctx ppf ty
 ;;

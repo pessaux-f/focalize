@@ -17,7 +17,7 @@
 exception No_input_file ;;
 
 
-let focalize_version_number = (0, 9, 1) ;;
+let focalize_version_number = (0, 9, 2) ;;
 
 let focalize_short_version =
   let (major, minor, patch_level) = focalize_version_number in
@@ -39,25 +39,17 @@ let (get_coq_version, set_coq_version) =
   (fun v -> coq_version := v)
 ;;
 
-(** Until the Dedukti backend is fully working, we disable by default the
-    Dedukti code generation. The ONLY way to active it is to use the
-    --experimental option which now simply trigger Dedukti code generation.
-    Later, we will remove this and also the function set_generate_dk. *)
 let (get_generate_dk, unset_generate_dk, set_generate_dk) =
-  let generate_dk = ref false in  (* !!!!!!!! Read above comment !!! *)
+  let generate_dk = ref false in
   (fun () -> !generate_dk),
   (fun () -> generate_dk := false),
   (fun () -> generate_dk := true)
 ;;
 
-(** Until the Dedukti backend is fully working, set_experimental triggers
-    Dedukti code generation. Later, we will remove this. *)
 let (get_experimental, set_experimental) =
   let experimental = ref false in
    (fun () -> !experimental),
-  (fun () ->
-    experimental := true ;
-    set_generate_dk ())        (* !!!!!!!! Read above comment !!! *)
+  (fun () -> experimental := true)
 ;;
 
 let (get_impose_termination_proof, set_impose_termination_proof) =
@@ -128,16 +120,18 @@ let (get_raw_ast_dump, set_raw_ast_dump) =
   (fun () -> raw_ast_dump := true)
 ;;
 
-let (get_generate_ocaml, unset_generate_ocaml) =
+let (get_generate_ocaml, unset_generate_ocaml, set_generate_ocaml) =
   let generate_ocaml = ref true in
   (fun () -> !generate_ocaml),
-  (fun () -> generate_ocaml := false)
+  (fun () -> generate_ocaml := false),
+  (fun () -> generate_ocaml := true)
 ;;
 
-let (get_generate_coq, unset_generate_coq) =
+let (get_generate_coq, unset_generate_coq, set_generate_coq) =
   let generate_coq = ref true in
   (fun () -> !generate_coq),
-  (fun () -> generate_coq := false)
+  (fun () -> generate_coq := false),
+  (fun () -> generate_coq := true)
 ;;
 
 let (get_fancy_ansi, unset_fancy_ansi) =

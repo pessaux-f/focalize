@@ -76,9 +76,12 @@ BYT_OBJS =\
  ../coqcodegen/main_coq_generation.cmo\
  \
  ../dkcodegen/dk_pprint.cmo\
+ ../dkcodegen/expr_dk_generation.cmo\
+ ../dkcodegen/let_dk_generation.cmo\
  ../dkcodegen/species_record_type_dk_generation.cmo\
  ../dkcodegen/rec_let_dk_gen.cmo\
  ../dkcodegen/type_dk_generation.cmo\
+ ../dkcodegen/proof_dk_generation.cmo\
  ../dkcodegen/species_dk_generation.cmo\
  ../dkcodegen/main_dk_generation.cmo\
  \
@@ -125,7 +128,7 @@ CAML_INCLUDES =\
  -I ../dkcodegen\
  -I ../testing\
  -I ../relation_extraction
-CAML_FLAGS = -w A-4 -warn-error $(WARN_ERROR) -safe-string
+CAML_FLAGS = -w A-4-50 -warn-error $(WARN_ERROR) -safe-string
 
 EXE_NAME=focalizec
 

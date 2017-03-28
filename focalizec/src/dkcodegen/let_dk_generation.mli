@@ -2,7 +2,7 @@
 (*                                                                            *)
 (*                        FoCaLiZe compiler                                   *)
 (*                                                                            *)
-(*            Raphaël Cauderlier                                              *)
+(*            RaphaÃ«l Cauderlier                                              *)
 (*                                                                            *)
 (*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
@@ -12,20 +12,10 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-val species_compile :
-  Env.DkGenEnv.t -> current_unit: Types.fname -> Format.formatter ->
-    Parsetree.species_def_desc Parsetree.ast ->
-      Env.TypeInformation.species_description ->
-        DepGraphData.name_node list ->
-          (Parsetree.vname * Env.TypeInformation.field_abstraction_info) list ->
-          (Env.TypeInformation.species_param list *
-           Env.DkGenInformation.method_info list *
-           (Env.DkGenInformation.collection_generator_info option) *
-           Env.collection_or_species)
+exception Logical_methods_only_inside_species of Location.t
 
-val collection_compile :
-  Env.DkGenEnv.t -> current_unit: Types.fname -> Format.formatter ->
-    Parsetree.collection_def_desc Parsetree.ast ->
-      Env.TypeInformation.species_description ->
-        DepGraphData.name_node list ->
-          Env.DkGenInformation.method_info list
+val toplevel_let_def_compile :
+  Context.species_compil_context ->
+  Env.DkGenEnv.t ->
+  Parsetree.let_def ->
+  Env.DkGenEnv.t

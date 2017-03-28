@@ -33,7 +33,7 @@ include $(ROOT_DIR)/Makefile.common
 
 CAML_INCLUDES =\
  -I ../basement
-CAML_FLAGS = -w A-4-9 -warn-error $(WARN_ERROR) -safe-string
+CAML_FLAGS = -w A-4-9-50 -warn-error $(WARN_ERROR) -safe-string
 
 EXE_NAME=focalizedep
 

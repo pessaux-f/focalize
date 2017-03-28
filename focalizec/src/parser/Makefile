@@ -24,7 +24,7 @@ BYT_OBJS=lexer.cmo parser.cmo parse_file.cmo \
 include $(ROOT_DIR)/Makefile.common
 
 CAML_INCLUDES=-I ../basement
-CAML_FLAGS = -w A-4-9 -warn-error $(WARN_ERROR) -safe-string
+CAML_FLAGS = -w A-4-9-50 -warn-error $(WARN_ERROR) -safe-string
 
 depend: lexer.ml parser.ml
 	$(CAMLDEP) $(CAML_INCLUDES) *.mli *.ml > ./.depend

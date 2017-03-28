@@ -320,12 +320,10 @@ module DkGenInformation :
     }
 
     type constructor_mapping_info = {
-      cmi_num_polymorphics_extra_args : int ;
       cmi_external_translation : Parsetree.external_translation_desc option
     }
 
     type label_mapping_info = {
-      lmi_num_polymorphics_extra_args : int ;
       lmi_external_translation : Parsetree.external_translation_desc option
     }
 
@@ -340,10 +338,6 @@ module DkGenInformation :
       | RPK_struct of Parsetree.vname
       | RPK_other
 
-    type rec_status =
-      | RC_non_rec
-      | RC_rec
-
     type value_body =
       | VB_non_toplevel
       | VB_toplevel_let_bound of
@@ -351,7 +345,7 @@ module DkGenInformation :
            Parsetree.binding_body)
       | VB_toplevel_property of Parsetree.logical_expr
 
-    type value_mapping_info = (int * value_body)
+    type value_mapping_info = value_body
 
     type type_info = TypeInformation.type_description
   end

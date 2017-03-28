@@ -3,7 +3,7 @@
 (; options ;)
 option : cc.uT -> cc.uT.
 Option : cc.uT -> Type.
-[ A : cc.uT ] cc.eT (option A) --> Option A.
+[A] cc.eT (option A) --> Option A.
 
 None : A : cc.uT -> Option A.
 Some : A : cc.uT -> cc.eT A -> Option A.
@@ -13,10 +13,10 @@ def call_by_value_option : A : cc.uT ->
                        (Option A -> cc.eT R) ->
                        Option A ->
                        cc.eT R.
-[ A : cc.uT, R : cc.uT, f : Option A -> cc.eT R ]
+[A,R,f]
     call_by_value_option _ R f (None A)
       --> f (None A)
-[ A : cc.uT, R : cc.uT, f : Option A -> cc.eT R, a : cc.eT A ]
+[A,R,f,a]
     call_by_value_option _ R f (Some A a)
       --> f (Some A a).
 
@@ -27,16 +27,9 @@ def match_option : A : cc.uT ->
                (a : cc.eT A -> cc.eT (P (Some A a))) ->
                o : Option A ->
                cc.eT (P o).
-[A : cc.uT,
- P : Option A -> cc.uT,
- Hnone : cc.eT (P (None A)),
- Hsome : a : cc.eT A -> cc.eT (P (Some A a))]
+[A,P,Hnone,Hsome]
     match_option _ P Hnone Hsome (None A) --> Hnone
-[A : cc.uT,
- P : Option A -> cc.uT,
- Hnone : cc.eT (P (None A)),
- Hsome : a : cc.eT A -> cc.eT (P (Some A a)),
- a : cc.eT A]
+[A,P,Hnone,Hsome,a]
     match_option _ P Hnone Hsome (Some A a) --> Hsome a.
 
 def simple_match_option : A : cc.uT ->
