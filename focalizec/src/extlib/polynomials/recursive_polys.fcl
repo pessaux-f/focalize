@@ -52,6 +52,23 @@ species Recursive_indexed_set (E is Setoid_with_zero,
   representation = recursive_representation (E, I);
 
 
+  let rec represents_some_self(p:recursive_representation(E, I)) =
+  let is_constant (x) = match x with
+    | Null -> true
+    | NonNull (_, d, _) -> I!is_zero(d)
+  in
+  let rec map_it(p) = match p with
+    | Null -> true
+    | NonNull (m, _, pp) ->
+      if represents_some_self(m) then map_it(pp) else false
+  in
+  match p with
+   | Base(_) -> true
+   | Composed(_, pp) ->
+     ~~ is_constant(pp)
+   && map_it(pp)
+   termination proof = structural p;
+
   let rec r_size (x : Self) : int =
     let rec d_size (x) =
       match x with
