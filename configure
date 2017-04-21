@@ -421,7 +421,7 @@ else
 fi
 
 # Check that the file $ZENONM is executable
-if [ ! `which $ZENONM` ] ;
+if [[ "$ZENONM" == "" || ! `which $ZENONM` ]] ;
 then
     ZENONM=""
     ZENONM_LIB_DIR=""
@@ -451,8 +451,8 @@ INSTALL_DOC_DIR=${INSTALL_PREFIX}/share/focalize
 # otherwise, use it.
 echo "Checking if destination directories are writable..."
 SUDO=
-mkdir $INSTALL_BIN_DIR || true
-touch $INSTALL_BIN_DIR/writable_p
+mkdir -p $INSTALL_BIN_DIR
+touch -c $INSTALL_BIN_DIR/writable_p
 if [ "$?" = 0 ] ;
 then
     rm -f $INSTALL_BIN_DIR/writable_p
@@ -462,8 +462,8 @@ fi
 
 if [ "$SUDO" = "" ] ;
 then
-    mkdir $INSTALL_LIB_DIR || true
-    touch $INSTALL_LIB_DIR/writable_p
+    mkdir -p $INSTALL_LIB_DIR
+    touch -c $INSTALL_LIB_DIR/writable_p
     if [ "$?" = 0 ]
     then
         rm -f $INSTALL_LIB_DIR/writable_p
@@ -474,8 +474,8 @@ fi
 
 if [ "$SUDO" = "" ] ;
 then
-    mkdir $INSTALL_MAN_DIR || true
-    touch $INSTALL_MAN_DIR/writable_p
+    mkdir -p $INSTALL_MAN_DIR
+    touch -c $INSTALL_MAN_DIR/writable_p
     if [ "$?" = 0 ]
     then
         rm -f $INSTALL_MAN_DIR/writable_p
@@ -486,8 +486,8 @@ fi
 
 if [ "$SUDO" = "" ] ;
 then
-    mkdir $INSTALL_DOC_DIR || true
-    touch $INSTALL_DOC_DIR/writable_p
+    mkdir -p $INSTALL_DOC_DIR
+    touch -c $INSTALL_DOC_DIR/writable_p
     if [ "$?" = 0 ]
     then
         rm -f $INSTALL_DOC_DIR/writable_p
@@ -526,7 +526,7 @@ GIT=`which git`
 if [ "$GIT" != "" ] ;
 then
     # Check that we are in a git repository.
-    git log > /dev/null
+    git log > /dev/null 2>&1
     if [ "$?" = 0 ] ;
     then
         echo "git log -1 --format=\"%H\"" >> gitlastsha.sh
