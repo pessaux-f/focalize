@@ -44,6 +44,8 @@ machine.
 
 For hurry people, assuming default installation settings/directories from
 the toplevel 'focalize' directory run:
+  ./configure
+then
   make all
 
 When prompt, enter your password to allow installer to write in installation
@@ -96,20 +98,6 @@ the 3 components, following the scheme, feeding the xx/configure scripts with
 your command-line options (see below) for settings:
 
 From the toplevel 'focalize' directory:
-  ./configure
-  cd zenon
-  ./configure-for-focalize
-  make depend
-  make all
-  make doc
-  make install
-  cd ../zvtov
-  ./configure
-  make depend
-  make all
-  make doc
-  make install
-  cd ../focalizec
   ./configure
   make depend
   make world

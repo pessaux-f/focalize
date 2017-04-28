@@ -26,8 +26,6 @@ CONFIGURE_FLAGS=
 
 # Default rule, building everything with default settings.
 all:
-	@echo "Toplevel configuration..."
-	@./configure $(CONFIGURE_FLAGS)
 	@echo "Building Zvtov..."
 	@($(CD) zvtov &&\
 		$(MAKE) depend &&\
