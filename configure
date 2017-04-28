@@ -451,8 +451,8 @@ INSTALL_DOC_DIR=${INSTALL_PREFIX}/share/focalize
 # otherwise, use it.
 echo "Checking if destination directories are writable..."
 SUDO=
-mkdir -p $INSTALL_BIN_DIR
-touch -c $INSTALL_BIN_DIR/writable_p
+mkdir -p $INSTALL_BIN_DIR || true
+touch $INSTALL_BIN_DIR/writable_p
 if [ "$?" = 0 ] ;
 then
     rm -f $INSTALL_BIN_DIR/writable_p
@@ -462,8 +462,8 @@ fi
 
 if [ "$SUDO" = "" ] ;
 then
-    mkdir -p $INSTALL_LIB_DIR
-    touch -c $INSTALL_LIB_DIR/writable_p
+    mkdir -p $INSTALL_LIB_DIR || true
+    touch $INSTALL_LIB_DIR/writable_p
     if [ "$?" = 0 ]
     then
         rm -f $INSTALL_LIB_DIR/writable_p
@@ -474,8 +474,8 @@ fi
 
 if [ "$SUDO" = "" ] ;
 then
-    mkdir -p $INSTALL_MAN_DIR
-    touch -c $INSTALL_MAN_DIR/writable_p
+    mkdir $INSTALL_MAN_DIR || true
+    touch $INSTALL_MAN_DIR/writable_p
     if [ "$?" = 0 ]
     then
         rm -f $INSTALL_MAN_DIR/writable_p
@@ -486,8 +486,8 @@ fi
 
 if [ "$SUDO" = "" ] ;
 then
-    mkdir -p $INSTALL_DOC_DIR
-    touch -c $INSTALL_DOC_DIR/writable_p
+    mkdir -p $INSTALL_DOC_DIR || true
+    touch $INSTALL_DOC_DIR/writable_p
     if [ "$?" = 0 ]
     then
         rm -f $INSTALL_DOC_DIR/writable_p
