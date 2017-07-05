@@ -4730,7 +4730,7 @@ type please_compile_me =
          (** The depency graph of the collection's methods. *)
          (DepGraphData.name_node list))
   | PCM_testing of Parsetree.testing_def
-  | PCM_type of (Parsetree.vname * Env.TypeInformation.type_description)
+  | PCM_type of (Parsetree.vname * Env.TypeInformation.type_description) list
   | PCM_let_def of (Parsetree.let_def * (Types.type_scheme list))
   | PCM_theorem of
       (Parsetree.theorem_def *
@@ -5534,8 +5534,9 @@ let typecheck_phrase ctx env phrase =
        Format.eprintf
          "No type inference for testing instructions.@.";
        ((PCM_testing testing_def),env)
-   | Parsetree.Ph_type type_def ->
-       let (env', ty_descr) = typecheck_type_def ctx env type_def in
+   | Parsetree.Ph_type type_defs ->
+let type_defs = List.hd type_defs in (* [TODO] [UNSURE] process all the defs! *)
+       let (env', ty_descr) = typecheck_type_defs ctx env type_defs in
        (* Interface printing stuff must be bone inside. *)
        if Configuration.get_do_interface_output () then
          Format.printf "type ... @\n";  (* [Unsure] TODO. *)

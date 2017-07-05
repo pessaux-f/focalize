@@ -158,6 +158,7 @@ List.iter
   "type", TYPE;
   "use", USE;
   "with", WITH;
+  "daube", DAUBE
 ]
 ;;
 

@@ -982,59 +982,72 @@ let scope_type_def_body ctx env_with_params env ty_def_body =
 ;;
 
 
+let rec scope_type_defs_bodies ctx env_with_types env_accu = function
+  | [] -> ([], env_accu)
+  | h :: q ->
+      let ty_def_descr = h.Parsetree.ast_desc in
+      (* Then extend the environment with the type parameters. *)
+      let env_with_params =
+        List.fold_left
+          (fun accu_env param_vname ->
+            Env.ScopingEnv.add_type
+              ~loc: h.Parsetree.ast_loc
+              param_vname Env.ScopeInformation.TBI_builtin_or_var accu_env)
+          env_with_types
+          ty_def_descr.Parsetree.td_params in
+      (* Now scope the definition's body. *)
+      let (scoped_body, env_from_def) =
+        scope_type_def_body ctx env_with_params env_accu
+          ty_def_descr.Parsetree.td_body in
+      (* Reconstruct the completely scoped definition. *)
+      let scoped_ty_def_descr = {
+        ty_def_descr with Parsetree.td_body = scoped_body } in
+      let scoped_ty_def = {
+        h with Parsetree.ast_desc = scoped_ty_def_descr } in
+      (* Extend the initial environment (i.e the one whitout the type variables
+         representing the definition's parameters of the definition) with a
+         binding to this type name to the current compilation unit. *)
+      let final_env =
+        Env.ScopingEnv.add_type
+          ~loc: h.Parsetree.ast_loc ty_def_descr.Parsetree.td_name
+          (Env.ScopeInformation.TBI_defined_in ctx.current_unit)
+          env_from_def in
+      let (other_scoped_defs, other_final_env) =
+        scope_type_defs_bodies ctx env_with_types final_env q in
+      ((scoped_ty_def :: other_scoped_defs), other_final_env)
+;;
+
 
 (* ************************************************************************* *)
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.type_def ->              *)
 (*   (Parsetree.type_def * Env.ScopingEnv.t)                                 *)
-(** {b Descr} : Scopes a type definition by scoping its internal body.
+(** {b Descr} : Scopes type definitions by scoping their internal bodies.
     Return the extended environment with bindings for the possible sum type
-    constructors or record type fields label and a binding to this type name
-    with the current compilation unit.
+    constructors or record type fields label and a binding to these types
+    names with the current compilation unit.
 
     {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
-let scope_type_def ctx env ty_def =
-  let ty_def_descr = ty_def.Parsetree.ast_desc in
-  (* We must first extend the environment with the type's name itself in case
-     the definition is recursive. This is done in the environment that will
-     be used while scoping the body but will not be extended.
-     Scoping the body will extend the environment where the type parameters
-     and this temporary type binding are not recorded. So there is no risk to
+let scope_type_defs ctx env ty_defs =
+  (* We must first extend the environment with the types' names themselves in
+     case the definitions are recursive. This is done in the environment that
+     will be used while scoping the bodies but will not be extended.
+     Scoping the bodies will extend the environment where the types parameters
+     and this temporary type bindings are not recorded. So there is no risk to
      see 2 bindings for this type name in the final environment since the
      final is not built from [env_with_type]. *)
-  let env_with_type =
-    Env.ScopingEnv.add_type
-      ~loc: ty_def.Parsetree.ast_loc ty_def_descr.Parsetree.td_name
-      (Env.ScopeInformation.TBI_defined_in ctx.current_unit) env in
-  (* Then extend the environment with the type parameters. *)
-  let env_with_params =
+  let env_with_types =
     List.fold_left
-      (fun accu_env param_vname ->
+      (fun accu ty_def ->
+        let ty_def_descr = ty_def.Parsetree.ast_desc in
         Env.ScopingEnv.add_type
-          ~loc: ty_def.Parsetree.ast_loc
-          param_vname Env.ScopeInformation.TBI_builtin_or_var accu_env)
-      env_with_type
-      ty_def_descr.Parsetree.td_params in
-  (* Now scope the definition's body. *)
-  let (scoped_body, env_from_def) =
-    scope_type_def_body ctx env_with_params env
-      ty_def_descr.Parsetree.td_body in
-  (* Reconstruct the completely scoped definition. *)
-  let scoped_ty_def_descr = {
-    ty_def_descr with Parsetree.td_body = scoped_body } in
-  let scoped_ty_def = {
-    ty_def with Parsetree.ast_desc = scoped_ty_def_descr } in
-  (* Extend the initial environment (i.e the one whitout the type variables
-     representing the definition's parameters of the definition) with a
-     binding to this type name to the current compilation unit. *)
-  let final_env =
-    Env.ScopingEnv.add_type
-      ~loc: ty_def.Parsetree.ast_loc ty_def_descr.Parsetree.td_name
-      (Env.ScopeInformation.TBI_defined_in ctx.current_unit)
-      env_from_def in
-  (scoped_ty_def, final_env)
+          ~loc: ty_def.Parsetree.ast_loc ty_def_descr.Parsetree.td_name
+          (Env.ScopeInformation.TBI_defined_in ctx.current_unit) accu)
+      env ty_defs in
+  (* Now, we will process each body separately. Indeed, the bodies do not
+     share anything else but the names of the defined types. *)
+   scope_type_defs_bodies ctx env_with_types env ty_defs
 ;;
-
 
 
 (* *********************************************************************** *)
@@ -2847,9 +2860,9 @@ let scope_phrase ctx env phrase =
             definition is not meant to be accessed outside its
             definition. *)
          ((Parsetree.Ph_testing scoped_testing_def), env, ctx)
-     | Parsetree.Ph_type type_def ->
-         let (scoped_ty_def, env') = scope_type_def ctx env type_def in
-         ((Parsetree.Ph_type scoped_ty_def), env', ctx)
+     | Parsetree.Ph_type type_defs ->
+         let (scoped_ty_defs, env') = scope_type_defs ctx env type_defs in
+         ((Parsetree.Ph_type scoped_ty_defs), env', ctx)
      | Parsetree.Ph_let let_def ->
          (* This one can extend the global scoping environment.
             The list of bound names does not interest us here. *)

@@ -156,4 +156,5 @@ let token ppf = function
   | TYPE -> Format.fprintf ppf "%s" "TYPE"
   | USE -> Format.fprintf ppf "%s" "USE"
   | WITH -> Format.fprintf ppf "%s" "WITH"
+  | DAUBE -> Format.fprintf ppf "%s" "DAUBE"
 ;;

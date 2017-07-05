@@ -995,8 +995,15 @@ let rec pp_phrase_desc ppf = function
   | Parsetree.Ph_testing testing_def ->
       Format.fprintf ppf "%a;;"
         pp_testing_def testing_def
-  | Parsetree.Ph_type type_def ->
-      Format.fprintf ppf "%a;;" pp_type_def type_def
+  | Parsetree.Ph_type type_defs -> (
+      match type_defs with
+      | [] -> assert false
+      | h :: q ->
+          Format.fprintf ppf "%a" pp_type_def h ;
+          List.iter
+            (fun dt -> Format.fprintf ppf "@\nand %a" pp_type_def dt) q ;
+          Format.fprintf ppf ";;"
+     )
   | Parsetree.Ph_let let_def -> Format.fprintf ppf "%a;;" pp_let_def let_def
   | Parsetree.Ph_theorem t_def ->
       Format.fprintf ppf "%a;;" pp_theorem_def t_def

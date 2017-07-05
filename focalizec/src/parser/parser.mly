@@ -280,6 +280,7 @@ let mk_proof_label (s1, s2) =
 %token TYPE
 %token USE
 %token WITH
+%token DAUBE
 
 /* Precedences and associativities. */
 
@@ -402,8 +403,8 @@ phrase:
     { mk (Ph_let $1) }
   | define_theorem SEMI_SEMI
     { mk (Ph_theorem $1) }
-  | define_type SEMI_SEMI
-    { mk (Ph_type $1) }
+  | define_types SEMI_SEMI
+    { mk (Ph_type (List.rev $1)) }
   | define_species SEMI_SEMI
     { mk (Ph_species $1) }
   | define_collection SEMI_SEMI
@@ -452,7 +453,17 @@ external_val:
 
 define_type:
   | opt_annot TYPE type_vname define_type_params EQUAL define_type_body
-    { mk_annot $1 {td_name = $3; td_params = $4; td_body = $6; } }
+      { mk_annot $1 {td_name = $3; td_params = $4; td_body = $6; } }
+;
+
+define_types:
+  | define_type { [$1] }
+  | define_types and_define_type { $2 :: $1 } /* Attention, reversed order. */
+;;
+
+and_define_type:
+  | opt_annot DAUBE type_vname define_type_params EQUAL define_type_body
+      { mk_annot $1 {td_name = $3; td_params = $4; td_body = $6; } }
 ;
 
 define_type_params:
