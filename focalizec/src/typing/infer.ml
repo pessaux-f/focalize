@@ -4730,7 +4730,8 @@ type please_compile_me =
          (** The depency graph of the collection's methods. *)
          (DepGraphData.name_node list))
   | PCM_testing of Parsetree.testing_def
-  | PCM_type of (Parsetree.vname * Env.TypeInformation.type_description) list
+  | PCM_type of (Parsetree.vname * Env.TypeInformation.type_description)
+        (* list  [WIP]*)
   | PCM_let_def of (Parsetree.let_def * (Types.type_scheme list))
   | PCM_theorem of
       (Parsetree.theorem_def *
@@ -5369,6 +5370,40 @@ let typecheck_type_def ctx env type_def =
 ;;
 
 
+(* [WIP]
+let typecheck_type_defs ctx env type_defs =
+  (* Build the list of variable mappings for each definition. By the way,
+     set the [Parsetree.ast_type] to [Parsetree.ANTI_irrelevant]. *)
+  let vmapps =
+    List.map
+      (fun type_def ->
+        let type_def_desc = type_def.Parsetree.ast_desc in
+        (* A type definition "has no type". Record in the AST node. *)
+        type_def.Parsetree.ast_type <- Parsetree.ANTI_irrelevant ;
+        type_def_desc.Parsetree.td_body.Parsetree.ast_type <-
+          Parsetree.ANTI_irrelevant ;
+        let { Parsetree.td_name = type_def_name ;
+              Parsetree.td_params = type_def_params ;
+              Parsetree.td_body = type_def_body ;
+            } = type_def_desc in
+        (* First, create the material to extend the [tyvars_mapping] of the
+           current context with parameters of the type definition. The
+           position of variables in the mapping is and must be the same that
+           in the type's parameters list. *)
+        Types.begin_definition () ;
+        let vmapp =
+          List.map
+            (fun var_name -> (var_name, Types.type_variable ()))
+            type_def_params in
+        Types.end_definition () ;
+        vmapp) in
+  (* Now, we must create the environment containing the proto-types of each
+     definition, in case of mutually recursive type definitions. *)
+  let (env_with_protos, futur_type_types) =
+     pre_insert_type_definitions type_defs vmapps env in
+  (* Now, really typecheck the definitions. *)
+  do_the_job env ~env_with_protos type_defs
+ *)
 
 
 (* ************************************************************************* *)
@@ -5535,8 +5570,10 @@ let typecheck_phrase ctx env phrase =
          "No type inference for testing instructions.@.";
        ((PCM_testing testing_def),env)
    | Parsetree.Ph_type type_defs ->
-let type_defs = List.hd type_defs in (* [TODO] [UNSURE] process all the defs! *)
-       let (env', ty_descr) = typecheck_type_defs ctx env type_defs in
+let type_def = List.hd type_defs in
+let (env', ty_descr) = typecheck_type_def ctx env type_def in
+(* [WIP]
+       let (env', ty_descr) = typecheck_type_defs ctx env type_defs in *)
        (* Interface printing stuff must be bone inside. *)
        if Configuration.get_do_interface_output () then
          Format.printf "type ... @\n";  (* [Unsure] TODO. *)
