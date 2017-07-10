@@ -1,3 +1,6 @@
+- Mutually recursive structural methods allowed.
+- Mutually recursive type definitions allowed.
+
 
 # Focalize 0.9.2
 ################
