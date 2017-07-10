@@ -3410,7 +3410,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          Misc_common.cfm_dependencies_from_parameters_in_type =
            ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
          Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
-       Misc_common.CSF_let_rec [compiled]
+       compiled
 ;;
 
 
@@ -3423,7 +3423,8 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
     {b Visibility}: Not exported outside this module.
  *************************************************************************** *)
 let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
-    generated_fields from name params decr_arg_name proof_loc scheme body ai =
+    generated_fields from name params decr_arg_name proof_loc scheme body ai
+    ~is_first ~is_last =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Extend the context with the mapping between these recursive
      functions and their extra arguments. Since we are in Coq, we need to take
@@ -3435,9 +3436,13 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
         [(name,
           Misc_common.make_params_list_from_abstraction_info
             ~care_logical: true ~care_types: true ai)] } in
-  (* Now, generate the prelude of the only method introduced by "let rec". *)
-  Format.fprintf out_fmter "@[<2>Fixpoint %a@ "
-    Parsetree_utils.pp_vname_with_operators_expanded name ;
+  (* Now, generate the prelude of the method introduced by "let rec". *)
+  if is_first then
+    Format.fprintf out_fmter "@[<2>Fixpoint %a@ "
+      Parsetree_utils.pp_vname_with_operators_expanded name
+  else
+    Format.fprintf out_fmter "@[<2>with %a@ "
+      Parsetree_utils.pp_vname_with_operators_expanded name ;
   let (generalized_vars, _) = Types.scheme_split scheme in
   let (abstracted_methods, new_ctx, new_print_ctx) =
     generate_field_definition_prelude
@@ -3451,8 +3456,10 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
   generate_defined_method_proto_postlude
     new_ctx new_print_ctx env ~self_manifest: None params scheme
     (Some (proof_loc, name, decr_arg_name)) (Some body) ;
-  (* Done... Then, final carriage return. *)
-  Format.fprintf out_fmter ".@]@\n@\n" ;
+  (* Done... Then, if there are still methods to print, do not print a dot. *)
+  if is_last then Format.fprintf out_fmter "." ;
+  (* Finally, final carriage return. *)
+  Format.fprintf out_fmter "@]@\n@\n" ;
   let compiled = {
     Misc_common.cfm_is_logical = false ;
     Misc_common.cfm_from_species = from ;
@@ -3467,7 +3474,7 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
          Misc_common.cfm_dependencies_from_parameters_in_type =
            ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
          Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
-       Misc_common.CSF_let_rec [compiled]
+  compiled
 ;;
 
 
@@ -3479,32 +3486,32 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
 
     {b Visibility}: Not exported outside this module.
  *************************************************************************** *)
-let generate_recursive_let_definition ctx print_ctx env ~self_manifest
-    fields_abstraction_infos generated_fields l =
+let rec generate_recursive_let_definition ctx print_ctx env ~self_manifest
+    fields_abstraction_infos generated_fields ~is_first l =
   match l with
-   | [] ->
-       (* A "let", then a fortiori "let rec" construct *)
-       (* must at least bind one identifier !          *)
-       assert false
-   | [(from, name, params, scheme, body, opt_term_pr, _, _)] -> (
+   | [] -> []
+   | (from, name, params, scheme, body, opt_term_pr, _, _) :: q -> (
        let ai = List.assoc name fields_abstraction_infos in
        (* First of all, only methods defined in the current species must be
           generated. Inherited methods ARE NOT generated again ! *)
-       if from.Env.fh_initial_apparition = ctx.Context.scc_current_species
-       then (
-         match opt_term_pr with
-         | None ->
-             (* For the moment, if no termination proof is stated, we continue
-                using the "Function" scheme until better thing is available. *)
-             generate_defined_recursive_let_definition_With_Function
-               ctx print_ctx env ~self_manifest generated_fields from name
-               params scheme body opt_term_pr ai
-         | Some term_pr -> (
-             match term_pr.Parsetree.ast_desc with
+       let cfield_mem =
+         if from.Env.fh_initial_apparition = ctx.Context.scc_current_species
+         then (
+           match opt_term_pr with
+           | None ->
+               (* For the moment, if no termination proof is stated, we continue
+                  using the "Function" scheme until better thing is
+                  available. *)
+               generate_defined_recursive_let_definition_With_Function
+                 ctx print_ctx env ~self_manifest generated_fields from name
+                 params scheme body opt_term_pr ai
+           | Some term_pr -> (
+               match term_pr.Parsetree.ast_desc with
                | Parsetree.TP_structural decr_arg_name ->
                    generate_defined_recursive_let_definition_With_Fixpoint
                      ctx print_ctx env generated_fields from name params
                      decr_arg_name term_pr.Parsetree.ast_loc scheme body ai
+                     ~is_first ~is_last: (q = [])
                | Parsetree.TP_lexicographic _
                | Parsetree.TP_measure (_, _, _)
                | Parsetree.TP_order (_, _, _) ->
@@ -3514,44 +3521,47 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
                    generate_defined_recursive_let_definition_With_Function
                      ctx print_ctx env ~self_manifest generated_fields from name
                      params scheme body opt_term_pr ai
-            )
-        )
-       else (
-         (* Just inherited, no code to emit.
-            Start by a bit of debug/information if requested. *)
-         if Configuration.get_verbose () then
-           Format.eprintf
-             "Field '%a' inherited from species '%a' but not \
-             (re)-declared is not generated again. @."
-             Parsetree_utils.pp_vname_with_operators_expanded name
-             Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
-         (* Recover the arguments for abstracted methods of Self in the
-            inherited generator.*)
-         let abstracted_methods =
-           find_inherited_method_generator_abstractions
-             ~current_unit: ctx.Context.scc_current_unit
-             from.Env.fh_initial_apparition name env in
-         (* Now, build the [compiled_field_memory], even if the method was not
-            really generated because it was inherited. *)
-         let compiled_field = {
-           Misc_common.cfm_is_logical = false ;
-           Misc_common.cfm_from_species = from ;
-           Misc_common.cfm_method_name = name ;
-           Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
-           Misc_common.cfm_used_species_parameter_tys =
-             ai.Env.TypeInformation.ad_used_species_parameter_tys ;
-           Misc_common.cfm_raw_dependencies_from_parameters =
-             ai.Env.TypeInformation.ad_raw_dependencies_from_params ;
-           Misc_common.cfm_dependencies_from_parameters =
-             ai.Env.TypeInformation.ad_dependencies_from_parameters ;
-           Misc_common.cfm_dependencies_from_parameters_in_type =
-             ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
-           Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
-         Misc_common.CSF_let_rec [compiled_field]
-         )
-      )
-   | (_, name1, _, _, _, _, _, _) :: (_, name2, _, _, _, _, _, _) :: _ ->
-       raise (Recursion.MutualRecursion (name1, name2))
+              )
+          )
+         else (
+           (* Just inherited, no code to emit.
+              Start by a bit of debug/information if requested. *)
+           if Configuration.get_verbose () then
+             Format.eprintf
+               "Field '%a' inherited from species '%a' but not \
+               (re)-declared is not generated again. @."
+               Parsetree_utils.pp_vname_with_operators_expanded name
+               Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
+           (* Recover the arguments for abstracted methods of Self in the
+              inherited generator.*)
+           let abstracted_methods =
+             find_inherited_method_generator_abstractions
+               ~current_unit: ctx.Context.scc_current_unit
+               from.Env.fh_initial_apparition name env in
+           (* Now, build the [compiled_field_memory], even if the method was not
+              really generated because it was inherited. *)
+           { Misc_common.cfm_is_logical = false ;
+             Misc_common.cfm_from_species = from ;
+             Misc_common.cfm_method_name = name ;
+             Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
+             Misc_common.cfm_used_species_parameter_tys =
+               ai.Env.TypeInformation.ad_used_species_parameter_tys ;
+             Misc_common.cfm_raw_dependencies_from_parameters =
+               ai.Env.TypeInformation.ad_raw_dependencies_from_params ;
+             Misc_common.cfm_dependencies_from_parameters =
+               ai.Env.TypeInformation.ad_dependencies_from_parameters ;
+             Misc_common.cfm_dependencies_from_parameters_in_type =
+               ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
+             Misc_common.cfm_coq_min_typ_env_names = abstracted_methods }) in
+       (* Process the remaining methods.
+          [Unsure]: mixing something else than structural termination will
+                    not work.
+          [Unsure]: the structural argument must be the first one for all the
+                    recursive functions, and have the same name. *)
+       cfield_mem ::
+       (generate_recursive_let_definition ctx print_ctx env ~self_manifest
+          fields_abstraction_infos generated_fields ~is_first: false q)
+)
 ;;
 
 
@@ -3619,9 +3629,11 @@ let generate_methods ctx print_ctx env ~self_manifest fields_abstraction_infos
         Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
       Misc_common.CSF_let compiled_field
   | Env.TypeInformation.SF_let_rec l ->
-      generate_recursive_let_definition
-        ctx print_ctx env ~self_manifest fields_abstraction_infos
-        generated_fields l
+      let compiled_fields =
+        generate_recursive_let_definition
+          ctx print_ctx env ~self_manifest fields_abstraction_infos
+          generated_fields l ~is_first: true in
+      Misc_common.CSF_let_rec compiled_fields
   | Env.TypeInformation.SF_theorem  (from, name, _, logical_expr, pr, _) ->
       let abstraction_info = List.assoc name fields_abstraction_infos in
       let coq_min_typ_env_names =

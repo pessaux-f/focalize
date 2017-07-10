@@ -45,7 +45,7 @@ val generate_defined_recursive_let_definition_With_Function :
   Parsetree.binding_body ->
   Parsetree.termination_proof_desc Parsetree.ast option ->
   Env.TypeInformation.field_abstraction_info ->
-  Misc_common.compiled_species_fields
+  Misc_common.compiled_field_memory
 
 val generate_defined_recursive_let_definition_With_Fixpoint :
   Context.species_compil_context ->
@@ -60,7 +60,8 @@ val generate_defined_recursive_let_definition_With_Fixpoint :
   Types.type_scheme ->
   Parsetree.binding_body ->
   Env.TypeInformation.field_abstraction_info ->
-    Misc_common.compiled_species_fields
+  is_first: bool -> is_last: bool ->
+    Misc_common.compiled_field_memory
 
 val species_compile :
   Env.CoqGenEnv.t -> current_unit: Types.fname -> Format.formatter ->
