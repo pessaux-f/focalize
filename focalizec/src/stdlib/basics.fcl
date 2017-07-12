@@ -40,7 +40,7 @@ type unit =
   | coq -> {* coq_builtins.bi__unit *}  (* FoCaLize's Coq definition of builtin. *)
   | dedukti -> {* dk_builtins.unit. def call_by_value_unit__t := dk_builtins.call_by_value_unit *}
 
-  with () =
+  constructor () =
   | caml -> {* () *}
   | coq -> {* coq_builtins.Void *}
   | dedukti -> {* dk_builtins.tt *}
@@ -90,7 +90,7 @@ type bool =
                   def match__false := dk_bool.match__false.
                   def call_by_value_bool__t := dk_bool.call_by_value_bool *}
 
-  with True =
+  constructor True =
   | caml -> {* true *}
   | coq -> {* true *}
   | dedukti -> {* dk_bool.true *}
@@ -123,7 +123,7 @@ type list ('a) =
                   def match__cons := dk_list.match__cons.
                   def call_by_value_list__t := dk_list.call_by_value_list *}
 
-  with [] =
+  constructor [] =
   | caml -> {* [] *}
   | coq -> {* List.nil *}
   | dedukti -> {* nil *}

@@ -227,6 +227,7 @@ let mk_proof_label (s1, s2) =
 %token CAML
 %token COLLECTION
 %token CONCLUDE
+%token CONSTRUCTOR
 %token COQ
 %token COQ_REQUIRE
 %token DEDUKTI
@@ -280,7 +281,6 @@ let mk_proof_label (s1, s2) =
 %token TYPE
 %token USE
 %token WITH
-%token DAUBE
 
 /* Precedences and associativities. */
 
@@ -462,7 +462,7 @@ define_types:
 ;;
 
 and_define_type:
-  | opt_annot DAUBE type_vname define_type_params EQUAL define_type_body
+  | opt_annot WITH type_vname define_type_params EQUAL define_type_body
       { mk_annot $1 {td_name = $3; td_params = $4; td_body = $6; } }
 ;
 
@@ -520,7 +520,7 @@ define_type_body_external:
 
 external_mapping:
   | { [] }
-  | WITH external_binding external_binding_list
+  | CONSTRUCTOR external_binding external_binding_list
     { $2 :: $3 }
 ;
 

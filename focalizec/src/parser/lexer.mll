@@ -103,6 +103,7 @@ List.iter
   "caml", CAML;
   "collection", COLLECTION;
   "conclude", CONCLUDE;
+  "constructor", CONSTRUCTOR ;
   "coq", COQ;
   "coq_require", COQ_REQUIRE;
   "dedukti", DEDUKTI;
@@ -158,7 +159,6 @@ List.iter
   "type", TYPE;
   "use", USE;
   "with", WITH;
-  "daube", DAUBE
 ]
 ;;
 
