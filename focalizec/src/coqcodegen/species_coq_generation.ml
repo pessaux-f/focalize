@@ -1658,7 +1658,8 @@ let zenonify_by_type ctx env type_ident =
      the "fake" definition for Zenon would prevent ot from finding proofs. *)
   ignore
     (Type_coq_generation.type_def_compile
-       ~as_zenon_fact: true reduced_ctx env type_vname ty_def)
+       ~as_zenon_fact: true reduced_ctx env
+       ~is_first: true ~is_last: true type_vname ty_def)
 ;;
 
 

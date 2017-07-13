@@ -277,26 +277,8 @@ let toplevel_compile env ~current_unit out_fmter = function
          separatly. *)
       env
   | Infer.PCM_type ty_descrs ->
-(* [Unsure][WIP] *)
-let (type_def_name, type_descr) = List.hd ty_descrs in
-      Coq_pprint.purge_type_simple_to_coq_variable_mapping () ;
-      (* Create the initial context for compiling the type definition. *)
-      let ctx = {
-        Context.rcc_current_unit = current_unit ;
-        (* Not under a species, hence no species parameter. *)
-        Context.rcc_species_parameters_names = [] ;
-        (* Not under a species, hence empty carriers mapping. *)
-        Context.rcc_collections_carrier_mapping = [] ;
-        (* Not in the context of generating a method's body code, then empty. *)
-        Context.rcc_lambda_lift_params_mapping = [] ;
-        Context.rcc_out_fmter = out_fmter } in
-      (* Since we are on the definition of the type, this type doesn't already
-         exists normally. Hence, we want the code generation to enrich the
-         environment with the components (record labels, sum value
-         constructors) and the type the definition induces. In effect, this is
-         not a "fake" type definition provided to Zenon as a fact. *)
-      Type_coq_generation.type_def_compile
-        ~as_zenon_fact: false ctx env type_def_name type_descr
+      Type_coq_generation.type_defs_compile
+        env out_fmter ~current_unit ~as_zenon_fact: false ty_descrs
   | Infer.PCM_let_def (let_def, _) ->
       Coq_pprint.purge_type_simple_to_coq_variable_mapping () ;
       (* Create the initial context for compiling the let definition.
