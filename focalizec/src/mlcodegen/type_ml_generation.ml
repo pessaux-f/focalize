@@ -114,10 +114,11 @@ let extend_ml_gen_env_with_type_external_mapping env external_mapping =
 
     {b Rem} : Exported outside this module.                           *)
 (* ****************************************************************** *)
-let type_def_compile ctx env type_def_name type_descr =
+let type_def_compile ctx env ~is_first ~is_last type_def_name type_descr =
   let out_fmter = ctx.Context.rcc_out_fmter in
   (* Type definition header. *)
-  Format.fprintf out_fmter "@[<2>type" ;
+  if is_first then Format.fprintf out_fmter "@[<2>type"
+  else Format.fprintf out_fmter "@[<2>and" ;
   (* We do not operate on a fresh instance of the type's identity scheme. We
      directly work on the type scheme, taking care to perform *no* unifications
      to prevent poluting it ! *)
@@ -135,10 +136,13 @@ let type_def_compile ctx env type_def_name type_descr =
       Format.fprintf out_fmter " _focty_%a =@ "
         Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
       (* Type abbreviation: the body is the abbreviated type. *)
-      Format.fprintf out_fmter "%a@] ;;@\n "
+      Format.fprintf out_fmter "%a@]"
         (Ml_pprint.pp_type_simple_to_ml
            ~current_unit: ctx.Context.rcc_current_unit [])
         tydef_body ;
+      (* End of the definition. *)
+      if is_last then Format.fprintf out_fmter " ;;" ;
+      Format.fprintf out_fmter "@\n" ;
       (* Not an external type definition, so nothing new in the environment. *)
       env
   | Env.TypeInformation.TK_external (external_trans, external_mapping) ->
@@ -160,7 +164,10 @@ let type_def_compile ctx env type_def_name type_descr =
              | (Parsetree.EL_Dk, _)
              | ((Parsetree.EL_external _), _) -> false)
             external_trans.Parsetree.ast_desc in
-        Format.fprintf out_fmter "%s@]@ ;;@\n" ocaml_code
+        Format.fprintf out_fmter "%s@]" ocaml_code ;
+        (* End of the definition. *)
+        if is_last then Format.fprintf out_fmter " ;;" ;
+        Format.fprintf out_fmter "@\n" ;
        with Not_found ->
          (* We didn't find any correspondance for OCaml. *)
          raise
@@ -186,6 +193,7 @@ let type_def_compile ctx env type_def_name type_descr =
       let sum_constructors_to_print =
         List.map
           (fun (sum_cstr_name, sum_cstr_arity, sum_cstr_scheme) ->
+Format.eprintf "generating cstr: %a@." Sourcify.pp_vname sum_cstr_name ;
             if sum_cstr_arity = Env.TypeInformation.CA_some then (
               let (_, sum_cstr_ty) = Types.scheme_split sum_cstr_scheme in
               let sum_cstr_args =
@@ -220,7 +228,10 @@ let type_def_compile ctx env type_def_name type_descr =
                     ~current_unit: ctx.Context.rcc_current_unit [])
                  sum_cstr_args)
         sum_constructors_to_print ;
-      Format.fprintf out_fmter "@]@\n ;;@\n" ;
+      Format.fprintf out_fmter "@]" ;
+      (* End of the definition. *)
+      if is_last then Format.fprintf out_fmter " ;;" ;
+      Format.fprintf out_fmter "@\n" ;
       (* Not an external type definition, so nothing new in the environment. *)
       env
       end)
@@ -263,8 +274,60 @@ let type_def_compile ctx env type_def_name type_descr =
                ~current_unit: ctx.Context.rcc_current_unit [])
             field_ty)
         record_fields_to_print ;
-      Format.fprintf out_fmter "@]@\n} ;;@\n" ;
+      Format.fprintf out_fmter "@]@\n}" ;
+      (* End of the definition. *)
+      if is_last then Format.fprintf out_fmter " ;;" ;
+      Format.fprintf out_fmter "@\n" ;
       (* Not an external type definition, so nothing new in the environment. *)
       env
       end)
  ;;
+
+
+let type_defs_compile env out_fmter ~current_unit ty_descrs =
+  let rec fold_compile ~is_first accu_env = function
+    | [] -> accu_env
+    | (type_def_name, type_descr) :: q ->
+        Ml_pprint.purge_type_simple_to_ml_variable_mapping () ;
+        (* Create the initial context for compiling the type definition. *)
+        let ctx = {
+          Context.rcc_current_unit = current_unit ;
+          (* Not under a species, hence no species parameter. *)
+          Context.rcc_species_parameters_names = [] ;
+          (* Not under a species, hence empty carriers mapping. *)
+          Context.rcc_collections_carrier_mapping = [] ;
+          (* Not in the context of generating a method's body code, then
+             empty. *)
+          Context.rcc_lambda_lift_params_mapping = [] ;
+          Context.rcc_out_fmter = out_fmter } in
+        let env_accu' =
+          type_def_compile
+            ctx accu_env ~is_first ~is_last: (q = []) type_def_name
+            type_descr in
+        (* Generate the remaining of the type definitions in the extended
+           environment. The next call is no more the first one. *)
+        fold_compile ~is_first: false accu_env q in
+  (* Initial call: [is_first] is true. *)
+  fold_compile ~is_first: true env ty_descrs
+;;
+
+(*
+  List.fold_left
+    (fun accu_env (type_def_name, type_descr) ->
+      Ml_pprint.purge_type_simple_to_ml_variable_mapping () ;
+      (* Create the initial context for compiling the type definition. *)
+      let ctx = {
+        Context.rcc_current_unit = current_unit ;
+        (* Not under a species, hence no species parameter. *)
+        Context.rcc_species_parameters_names = [] ;
+        (* Not under a species, hence empty carriers mapping. *)
+        Context.rcc_collections_carrier_mapping = [] ;
+        (* Not in the context of generating a method's body code, then
+           empty. *)
+        Context.rcc_lambda_lift_params_mapping = [] ;
+        Context.rcc_out_fmter = out_fmter } in
+      type_def_compile ctx accu_env ~is_first: true type_def_name type_descr)
+    env ty_descrs
+;;
+ *)
+  

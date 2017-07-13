@@ -22,3 +22,6 @@ val bind_parameters_to_types_from_type_scheme :
     (((Parsetree.vname * Types.type_simple option) list) *
        (Types.type_simple option) *
        (Types.type_variable list))
+
+val fold_left3 :
+  ('a -> 'b -> 'c -> 'd -> 'a) -> 'a -> 'b list -> 'c list -> 'd list -> 'a

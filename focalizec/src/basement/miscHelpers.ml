@@ -98,3 +98,12 @@ let bind_parameters_to_types_from_type_scheme ~self_manifest opt_scheme
          assert false
        end)
 ;;
+
+
+let rec fold_left3 f accu l1 l2 l3 =
+  match (l1, l2, l3) with
+    ([], [], []) -> accu
+  | (a1::l1, a2::l2, a3::l3) -> fold_left3 f (f accu a1 a2 a3) l1 l2 l3
+  | (_, _, _) -> invalid_arg "MiscHelpers.fold_left3"
+;;
+

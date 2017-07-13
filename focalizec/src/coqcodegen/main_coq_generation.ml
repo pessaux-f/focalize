@@ -276,7 +276,9 @@ let toplevel_compile env ~current_unit out_fmter = function
          testing is activated, testing instructions are compiled
          separatly. *)
       env
-  | Infer.PCM_type (type_def_name, type_descr) ->
+  | Infer.PCM_type ty_descrs ->
+(* [Unsure][WIP] *)
+let (type_def_name, type_descr) = List.hd ty_descrs in
       Coq_pprint.purge_type_simple_to_coq_variable_mapping () ;
       (* Create the initial context for compiling the type definition. *)
       let ctx = {

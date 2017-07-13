@@ -1262,9 +1262,12 @@ let gen_doc_pcm out_fmt env ~current_unit = function
          </foc:directive>@\n"
         comp_unit ;
       env
-  | Infer.PCM_type (ty_vname, ty_descrip) ->
-      Types.purge_type_simple_to_xml_variable_mapping () ;
-      gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip ;
+  | Infer.PCM_type ty_descrs ->
+      List.iter
+        (fun (ty_vname, ty_descrip) ->
+          Types.purge_type_simple_to_xml_variable_mapping () ;
+          gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip)
+        ty_descrs ;
       env
   | Infer.PCM_let_def (let_def, schemes) ->
       Types.purge_type_simple_to_xml_variable_mapping () ;
