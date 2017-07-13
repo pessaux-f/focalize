@@ -193,7 +193,6 @@ let type_def_compile ctx env ~is_first ~is_last type_def_name type_descr =
       let sum_constructors_to_print =
         List.map
           (fun (sum_cstr_name, sum_cstr_arity, sum_cstr_scheme) ->
-Format.eprintf "generating cstr: %a@." Sourcify.pp_vname sum_cstr_name ;
             if sum_cstr_arity = Env.TypeInformation.CA_some then (
               let (_, sum_cstr_ty) = Types.scheme_split sum_cstr_scheme in
               let sum_cstr_args =
