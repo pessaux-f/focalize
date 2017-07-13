@@ -5387,7 +5387,7 @@ let typecheck_type_defs ctx env type_defs =
   (* Put the list in the right order. *)
   let futur_type_types = List.rev reved_futur_type_types in
   (* Now, really typecheck the definitions. Attention, the returned description
-     list is in reverse order. . *)
+     list is in reverse order. *)
   let (extended_env, revd_ty_descrs) =
     MiscHelpers.fold_left3
       (fun (env_accu, type_descr_accu) ty_def vmapp futur_type_type ->
