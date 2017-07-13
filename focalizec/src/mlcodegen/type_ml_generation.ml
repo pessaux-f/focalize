@@ -300,34 +300,13 @@ let type_defs_compile env out_fmter ~current_unit ty_descrs =
              empty. *)
           Context.rcc_lambda_lift_params_mapping = [] ;
           Context.rcc_out_fmter = out_fmter } in
-        let env_accu' =
+        let accu_env' =
           type_def_compile
             ctx accu_env ~is_first ~is_last: (q = []) type_def_name
             type_descr in
         (* Generate the remaining of the type definitions in the extended
            environment. The next call is no more the first one. *)
-        fold_compile ~is_first: false accu_env q in
+        fold_compile ~is_first: false accu_env' q in
   (* Initial call: [is_first] is true. *)
   fold_compile ~is_first: true env ty_descrs
 ;;
-
-(*
-  List.fold_left
-    (fun accu_env (type_def_name, type_descr) ->
-      Ml_pprint.purge_type_simple_to_ml_variable_mapping () ;
-      (* Create the initial context for compiling the type definition. *)
-      let ctx = {
-        Context.rcc_current_unit = current_unit ;
-        (* Not under a species, hence no species parameter. *)
-        Context.rcc_species_parameters_names = [] ;
-        (* Not under a species, hence empty carriers mapping. *)
-        Context.rcc_collections_carrier_mapping = [] ;
-        (* Not in the context of generating a method's body code, then
-           empty. *)
-        Context.rcc_lambda_lift_params_mapping = [] ;
-        Context.rcc_out_fmter = out_fmter } in
-      type_def_compile ctx accu_env ~is_first: true type_def_name type_descr)
-    env ty_descrs
-;;
- *)
-  
