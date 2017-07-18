@@ -369,7 +369,7 @@ and let_def_desc = {
   ld_final : final_flag;
   ld_local : local_flag;
   ld_bindings : binding list;
-  ld_termination_proof : termination_proof option;
+  ld_termination_proofs : (termination_proof option) list
 }
 
 and param = (vname * type_expr option)

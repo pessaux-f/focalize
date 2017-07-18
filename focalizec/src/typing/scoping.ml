@@ -1936,22 +1936,24 @@ and scope_let_definition ~toplevel_let ctx env let_def =
   let scoped_bindings =
     List.map scope_binding let_def_descr.Parsetree.ld_bindings in
   (* Now, scope the optional termination proof. *)
-  let scoped_termination_proof =
-    (* In order to scope this proof we need to construct a second environment
-        which contains the scoped parameters of the functions being defined
-       (see documentation on [scope_termination_proof]). *)
-    let env_with_all_params =
-      List.fold_left add_binding_parameters env scoped_bindings in
-    match let_def_descr.Parsetree.ld_termination_proof with
-     | None -> None
-     | Some tp ->
-         Some (scope_termination_proof ctx env env_with_all_params tp) in
+  let scoped_termination_proofs =
+    List.map2
+      (fun opt_tp scoped_binding ->
+        match opt_tp with
+        | None -> None
+        | Some tp ->
+           (* In order to scope a proof we need to construct a second
+              environment which contains the scoped parameters of the function
+              being defined (see documentation on [scope_termination_proof]). *)
+            let env_with_params = add_binding_parameters env scoped_binding in
+            Some (scope_termination_proof ctx env env_with_params tp))
+      let_def_descr.Parsetree.ld_termination_proofs scoped_bindings in
   (* An finally be return the scoped let-definition and the extended
      environment. *)
   let scoped_let_def_desc = {
     let_def_descr with
       Parsetree.ld_bindings = scoped_bindings ;
-      Parsetree.ld_termination_proof = scoped_termination_proof } in
+      Parsetree.ld_termination_proofs = scoped_termination_proofs } in
   let scoped_let_def = {
     let_def with Parsetree.ast_desc = scoped_let_def_desc } in
   (* We finally get le list of names bound by this let-definition. *)

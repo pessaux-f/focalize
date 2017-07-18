@@ -85,23 +85,25 @@ and gen_focalize_code d code = match code with
 
 (* Focalize code generation. *)
 let gen_focalize (fn, args, code) d =
-  let fargs = List.map (function x -> (gen_ident x, None)) args in
+  let fargs = List.map (fun x -> (gen_ident x, None)) args in
   Parsetree.SF_let
     (mk_ast
-       ( { Parsetree.ld_rec = Parsetree.RF_rec;
-	         Parsetree.ld_logical = Parsetree.LF_no_logical;
-	         Parsetree.ld_final = Parsetree.LF_no_final;
-	         Parsetree.ld_local = Parsetree.LF_no_local;
+       ( { Parsetree.ld_rec = Parsetree.RF_rec ;
+	         Parsetree.ld_logical = Parsetree.LF_no_logical ;
+	         Parsetree.ld_final = Parsetree.LF_no_final ;
+	         Parsetree.ld_local = Parsetree.LF_no_local ;
 	         Parsetree.ld_bindings =
-             [mk_ast ({ Parsetree.b_name = gen_ident fn;
-		                    Parsetree.b_params = fargs;
-		                    Parsetree.b_type = None;
+             [mk_ast ({ Parsetree.b_name = gen_ident fn ;
+		                    Parsetree.b_params = fargs ;
+		                    Parsetree.b_type = None ;
 		                    Parsetree.b_body =
-                        Parsetree.BB_computational (gen_focalize_code d code )
-	                    })];
-	         Parsetree.ld_termination_proof = None;
+                          Parsetree.BB_computational (gen_focalize_code d code )
+	                    })] ;
+           (* Only one binding => one None in the list of termination proofs. *)
+	         Parsetree.ld_termination_proofs = [None] ;
 	       }))
 ;;
+
 
 (* Name of a focalize let. *)
 let field_name = function
@@ -111,6 +113,7 @@ let field_name = function
   | _ -> failwith "focgen: field_name: TODO"
 ;;
 
+
 (* Name of a focalize signture. *)
 let sig_field_name = function
   | Parsetree.SF_sig s ->
@@ -118,15 +121,16 @@ let sig_field_name = function
   | _ -> failwith "focgen: sig_field_name: TODO"
 ;;
 
-(* Replace a signture by its definition. *)
 
+(* Replace a signture by its definition. *)
 let rec replace_sf_in_list fl f = match fl with
 	| [] -> []
 	| (Parsetree.SF_sig _)::q -> let orig_f = List.hd fl in
-	if (field_name f) = (sig_field_name orig_f) then (f)::q
+	if (field_name f) = (sig_field_name orig_f) then (f) :: q
 		else orig_f::(replace_sf_in_list q f)
-	| x::q -> x::(replace_sf_in_list q f)
+	| x :: q -> x :: (replace_sf_in_list q f)
 ;;
+
 
 let replace_sf stuff sp_name field (*proofs*) =
   let nphlist = List.map (function x -> match x.Parsetree.ast_desc with

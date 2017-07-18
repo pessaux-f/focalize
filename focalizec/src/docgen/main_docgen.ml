@@ -985,7 +985,7 @@ let make_fake_let_def_from_methods meths_infos =
     Parsetree.ld_final = flags.Env.TypeInformation.ldf_final ;
     Parsetree.ld_local = Parsetree.LF_no_local ; (* Not implemented. *)
     Parsetree.ld_bindings = fake_bindings ;
-    Parsetree.ld_termination_proof = opt_term_proof } in
+    Parsetree.ld_termination_proofs = [ opt_term_proof ] } in
   (* Finally return the [let_def]. *)
   { Parsetree.ast_loc = Location.none ;
     Parsetree.ast_desc = fake_let_def_desc ;

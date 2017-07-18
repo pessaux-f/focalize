@@ -43,48 +43,59 @@ let toplevel_let_def_compile ctx env let_def =
   if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
     raise (Logical_methods_only_inside_species let_def.Parsetree.ast_loc) ;
   let out_fmter = ctx.Context.scc_out_fmter in
+  let opt_term_proofs =
+    let_def.Parsetree.ast_desc.Parsetree.ld_termination_proofs in
   (* Currently, toplevel recursive functions are generated with "Fixpoint". *)
-  let rec_status =
+  let rec_status_list =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
-     | Parsetree.RF_no_rec -> Env.RC_non_rec
-     | Parsetree.RF_rec -> (
-         match let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof with
-         | None -> Env.RC_rec Env.RPK_other
-         | Some term_pr -> (
-             match term_pr.Parsetree.ast_desc with
-             | Parsetree.TP_structural decr_arg ->
-                 Env.RC_rec (Env.RPK_struct decr_arg)
-             | _ -> Env.RC_rec Env.RPK_other))
-    ) in
+    | Parsetree.RF_no_rec ->
+        (* Make a list full of [RC_non_rec] with as many elements as there are
+           bindings. *)
+        MiscHelpers.list_fill
+          Env.RC_non_rec
+          (List.length let_def.Parsetree.ast_desc.Parsetree.ld_bindings)
+    | Parsetree.RF_rec ->
+        List.map
+          (function
+            | None -> Env.RC_rec Env.RPK_other
+            | Some term_pr ->
+                match term_pr.Parsetree.ast_desc with
+                | Parsetree.TP_structural decr_arg ->
+                    Env.RC_rec (Env.RPK_struct decr_arg)
+                | _ ->  Env.RC_rec Env.RPK_other)
+          opt_term_proofs) in
+  (* Build the list of names mutually recursively bound. *)
   let in_recursive_let_section_of =
-    if rec_status <> Env.RC_non_rec then  (* Is rec. *)
-      List.map
-        (fun b -> b.Parsetree.ast_desc.Parsetree.b_name)
-        let_def.Parsetree.ast_desc.Parsetree.ld_bindings
-    else [] in
+    List.fold_left2
+      (fun accu rec_status binding ->
+        match rec_status with
+        | Env.RC_non_rec -> accu
+        | Env.RC_rec _ -> binding.Parsetree.ast_desc.Parsetree.b_name :: accu)
+      []
+      rec_status_list
+      let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
   Format.fprintf out_fmter "@[<2>" ;
-  let opt_term_proof =
-    let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof in
   (* Recover pre-compilation info and extended environment in case of
      recursivity for all the bindings. If no recursivity, then the environment
      is unchanged. This means that in case of recursive function, we DO NOT
      have to extend the environment again. *)
   let (env2, pre_comp_infos) =
     Species_record_type_coq_generation.pre_compute_let_bindings_infos_for_rec
-      ~rec_status ~toplevel: true env
+      ~rec_status_list ~toplevel: true env
       let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
   (* Now generate each bound definition. Remark that there is no local idents
      in the scope because we are at toplevel. In the same way, because we are
      not under the scope of a species, the way "Self" must be printed is
      non-relevant. We use [SMS_from_species] by default. *)
   let final_env =
-    (match (let_def.Parsetree.ast_desc.Parsetree.ld_bindings, pre_comp_infos)
+    (match (let_def.Parsetree.ast_desc.Parsetree.ld_bindings, pre_comp_infos,
+           rec_status_list, opt_term_proofs)
     with
-     | ([], _) ->
+     | ([], _, _, _) ->
          (* The "let" construct should always at least bind one identifier ! *)
          assert false
-     | ([one_bnd], [one_pre_comp_info]) ->
-         if rec_status <> Env.RC_non_rec then (
+     | ([one_bnd], [one_pre_comp_info], [one_rec_status], [one_opt_tproof]) ->
+         if one_rec_status <> Env.RC_non_rec then (
            (* In case of a unique recursive function, generate the code like
               for methods. *)
            let def_scheme =
@@ -118,7 +129,7 @@ let toplevel_let_def_compile ctx env let_def =
                Env.TypeInformation.ad_dependencies_from_parameters_in_type = [];
                Env.TypeInformation.ad_min_coq_env = [];
                Env.TypeInformation.ad_min_dk_env = [] } in
-           (match opt_term_proof with
+           (match one_opt_tproof with
            | Some { Parsetree.ast_desc = Parsetree.TP_structural decr_arg ;
                     Parsetree.ast_loc = term_pr_loc } ->
                 ignore
@@ -150,7 +161,7 @@ let toplevel_let_def_compile ctx env let_def =
                         one_pre_comp_info.Species_record_type_coq_generation.
                           lbpc_params_with_type)
                      def_scheme one_bnd.Parsetree.ast_desc.Parsetree.b_body
-                     opt_term_proof dummy_abstr_info) ;
+                     one_opt_tproof dummy_abstr_info) ;
                 (* No need to extended the environment. This was done by
                    [pre_compute_let_bindings_infos_for_rec] because we are
                    processing a recursive function. *)
@@ -161,37 +172,40 @@ let toplevel_let_def_compile ctx env let_def =
            (* Non recursive method. *)
            let env' =
              Species_record_type_coq_generation.let_binding_compile
-               ctx ~binder: "Let" ~opt_term_proof ~local_idents: []
-               ~in_recursive_let_section_of
+               ctx ~binder: "Let" ~opt_term_proof: one_opt_tproof
+               ~local_idents: [] ~in_recursive_let_section_of
                (* Or whatever since "Self" does not exist anymore. *)
                ~self_methods_status:
                  Species_record_type_coq_generation.SMS_from_record
                ~recursive_methods_status:
                  Species_record_type_coq_generation.RMS_regular
-               ~toplevel: true ~rec_status env2 one_bnd one_pre_comp_info in
+               ~toplevel: true ~rec_status: one_rec_status env2 one_bnd
+               one_pre_comp_info in
            Format.fprintf out_fmter "." ;
            env'
           )
      | ((first_bnd :: next_bnds),
-        (first_pre_comp_info :: next_pre_comp_infos)) ->
+        (first_pre_comp_info :: next_pre_comp_infos),
+        (first_rec_status :: next_rec_status),
+        (first_opt_tproof :: next_opt_tproofs)) ->
          (* In case of mutually recursive functions, generate the code
             assuming they are structurally décreasing. *)
          let first_binder =
-           if rec_status <> Env.RC_non_rec then "Fixpoint" else "Let" in
+           if first_rec_status <> Env.RC_non_rec then "Fixpoint" else "Let" in
          let accu_env =
            ref
              (Species_record_type_coq_generation.let_binding_compile
-                ctx ~binder: first_binder ~opt_term_proof ~local_idents: []
-                ~in_recursive_let_section_of
+                ctx ~binder: first_binder ~opt_term_proof: first_opt_tproof
+                ~local_idents: [] ~in_recursive_let_section_of
                 (* Or whatever since "Self" does not exist anymore. *)
                 ~self_methods_status:
                   Species_record_type_coq_generation.SMS_from_record
                 ~recursive_methods_status:
                   Species_record_type_coq_generation.RMS_regular
-                ~toplevel: true ~rec_status env2 first_bnd
+                ~toplevel: true ~rec_status: first_rec_status env2 first_bnd
                 first_pre_comp_info) in
-         List.iter2
-           (fun binding pre_comp_info ->
+         MiscHelpers.iter4 
+           (fun binding pre_comp_info rec_status opt_term_proof ->
              Format.fprintf out_fmter "@]@\n@[<2>" ;
              accu_env :=
                Species_record_type_coq_generation.let_binding_compile
@@ -203,10 +217,10 @@ let toplevel_let_def_compile ctx env let_def =
                  ~recursive_methods_status:
                    Species_record_type_coq_generation.RMS_regular
                  ~toplevel: true ~rec_status !accu_env binding pre_comp_info)
-           next_bnds next_pre_comp_infos ;
+           next_bnds next_pre_comp_infos next_rec_status next_opt_tproofs ;
          Format.fprintf out_fmter "." ;
          !accu_env
-     | (_, _) ->
+     | (_, _, _, _) ->
          (* Case where we would not have the same number og pre-compiled infos
             and of bindings. Should never happen. *)
          assert false) in

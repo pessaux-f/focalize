@@ -1509,47 +1509,37 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
          dep_on_rep))
       let_def_descr.Parsetree.ld_bindings
       pre_env_info in
-  (* Typecheck the termination proof if any. *)
-  (match let_def_descr.Parsetree.ld_termination_proof with
-   | None -> ()
-   | Some tp ->
-       (* We must first extend the environment with the parameters of the
-          function(s).
-          [Unsure] We add all the parameters of ALL the function,
-          hence in case of mutually recursive functions with arguments wearing
-          the same names, this will suck !!! However, termination of mutually
-          recursive functions is not currently available/understood...
-          First start by a local function doing the job... *)
-       let rec add_bindings_parameters in_env env_bnds bnds =
-         match (env_bnds, bnds) with
-         | ([], []) -> in_env
-         | (((_, sc, _, _) :: qeq), (hb :: qb)) ->
-             (* Get the list of params with their type. *)
-             let (params_n_ty, _, _) =
-               MiscHelpers.bind_parameters_to_types_from_type_scheme
-                 ~self_manifest: ctx.self_manifest (Some sc)
-                 (List.map fst hb.Parsetree.ast_desc.Parsetree.b_params) in
-             (* Now add each of them in the environment. *)
-             let in_env' =
-               List.fold_left
-                 (fun env_accu (n, topt) ->
-                   match topt with
-                   | Some t ->
-                       Env.TypingEnv.add_value
-                         ~toplevel: None n (Types.generalize t) env_accu
-                   | None ->
-                       (* Since we provided a scheme above to
-                          bind_parameters_to_types_from_type_scheme, each
-                          parameter must have been labelled by a type. *)
-                       assert false)
-                 in_env params_n_ty in
-             (* Recurse on the other bindings. *)
-             add_bindings_parameters in_env' qeq qb
-         | (_, _) -> assert false in
-       let env_with_all_params =
-         add_bindings_parameters
-           env' tmp_env_bindings let_def_descr.Parsetree.ld_bindings in
-       typecheck_termination_proof ctx env_with_all_params tp) ;
+  (* Typecheck the termination proofs. *)
+  MiscHelpers.iter3
+    (fun opt_tp tmp_env_bnd bnd ->
+      match opt_tp with
+      | None -> ()
+      | Some tp ->
+          (* We must first extend the environment with the parameters of the
+             function. *)
+          let (_, sc, _, _) = tmp_env_bnd in
+          (* Get the list of params with their type. *)
+          let (params_n_ty, _, _) =
+            MiscHelpers.bind_parameters_to_types_from_type_scheme
+              ~self_manifest: ctx.self_manifest (Some sc)
+              (List.map fst bnd.Parsetree.ast_desc.Parsetree.b_params) in
+          (* Now add each of them in the environment. *)
+          let tproof_env =
+            List.fold_left
+              (fun env_accu (n, topt) ->
+                match topt with
+                | Some t ->
+                    Env.TypingEnv.add_value
+                      ~toplevel: None n (Types.generalize t) env_accu
+                | None ->
+                    (* Since we provided a scheme above to
+                       bind_parameters_to_types_from_type_scheme, each parameter
+                       must have been labelled by a type. *)
+                    assert false)
+              env' params_n_ty in
+          typecheck_termination_proof ctx tproof_env tp)
+    let_def_descr.Parsetree.ld_termination_proofs tmp_env_bindings
+    let_def_descr.Parsetree.ld_bindings ;
   (* We make the clean environment binding by discarding the location
      information we kept just to be able to pinpoint accurately the guilty
      method in case of one would have variables in its scheme. *)
@@ -2130,8 +2120,9 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
                 | Parsetree.RF_rec -> (
                     let field_infos =
-                      List.map2
-                        (fun (id, ty_scheme, has_def_dep_on_rep) binding ->
+                      MiscHelpers.map3
+                        (fun (id, ty_scheme, has_def_dep_on_rep) binding
+                          opt_tproof ->
                           let expr =
                             binding.Parsetree.ast_desc.Parsetree.b_body in
                           let params_names =
@@ -2145,11 +2136,12 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                               function the same proof. This is not correct but
                               anyway, we only handle unique recursive
                               function"s". *)
-                           let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof,
+                           opt_tproof,
                            has_def_dep_on_rep,
                            let_def_flags))
                         bindings
-                        let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
+                        let_def.Parsetree.ast_desc.Parsetree.ld_bindings
+                        let_def.Parsetree.ast_desc.Parsetree.ld_termination_proofs in
                     (* Recursive, so just 1 field with several names. *)
                     ((append_and_ensure_method_uniquely_defined
                         current_species accu_fields
@@ -2161,8 +2153,9 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                        Anyway, if that not the case, this does not annoy.
                        So we return a list of n fields with 1 name in each. *)
                     let field_infos =
-                      List.map2
-                        (fun (id, ty_scheme, has_def_dep_on_rep) binding ->
+                      MiscHelpers.map3
+                        (fun (id, ty_scheme, has_def_dep_on_rep) binding
+                          opt_tproof ->
                           let expr =
                             binding.Parsetree.ast_desc.Parsetree.b_body in
                           let params_names =
@@ -2175,11 +2168,12 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                              (* Same remark than above, but with the additionnal
                                 stuff that non-recursive functions should anyway
                                 not have proofs since it is useless. *)
-                             let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof,
+                             opt_tproof,
                              has_def_dep_on_rep,
                              let_def_flags))
                         bindings
-                        let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
+                        let_def.Parsetree.ast_desc.Parsetree.ld_bindings
+                        let_def.Parsetree.ast_desc.Parsetree.ld_termination_proofs in
                     ((append_and_ensure_method_uniquely_defined
                         current_species accu_fields field_infos),
                      ctx, env', accu_proofs, accu_term_proofs)

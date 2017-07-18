@@ -664,19 +664,19 @@ let pre_compute_let_binding_info_for_rec env bd ~rec_status ~toplevel =
     bindings (not forcely mutually recursive), accumulating the obtained
     environment at each step.                                                 *)
 (* ************************************************************************** *)
-let pre_compute_let_bindings_infos_for_rec ~rec_status ~toplevel env bindings =
+let pre_compute_let_bindings_infos_for_rec ~rec_status_list ~toplevel env
+    bindings =
   (* And not [List.fold_right otherwise the bindings will be processed in
      reverse order. However, the list of infos needs be reversed to
      keep them in the same order than the list of bindings (was bug #60). *)
   let (new_env, reved_infos) =
-    List.fold_left
-      (fun (env_accu, infos_accu) binding ->
+    List.fold_left2
+      (fun (env_accu, infos_accu) rec_status binding ->
         let (env', info) =
           pre_compute_let_binding_info_for_rec
             ~rec_status ~toplevel env_accu binding in
         (env', info :: infos_accu))
-      (env, [])
-      bindings in
+      (env, []) rec_status_list bindings in
   (new_env, (List.rev reved_infos))
 ;;
 
@@ -884,72 +884,84 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
   if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
     failwith "Coq compilation of logical let in TODO" ;  (* [Unsure]. *)
   let out_fmter = ctx.Context.scc_out_fmter in
-  let rec_status =
+  let nb_bindings =
+    List.length let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
+  let opt_term_proofs =
+    let_def.Parsetree.ast_desc.Parsetree.ld_termination_proofs in
+  (* Extract the list of recursive status for the bindings. *)
+  let rec_status_list =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
-     | Parsetree.RF_no_rec -> Env.RC_non_rec
-     | Parsetree.RF_rec -> (
-         match let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof with
-         | None -> Env.RC_rec Env.RPK_other
-         | Some term_pr -> (
-             match term_pr.Parsetree.ast_desc with
-             | Parsetree.TP_structural decr_arg ->
-                 Env.RC_rec (Env.RPK_struct decr_arg)
-             | _ ->  Env.RC_rec Env.RPK_other))
-    ) in
+    | Parsetree.RF_no_rec ->
+        (* Make a list full of [RC_non_rec] with as many elements as there are
+           bindings. *)
+        MiscHelpers.list_fill Env.RC_non_rec nb_bindings
+    | Parsetree.RF_rec ->
+        List.map
+          (function
+            | None -> Env.RC_rec Env.RPK_other
+            | Some term_pr ->
+                match term_pr.Parsetree.ast_desc with
+                | Parsetree.TP_structural decr_arg ->
+                    Env.RC_rec (Env.RPK_struct decr_arg)
+                | _ ->  Env.RC_rec Env.RPK_other)
+          opt_term_proofs) in
   (* Generates the binder ("fix" or non-"fix"). *)
   Format.fprintf out_fmter "@[<2>" ;
   let initial_binder =
-    (match rec_status with
+    (match List.hd rec_status_list with
      | Env.RC_non_rec -> "let"
      | Env.RC_rec _ ->
          (* [Unsure] We don't known now how to compile several local mutually
             recursive functions. *)
-         if (List.length let_def.Parsetree.ast_desc.Parsetree.ld_bindings) > 1
-         then failwith "TODO: local mutual recursive functions." ;
+         if nb_bindings > 1 then
+           failwith "TODO: local mutual recursive functions." ;
          "let fix") in
-  let opt_term_proof =
-    let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof in
   (* Recover pre-compilation info and extended environment in case of
      recursivity for all the bindings. *)
   let (env, pre_comp_infos) =
     pre_compute_let_bindings_infos_for_rec
-      ~rec_status ~toplevel: false env
+      ~rec_status_list ~toplevel: false env
       let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
   (* Now generate each bound definition. *)
   let env' =
-    (match (let_def.Parsetree.ast_desc.Parsetree.ld_bindings, pre_comp_infos)
+    (match (let_def.Parsetree.ast_desc.Parsetree.ld_bindings, pre_comp_infos,
+           rec_status_list, opt_term_proofs)
     with
-     | ([], _) ->
+     | ([], _, _, _) ->
          (* The "let" construct should always at least bind one identifier ! *)
          assert false
-     | ([one_bnd], [one_pre_comp_info]) ->
+     | ([one_bnd], [one_pre_comp_info], [one_rec_status], [one_opt_tproof]) ->
          let_binding_compile
-           ctx ~opt_term_proof ~binder: initial_binder
+           ctx ~opt_term_proof: one_opt_tproof ~binder: initial_binder
            ~in_recursive_let_section_of ~local_idents ~self_methods_status
-           ~recursive_methods_status ~toplevel: false ~rec_status env one_bnd
-           one_pre_comp_info
+           ~recursive_methods_status ~toplevel: false
+           ~rec_status: one_rec_status env one_bnd one_pre_comp_info
      | ((first_bnd :: next_bnds),
-        (first_pre_comp_info :: next_pre_comp_infos)) ->
+        (first_pre_comp_info :: next_pre_comp_infos),
+        (first_rec_status :: next_rec_status),
+        (first_opt_tproof :: next_opt_tproofs)) ->
          let accu_env =
            ref
              (let_binding_compile
-                ctx ~opt_term_proof ~binder: initial_binder
+                ctx ~opt_term_proof: first_opt_tproof  ~binder: initial_binder
                 ~in_recursive_let_section_of ~local_idents ~self_methods_status
-                ~recursive_methods_status ~toplevel: false ~rec_status env
+                ~recursive_methods_status ~toplevel: false
+                ~rec_status:first_rec_status  env
                 first_bnd first_pre_comp_info) in
-         List.iter2
-           (fun binding pre_comp_info ->
+         MiscHelpers.iter4
+           (fun binding pre_comp_info opt_tproof rec_status ->
              (* We transform "let and" non recursive functions into several
                 "let in" definitions. *)
              Format.fprintf out_fmter "@ in@]@\n@[<2>" ;
              accu_env :=
                let_binding_compile
-                 ctx ~opt_term_proof ~binder: "let" ~in_recursive_let_section_of
-                 ~local_idents ~self_methods_status ~recursive_methods_status
+                 ctx ~opt_term_proof: opt_tproof ~binder: "let"
+                 ~in_recursive_let_section_of ~local_idents
+                 ~self_methods_status ~recursive_methods_status
                  ~rec_status ~toplevel: false env binding pre_comp_info)
-           next_bnds next_pre_comp_infos ;
+           next_bnds next_pre_comp_infos next_opt_tproofs next_rec_status ;
            !accu_env
-     | (_, _) ->
+     | (_, _, _, _) ->
          (* Case where we would not have the same number og pre-compiled infos
             and of bindings. Should never happen. *)
          assert false) in

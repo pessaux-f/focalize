@@ -14,8 +14,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: miscHelpers.ml,v 1.11 2012-10-26 14:55:19 pessaux Exp $ *)
-
 
 (** ****************************************************************************
     {b Descr} : Because methods parameters do not have their type scheme with
@@ -100,10 +98,49 @@ let bind_parameters_to_types_from_type_scheme ~self_manifest opt_scheme
 ;;
 
 
+let rec map2_opt2 f l1 l2 =
+  match (l1, l2) with
+  | ([], []) -> []
+  | (a1::l1, []) -> (f a1 None) :: (map2_opt2 f l1 l2)
+  | (a1::l1, a2::l2) -> (f a1 (Some a2)) :: (map2_opt2 f l1 l2)
+  | (_, _) -> invalid_arg "MiscHelpers.map2_opt2"
+;;
+
+
 let rec fold_left3 f accu l1 l2 l3 =
   match (l1, l2, l3) with
-    ([], [], []) -> accu
+  | ([], [], []) -> accu
   | (a1::l1, a2::l2, a3::l3) -> fold_left3 f (f accu a1 a2 a3) l1 l2 l3
   | (_, _, _) -> invalid_arg "MiscHelpers.fold_left3"
 ;;
 
+
+let rec iter3 f l1 l2 l3 =
+  match (l1, l2, l3) with
+  | ([], [], []) -> ()
+  | (a1::l1, a2::l2, a3::l3) -> f a1 a2 a3 ; iter3 f l1 l2 l3
+  | (_, _, _) -> invalid_arg "MiscHelpers.iter3"
+;;
+
+
+let rec map3 f l1 l2 l3 =
+  match (l1, l2, l3) with
+  | ([], [], []) -> []
+  | (a1::l1, a2::l2, a3::l3) -> (f a1 a2 a3) :: (map3 f l1 l2 l3)
+  | (_, _, _) -> invalid_arg "MiscHelpers.map3"
+;;
+
+
+let list_fill v n =
+  let rec rec_fill n' =
+    if n' <= 0 then []
+    else v :: (rec_fill (n' - 1)) in
+  rec_fill n
+;;
+
+let rec iter4 f l1 l2 l3 l4 =
+  match (l1, l2, l3, l4) with
+  | ([], [], [], []) -> ()
+  | (a1::l1, a2::l2, a3::l3, a4::l4) -> f a1 a2 a3 a4 ; iter4 f l1 l2 l3 l4
+  | (_, _, _, _) -> invalid_arg "MiscHelpers.iter4"
+;;
