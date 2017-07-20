@@ -5011,6 +5011,11 @@ let typecheck_regular_type_def_body ctx ~is_repr_of_external env
        (* This definition will only add a type name, no new type constructor. *)
        let identity_type = typecheck_type_expr ctx env_with_protos ty in
        Types.end_definition () ;
+       (* Unify the type proto with the one wd really found. *)
+       let identity_type =
+         Types.unify
+           ~loc: regular_type_def_body.Parsetree.ast_loc
+           ~self_manifest: ctx.self_manifest identity_type futur_type_type in
        (* Record the type representing this body in the AST node. *)
        regular_type_def_body.Parsetree.ast_type <-
          Parsetree.ANTI_type identity_type ;
@@ -5039,6 +5044,20 @@ let typecheck_regular_type_def_body ctx ~is_repr_of_external env
        end)
   | Parsetree.RTDB_union constructors ->
       (begin
+      (* Build the type itself. *)
+      let type_identity =
+        Types.type_basic
+          (Types.make_type_constructor
+             ctx.current_unit (Parsetree_utils.name_of_vname type_name))
+          vars_of_mapping in
+      (* Unify the type proto with the one wd really found. *)
+      let type_identity =
+        Types.unify
+          ~loc: regular_type_def_body.Parsetree.ast_loc
+          ~self_manifest: ctx.self_manifest type_identity futur_type_type in
+      (* Record the type representing this body in the AST node. *)
+      regular_type_def_body.Parsetree.ast_type <-
+        Parsetree.ANTI_type type_identity ;
       (* Now process the constructors of the type. Create the list of
          couples : (constructor name * type_simple). *)
       let cstr_bindings =
@@ -5077,13 +5096,10 @@ let typecheck_regular_type_def_body ctx ~is_repr_of_external env
            Env.TypingEnv.add_constructor cstr_name cstr_descr accu_env)
           env
           cstr_bindings in
-      (* Record the type representing this body in the AST node. *)
-      regular_type_def_body.Parsetree.ast_type <-
-        Parsetree.ANTI_type futur_type_type ;
       (* Now add the type itself. *)
-      let type_identity =
+      let type_sch =
         Types.build_type_def_scheme
-          ~variables: vars_of_mapping ~body: futur_type_type in
+          ~variables: vars_of_mapping ~body: type_identity in
       let final_type_descr = {
         Env.TypeInformation.type_loc = regular_type_def_body.Parsetree.ast_loc;
         Env.TypeInformation.type_kind =
@@ -5092,7 +5108,7 @@ let typecheck_regular_type_def_body ctx ~is_repr_of_external env
                (fun (n, arity, descr) ->
                 (n, arity, descr.Env.TypeInformation.cstr_scheme))
                cstr_bindings) ;
-        Env.TypeInformation.type_identity = type_identity ;
+        Env.TypeInformation.type_identity = type_sch ;
         Env.TypeInformation.type_params = vars_of_mapping ;
         Env.TypeInformation.type_arity = nb_params } in
       (* Extend the environment by the type itself. *)
@@ -5106,6 +5122,20 @@ let typecheck_regular_type_def_body ctx ~is_repr_of_external env
       (env', final_type_descr)
      end)
   | Parsetree.RTDB_record labels ->
+      (* Build the type itself. *)
+      let type_identity =
+        Types.type_basic
+          (Types.make_type_constructor
+             ctx.current_unit (Parsetree_utils.name_of_vname type_name))
+          vars_of_mapping in
+      (* Unify the type proto with the one wd really found. *)
+      let type_identity =
+        Types.unify
+          ~loc: regular_type_def_body.Parsetree.ast_loc
+          ~self_manifest: ctx.self_manifest type_identity futur_type_type in
+      (* Record the type representing this body in the AST node. *)
+      regular_type_def_body.Parsetree.ast_type <-
+        Parsetree.ANTI_type type_identity ;
       (* First, we sort the label list in order to get a canonical
          representation of a record. *)
       let labels = List.sort (fun (n1, _) (n2, _) -> compare n1 n2) labels in
@@ -5130,13 +5160,10 @@ let typecheck_regular_type_def_body ctx ~is_repr_of_external env
             Env.TypingEnv.add_label lbl_name lbl_descr accu_env)
           env
           fields_descriptions in
-      (* Record the type representing this body in the AST node. *)
-      regular_type_def_body.Parsetree.ast_type <-
-        Parsetree.ANTI_type futur_type_type ;
       (* Now add the type itself. *)
-      let type_identity =
+      let type_sch =
         Types.build_type_def_scheme
-          ~variables: vars_of_mapping ~body: futur_type_type in
+          ~variables: vars_of_mapping ~body: type_identity in
       let final_type_descr = {
         Env.TypeInformation.type_loc = regular_type_def_body.Parsetree.ast_loc;
         Env.TypeInformation.type_kind =
@@ -5147,7 +5174,7 @@ let typecheck_regular_type_def_body ctx ~is_repr_of_external env
                   lbl_descr.Env.TypeInformation.field_mut,
                   lbl_descr.Env.TypeInformation.field_scheme))
                fields_descriptions);
-          Env.TypeInformation.type_identity = type_identity ;
+          Env.TypeInformation.type_identity = type_sch ;
           Env.TypeInformation.type_params = vars_of_mapping ;
           Env.TypeInformation.type_arity = nb_params } in
       (* Extend the environment by the type itself. *)
@@ -5321,11 +5348,7 @@ let pre_insert_type_definitions ctx type_defs vmapps env =
           (* Make the type constructor... We know it's vname. Now its
              hosting module is the current one because it is defined
              inside it, eh ! *)
-          let futur_type_type =
-            Types.type_basic
-              (Types.make_type_constructor
-                 ctx.current_unit (Parsetree_utils.name_of_vname type_name))
-              vars_of_mapping in
+          let futur_type_type = Types.type_variable () in
           Types.end_definition () ;
           let proto_identity =
             Types.build_type_def_scheme
