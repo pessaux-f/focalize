@@ -968,7 +968,7 @@ let make_fake_let_def_from_methods meths_infos =
     match List.hd meths_infos with (_, _, _, _, op, _) -> op in
   let fake_bindings =
     List.map
-      (fun (name, pnames, sch, body, opt_term_proof, lflags) ->
+      (fun (name, pnames, sch, body, _, _) ->
         let fake_binding_desc = {
           Parsetree.b_name = name ;
           Parsetree.b_params = List.map (fun n -> (n, None)) pnames ;
@@ -1208,7 +1208,7 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
        gen_doc_external_translation out_fmt ext_transl ;
        List.iter
          (fun ext_binding ->
-           let (vname, ext_trans) = ext_binding.Parsetree.ast_desc in
+           let (vname, _) = ext_binding.Parsetree.ast_desc in
            Format.fprintf out_fmt "<@[<h 2>foc:external-ty-value-mapping>@\n" ;
            Format.fprintf out_fmt "<foc:fcl-name>%a</foc:fcl-name>@\n"
              Utils_docgen.pp_xml_vname vname ;
@@ -1269,7 +1269,7 @@ let gen_doc_pcm out_fmt env ~current_unit = function
           gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip)
         ty_descrs ;
       env
-  | Infer.PCM_let_def (let_def, schemes) ->
+  | Infer.PCM_let_def (let_def, _) ->
       Types.purge_type_simple_to_xml_variable_mapping () ;
       (* Build as many fake history and doc as there are bindings. *)
       let empty_from_n_docs =

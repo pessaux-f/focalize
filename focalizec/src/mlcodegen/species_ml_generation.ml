@@ -49,8 +49,8 @@ let build_collections_carrier_mapping ~current_unit species_descr =
              capitalized and OCaml type variable are always syntactically
              lowercase. *)
           let carrier_type_variable_name =
-            "'" ^ (String.uncapitalize n_as_string) ^ (string_of_int !cnt) ^
-            "_T" in
+            "'" ^ (String.uncapitalize_ascii n_as_string) ^
+            (string_of_int !cnt) ^ "_T" in
           incr cnt ;
           (* Now, build the "collection type" this name will be bound to.
              According to how the "collection type" of parameters are built,
@@ -64,7 +64,8 @@ let build_collections_carrier_mapping ~current_unit species_descr =
              parameter's carrier type seen from OCaml. Same remark than above
              for lowercase/uppercase. *)
           let carrier_type_variable_name =
-            "'" ^ (String.uncapitalize (Parsetree_utils.name_of_vname n)) ^
+            "'" ^
+            (String.uncapitalize_ascii (Parsetree_utils.name_of_vname n)) ^
             (string_of_int !cnt) ^ "_T" in
           incr cnt ;
           (type_coll,
@@ -981,7 +982,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
            (* Now really generate the code of by what to instanciate. *)
            (match instancied_with with
             | Misc_common.IPI_by_toplevel_collection (coll_mod, coll_name) ->
-                let capitalized_coll_mod = String.capitalize coll_mod in
+                let capitalized_coll_mod = String.capitalize_ascii coll_mod in
                 let prefix =
                   if coll_mod = current_unit then ""
                   else capitalized_coll_mod ^ "." in
@@ -1229,7 +1230,7 @@ let generate_collection_generator ctx env compiled_species_fields =
           defined_from_mod Sourcify.pp_vname defined_from_species ;
       if defined_from_mod <> ctx.Context.scc_current_unit then
         Format.fprintf out_fmter "%s.@,"
-          (String.capitalize defined_from_mod) ;
+          (String.capitalize_ascii defined_from_mod) ;
       Format.fprintf out_fmter "%a.@,%a"
         Parsetree_utils.pp_vname_with_operators_expanded defined_from_species
         Parsetree_utils.pp_vname_with_operators_expanded
@@ -1581,7 +1582,8 @@ let apply_collection_generator_to_parameters ctx env collection_body_params
                Format.fprintf out_fmter "@ " ;
                (match corresponding_effective_opt_fname with
                 | Some fname ->
-                    Format.fprintf out_fmter "%s." (String.capitalize fname)
+                    Format.fprintf out_fmter "%s."
+                      (String.capitalize_ascii fname)
                 | None -> ()) ;
                (* Collection name "." species method name. *)
                Format.fprintf out_fmter "%a.%a"
@@ -1639,16 +1641,16 @@ let print_implemented_species_as_ocaml_module ~current_unit out_fmter
    | Parsetree.I_global (Parsetree.Vname vname) ->
        (* Local species, so no need to find it in another ML "file-module". *)
        Format.fprintf out_fmter "%s"
-         (String.capitalize (Parsetree_utils.name_of_vname vname))
+         (String.capitalize_ascii (Parsetree_utils.name_of_vname vname))
    | Parsetree.I_global (Parsetree.Qualified (fname, vname)) ->
        (* If the specified module name is the current compilation unit, *)
        (* then again no need to find the species's module in another ML *)
        (* "file-module" otherwise we explicitely prefix by the module   *)
        (* name corresponding to the filename.                           *)
        if fname <> current_unit then
-         Format.fprintf out_fmter "%s." (String.capitalize fname) ;
+         Format.fprintf out_fmter "%s." (String.capitalize_ascii fname) ;
        Format.fprintf out_fmter "%s"
-         (String.capitalize (Parsetree_utils.name_of_vname vname))
+         (String.capitalize_ascii (Parsetree_utils.name_of_vname vname))
 ;; (* [Unsure] String.capitalize nécessaire ? *)
 
 

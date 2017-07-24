@@ -1489,7 +1489,7 @@ let build_collection_generator_arguments_for_params_methods out_fmter
 
 
 
-let generate_collection_generator ctx print_ctx env compiled_species_fields
+let generate_collection_generator ctx env compiled_species_fields
     abstracted_params_methods_in_record_type =
   let current_species_name = snd ctx.Context.scc_current_species in
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -1728,7 +1728,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
       Sourcify.pp_vname species_name ;
   (* Start the chapter encapsulating the species representation. *)
   let module_name =
-    String.capitalize (Parsetree_utils.name_of_vname species_name) in
+    String.capitalize_ascii (Parsetree_utils.name_of_vname species_name) in
   Format.fprintf out_fmter "@[<2>(; Module %s. ;)@\n" module_name;
   (* Insert in the environment the value bindings of the species methods and
      the species bindings for its parameters. This is needed since in Dk
@@ -1833,7 +1833,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
            recovered with the above [params_carriers_abstr_for_record]. *)
         abstr_params_methods_in_coll_gen) =
         generate_collection_generator
-          ctxt_ccmap print_ctx env' compiled_fields
+          ctxt_ccmap env' compiled_fields
           abstracted_params_methods_in_record_type in
       (* From this, we must remove parameters whose methods list is empty.
          In fact, they correspond to entity parameters. Since to generate

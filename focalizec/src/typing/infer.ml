@@ -5328,7 +5328,7 @@ let typecheck_type_def_body_simple ctx env ~env_with_protos ~futur_type_type
 (** Return the environment extended with the proto-type scheme of all the
     type definitions mullually defined and the list of the created proto-types
     of the type definitions. *)
-let pre_insert_type_definitions ctx type_defs vmapps env =
+let pre_insert_type_definitions type_defs vmapps env =
   List.fold_left2
     (fun (env_accu, pre_tys_accu) ty_def vmapp ->
       let tydef_body = ty_def.Parsetree.ast_desc.Parsetree.td_body in
@@ -5400,7 +5400,7 @@ let typecheck_type_defs ctx env type_defs =
   (* Now, we must create the environment containing the proto-types of each
      definition, in case of mutually recursive type definitions. *)
   let (env_with_protos, reved_futur_type_types) =
-     pre_insert_type_definitions ctx type_defs vmapps env in
+     pre_insert_type_definitions type_defs vmapps env in
   (* Put the list in the right order. *)
   let futur_type_types = List.rev reved_futur_type_types in
   (* Now, really typecheck the definitions. Attention, the returned description

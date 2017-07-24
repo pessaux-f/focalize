@@ -20,7 +20,7 @@ let mk_ast thing = {
 
 (* Focalize identifiers generation. *)
 
-let gen_ident var_name = if String.capitalize var_name = var_name then
+let gen_ident var_name = if String.capitalize_ascii var_name = var_name then
     Parsetree.Vuident var_name
 	else Parsetree.Vlident var_name
 let gen_iident var_name = Parsetree.Viident var_name

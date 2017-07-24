@@ -139,7 +139,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
           compiled one, then do not qualify the identifier. *)
        if mod_name <> ctx.Context.rcc_current_unit then
          Format.fprintf out_fmter "%s.%a"
-           (String.capitalize mod_name)
+           (String.capitalize_ascii mod_name)
            Parsetree_utils.pp_vname_with_operators_expanded vname
        else
          Format.fprintf out_fmter "%a"
@@ -232,7 +232,8 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                       ourselves and moreover belongs to another compilation
                       unit. May be a species from the toplevel of another
                       FoCaL source file. *)
-                   let capitalized_modname = String.capitalize module_name in
+                   let capitalized_modname =
+                     String.capitalize_ascii module_name in
                    Format.fprintf out_fmter
                      "%s.%a.%a"
                      capitalized_modname
@@ -293,7 +294,7 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
               one must not qualify it. *)
            if fname <> ctx.Context.rcc_current_unit then
              Format.fprintf ctx.Context.rcc_out_fmter "%s.%a"
-               (String.capitalize fname)
+               (String.capitalize_ascii fname)
                Parsetree_utils.pp_vname_with_operators_expanded name
            else
              Format.fprintf ctx.Context.rcc_out_fmter "%a"
@@ -305,7 +306,7 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
 
 
 let pp_to_ocaml_label_ident ctx ppf lab_ident =
-  (* Just mask the previous [lbl_ident] to simply remove the only possible 
+  (* Just mask the previous [lbl_ident] to simply remove the only possible
      constructor [LI], and to get the interesting information. *)
   let Parsetree.LI lab_ident = lab_ident.Parsetree.ast_desc in
   match lab_ident.Parsetree.ast_desc with
@@ -320,7 +321,7 @@ let pp_to_ocaml_label_ident ctx ppf lab_ident =
               (* If the constructor belongs to the current compilation unit
                  then one must not qualify it. *)
               if modname <> ctx.Context.rcc_current_unit then
-                Format.fprintf ppf "%s." (String.capitalize modname) ;
+                Format.fprintf ppf "%s." (String.capitalize_ascii modname) ;
               n) in
        Format.fprintf ppf "%a"
          Parsetree_utils.pp_vname_with_operators_expanded vname
