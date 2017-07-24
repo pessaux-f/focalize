@@ -3189,6 +3189,10 @@ let generate_termination_proof_for_Function ctx print_ctx env ~self_manifest
     It generates a termination order and a termination proof instead of
     using fake and generic ones.
 
+    {b Note}: The [ctx] must already contain the
+    [scc_lambda_lift_params_mapping] for all the mutually recursive defined
+    functions.
+
     {b Visibility}: Not exported outside this module.
  *************************************************************************** *)
 let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
@@ -3200,16 +3204,6 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        failwith "recursive logical : TODO"  (* [Unsure] *)
    | Parsetree.BB_computational body_expr ->
        let species_name = snd (ctx.Context.scc_current_species) in
-       (* Extend the context with the mapping between these recursive
-          functions and their extra arguments. Since we are in Coq, we
-          need to take care of the logical definitions and of the
-          explicite types abstraction management. *)
-       let ctx' = {
-         ctx with
-           Context.scc_lambda_lift_params_mapping =
-             [(name,
-               Misc_common.make_params_list_from_abstraction_info
-                 ~care_logical: true ~care_types: true ai)] } in
        (* Open the "Section" and "Module" for the recursive definition. *)
        Format.fprintf out_fmter "@\n@[<2>Module Termination_%a_namespace.@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name;
@@ -3237,7 +3231,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
            [] body_expr in
        (* ---> Generate the order depending on the kind of proof. *)
        generate_termination_order_for_Function
-         ctx' print_ctx env name params_with_type generalized_vars ai
+         ctx print_ctx env name params_with_type generalized_vars ai
          ai.Env.TypeInformation.ad_dependencies_from_parameters
          generated_fields opt_term_pr ;
        (* ---> Start the Coq "Section" containing the termination theorem as
@@ -3246,7 +3240,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          Parsetree_utils.pp_vname_with_operators_expanded name ;
        (* ---> Generate the termination proof. *)
        let (abstracted_methods, new_ctx, new_print_ctx) =
-         generate_termination_proof_for_Function ctx' print_ctx env
+         generate_termination_proof_for_Function ctx print_ctx env
            ~self_manifest name params_with_type generalized_vars ai
            ai.Env.TypeInformation.ad_dependencies_from_parameters
            generated_fields recursive_calls opt_term_pr in
@@ -3421,22 +3415,16 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
     "Fixpoint" instead of "Function". This function is assumed to be
     structurally recursive with its argument [decr_arg_name] decreasing.
 
+    {b Note}: The [ctx] must already contain the
+    [scc_lambda_lift_params_mapping] for all the mutually recursive defined
+    functions.
+
     {b Visibility}: Not exported outside this module.
  *************************************************************************** *)
 let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
     generated_fields from name params decr_arg_name proof_loc scheme body ai
     ~is_first ~is_last =
   let out_fmter = ctx.Context.scc_out_fmter in
-  (* Extend the context with the mapping between these recursive
-     functions and their extra arguments. Since we are in Coq, we need to take
-     care of the logical definitions and of the explicite types abstraction
-     management. *)
-  let ctx' = {
-    ctx with
-      Context.scc_lambda_lift_params_mapping =
-        [(name,
-          Misc_common.make_params_list_from_abstraction_info
-            ~care_logical: true ~care_types: true ai)] } in
   (* Now, generate the prelude of the method introduced by "let rec". *)
   if is_first then
     Format.fprintf out_fmter "@[<2>Fixpoint %a@ "
@@ -3447,7 +3435,7 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
   let (generalized_vars, _) = Types.scheme_split scheme in
   let (abstracted_methods, new_ctx, new_print_ctx) =
     generate_field_definition_prelude
-      ~in_section: false ctx' print_ctx env generalized_vars
+      ~in_section: false ctx print_ctx env generalized_vars
       ai.Env.TypeInformation.ad_min_coq_env
       ai.Env.TypeInformation.ad_used_species_parameter_tys
       ai.Env.TypeInformation.ad_dependencies_from_parameters generated_fields in
@@ -3481,13 +3469,17 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
 
 
 (** ***************************************************************************
-   {b Descr}: Is in charge to generate the Coq code for recursive functions.
-   It deals and differentiate structural and non-structural recursive
-   functions.
+    {b Descr}: Is in charge to generate the Coq code for recursive functions.
+    It deals and differentiate structural and non-structural recursive
+    functions.
+
+    {b Note}: The [ctx] must already contain the
+    [scc_lambda_lift_params_mapping] for all the mutually recursive defined
+    functions.
 
     {b Visibility}: Not exported outside this module.
  *************************************************************************** *)
-let rec generate_recursive_let_definition ctx print_ctx env ~self_manifest
+let rec generate_recursive_let_definitions ctx print_ctx env ~self_manifest
     fields_abstraction_infos generated_fields ~is_first l =
   match l with
    | [] -> []
@@ -3560,9 +3552,35 @@ let rec generate_recursive_let_definition ctx print_ctx env ~self_manifest
           [Unsure]: the structural argument must be the first one for all the
                     recursive functions, and have the same name. *)
        cfield_mem ::
-       (generate_recursive_let_definition ctx print_ctx env ~self_manifest
+       (generate_recursive_let_definitions ctx print_ctx env ~self_manifest
           fields_abstraction_infos generated_fields ~is_first: false q)
 )
+;;
+
+
+
+(** Mostly build the context where the [scc_lambda_lift_params_mapping] is
+    present for all the mutually recursive defined functions, then
+    directly give the hand to [generate_recursive_let_definitions]. *)
+let rec prepare_recursive_let_definitions ctx print_ctx env ~self_manifest
+    fields_abstraction_infos generated_fields l =
+  let ctx' =
+    List.fold_left
+      (fun accu_ctx (_, name, _, _, _, _, _, _) ->
+        (* Extend the context with the mapping between these recursive functions
+           and their extra arguments. Since we are in Coq, we need to take care
+           of the logical definitions and of the explicite types abstraction
+           management. *)
+        let ai = List.assoc name fields_abstraction_infos in
+        let old_map = accu_ctx.Context.scc_lambda_lift_params_mapping in
+        let new_map =
+          (name, Misc_common.make_params_list_from_abstraction_info
+             ~care_logical: true ~care_types: true ai)
+          :: old_map in
+        { accu_ctx with Context.scc_lambda_lift_params_mapping = new_map })
+    ctx l in
+  generate_recursive_let_definitions ctx' print_ctx env ~self_manifest
+    fields_abstraction_infos generated_fields ~is_first: true l
 ;;
 
 
@@ -3631,9 +3649,9 @@ let generate_methods ctx print_ctx env ~self_manifest fields_abstraction_infos
       Misc_common.CSF_let compiled_field
   | Env.TypeInformation.SF_let_rec l ->
       let compiled_fields =
-        generate_recursive_let_definition
+        prepare_recursive_let_definitions
           ctx print_ctx env ~self_manifest fields_abstraction_infos
-          generated_fields l ~is_first: true in
+          generated_fields l in
       Misc_common.CSF_let_rec compiled_fields
   | Env.TypeInformation.SF_theorem  (from, name, _, logical_expr, pr, _) ->
       let abstraction_info = List.assoc name fields_abstraction_infos in
