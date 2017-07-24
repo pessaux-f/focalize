@@ -43,7 +43,9 @@ BYT_OBJS =\
 include $(ROOT_DIR)/Makefile.common
 
 CAML_INCLUDES=-I ../basement -I ../parser -I ../typing
-CAML_FLAGS = -w A-4-9-50 -warn-error $(WARN_ERROR)
+# [Unsure] Exclude warning 32 (value not used) because there are tons of them.
+# When refactoring this code, we must reativate this warning.
+CAML_FLAGS = -w A-4-9-50-32 -warn-error $(WARN_ERROR)
 
 EXE_NAME=focalizetest
 

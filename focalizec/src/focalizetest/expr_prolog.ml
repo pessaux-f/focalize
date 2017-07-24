@@ -143,7 +143,7 @@ let minifoc_expr_of_myexpr e =
         (*  global call  *)
     | MGlob_id(i) ->
         if Focalize_inter.is_constructor i then
-          FValue(FConstruct(String.uncapitalize (ident_name i), []))
+          FValue (FConstruct (String.uncapitalize_ascii (ident_name i), []))
         else
           FBasic(ident_name i, [])
     | MApp(MGlob_id(i), _, l) ->
@@ -153,7 +153,7 @@ let minifoc_expr_of_myexpr e =
         let func = 
           fun lv ->
             if Focalize_inter.is_constructor i then
-              FValue(FConstruct(String.uncapitalize (ident_name i), lv))
+              FValue (FConstruct (String.uncapitalize_ascii (ident_name i), lv))
             else
               FBasic(ident_name i, lv) in
         add_let l func [] aux
