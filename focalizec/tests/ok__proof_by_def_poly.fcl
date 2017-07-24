@@ -1,0 +1,40 @@
+open "basics" ;;
+
+let rec blabla (xx) =
+  match xx with
+  | [] -> 0
+  | x :: y -> 1 + blabla (y)
+;;
+
+let id (x) = x ;;
+
+theorem bla: all x : int, id (x) = x
+proof = by definition of id ;;
+
+
+type set_t ('a) =
+  | Empty
+  | Elem ('a, set_t ('a))
+;;
+
+let rec f (s) =
+  match s with
+  | Empty -> false
+  | Elem (_, s1) -> f (s1)  (* _ killer ! Must be transformer into a fresh
+          variable that must then be introduced in the context with the right
+          type. *)
+
+;;
+
+let add (x, s) = Elem (x, s) ;;
+
+let rec dbelongs (x, s) =
+  match s with
+   | Empty -> false
+   | Elem (e, s) -> if e = x then true else dbelongs (x, s)
+termination proof = structural s
+;;
+
+theorem added_forcibly_belongs: all x : int, all s : set_t (int),
+  dbelongs (x, add (x, s))
+proof = by definition of add, dbelongs type set_t ;;
