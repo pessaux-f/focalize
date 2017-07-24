@@ -83,6 +83,7 @@ val list_indices_of_present_in : all: 'a list -> subset: 'a list -> int list
 val list_index_of : 'a -> 'a list -> int
 
 
+val color_available : unit -> bool
 
 (** Effects to the terminal for pretty-printing tools. *)
 
