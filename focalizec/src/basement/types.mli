@@ -27,21 +27,18 @@ type type_simple_view = private
   | ST_var of type_variable                             (** Type variable. *)
   | ST_arrow of (type_simple_view * type_simple_view)   (** Functional type. *)
   | ST_tuple of type_simple_view list                   (** Tuple type. *)
-  | ST_sum_arguments of type_simple_view list
-      (** Type of sum type value constructor's arguments. To prevent them from
+  | ST_sum_arguments of type_simple_view list  (** Type of sum
+          type value constructor's arguments. To prevent them from
           being confused with tuples. *)
   | ST_prop                                             (** The type of logical
                                                             formulae *)
-  | ST_construct of
-      (** Type constructor, possibly with arguments. Encompass the types
-          related to records and sums. Any value of these types are typed as
-          a [ST_construct] whose name is the name of the record (or sum)
-          type. *)
-      (type_name * type_simple_view list)
+  | ST_construct of (type_name * type_simple_view list)  (** Type constructor,
+          possibly with arguments. Encompass the types related to records
+          and sums. Any value of these types are typed as a [ST_construct]
+          whose name is the name of the record (or sum) type. *)
   | ST_self_rep     (** Carrier type of the currently analysed species. *)
-  | ST_species_rep of
-      (** Carrier type of a collection hosted in the specified module. *)
-      (fname * collection_name)
+  | ST_species_rep of  (fname * collection_name)  (** Carrier type of a
+          collection hosted in the specified module. *)
 
 val view_type_simple : type_simple -> type_simple_view
 
@@ -85,6 +82,7 @@ val type_prop : unit -> type_simple
 val type_rep_species :
   species_module: fname -> species_name: collection_name -> type_simple
 val is_generalized_type_variable : type_variable -> bool
+
 (** Generate the carrier type of the currently analysed species. *)
 val type_self : unit -> type_simple
 val is_bool_or_self_type : type_simple -> bool

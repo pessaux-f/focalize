@@ -16,56 +16,45 @@
 
 
 
-(* ***************************************************************** *)
 (** {b Descr} : File ("module") name (without the ".fcl" extension).
 
-    {b Exported} : Yes.                                              *)
-(* ***************************************************************** *)
+    {b Exported} : Yes. *)
 type fname = string ;;
 
 
 
-(* ***************************************************** *)
 (** {b Descr} : Represents a collection or species name.
 
-    {b Exported} : Yes.                                  *)
-(* ***************************************************** *)
+    {b Exported} : Yes. *)
 type collection_name = string ;;
 
 
 
-(* *********************************************************************** *)
 (** {b Descr} : Type constructor name. Records both the constructor's name
     and it's hosting module (file) name).
 
-    {b Exported} : Abstract.                                               *)
-(* *********************************************************************** *)
+    {b Exported} : Abstract. *)
 type type_name =
-  (fname *      (** Compilation unit where the type constructor was defined. *)
-   string)      (** Name of the constructor (for instance "int"). *)
+  (fname *      (* Compilation unit where the type constructor was defined. *)
+   string)      (* Name of the constructor (for instance "int"). *)
 ;;
 
 
 
-(* ****************************************************************** *)
 (** {b Descr} : Binding level considered as describing the level of a
     generalized type variable.
 
-    {b Exported} : No.                                                *)
-(* ****************************************************************** *)
+    {b Exported} : No. *)
 let generic_level = 100000000 ;;
 
 
 
-(* **************************************************** *)
 (** {b Descr} : Describes the type algebra of FoCaLize.
-    Actually, this is a view of it. Internally type_simple
-    and type_simple_view are the same type but only
-    the definition of type_simple_view is (privately)
-    exported.
+    Actually, this is a view of it. Internally [type_simple] and
+    [type_simple_view] are the same type but only the definition of
+    [type_simple_view] is (privately) exported.
 
-    {b Exported} : Private.                             *)
-(* **************************************************** *)
+    {b Exported} : Private. *)
 type type_simple_view =
   | ST_var of type_variable                             (** Type variable. *)
   | ST_arrow of (type_simple_view * type_simple_view)   (** Functional type. *)
@@ -75,50 +64,41 @@ type type_simple_view =
           being confused with tuples. *)
   | ST_prop                                             (** The type of logical
                                                             formulae *)
-  | ST_construct of
-      (** Type constructor, possibly with arguments. Encompass the types
-          related to records and sums. Any value of these types are typed as
+  | ST_construct of (type_name * type_simple_view list) (** Type constructor,
+          possibly with arguments. Encompass the types related to records and
+          sums. Any value of these types are typed as
           a [ST_construct] whose name is the name of the record (or sum)
           type. *)
-      (type_name * type_simple_view list)
   | ST_self_rep     (** Carrier type of the currently analysed species. *)
-  | ST_species_rep of
-      (** Carrier type of a collection hosted in the specified module. *)
-      (fname * collection_name)
+  | ST_species_rep of (fname * collection_name)  (** Carrier type of a
+          collection hosted in the specified module. *)
 
 
-(* *********************************************************** *)
 (** {b Descr} : Non-canonical internal version of simple types.
 
-    {b Exported} : Abstract.                                   *)
-(* *********************************************************** *)
+    {b Exported} : Abstract. *)
 and type_simple = type_simple_view
 
-(* ************************************************************************** *)
+
 (** {b Descr} : Variable of type (type variable).
     Attention, they introduce the requirement for types to be repr'ed in
     order to get their canonical representation !
 
-    {b Exported} : No.
- **************************************************************************** *)
+    {b Exported} : No. *)
 and type_variable = {
-  (** Binding level of the type. *)
-  mutable tv_level : int ;
-  (** Value of the type variable. *)
-  mutable tv_value : type_variable_value
-  (** Unique integer to trace identity of variables when debugging. *)
+  mutable tv_level : int ;   (** Binding level of the type. *)
+  mutable tv_value : type_variable_value   (** Value of the type variable. *)
+  (* Unique integer to trace identity of variables when debugging. *)
   (* DEBUG
   ; tv_debug : int *)
 }
 
 
 
-(* ******************************************************************* *)
 (** {b Descr} : Value of a type link (generalization principle of type
     variable's value.
 
-    {b Exported} : No.                                                 *)
-(* ******************************************************************* *)
+    {b Exported} : No. *)
 and type_variable_value =
   | TVV_unknown
   | TVV_known of type_simple
@@ -137,8 +117,8 @@ and type_variable_value =
     {b Exported} : Yes.                                                       *)
 (* ************************************************************************** *)
 type type_collection =
-  (fname *           (** The "module" hosting the collection' code. *)
-  collection_name)   (** The name of the collection as a string (not a
+  (fname *           (* The "module" hosting the collection' code. *)
+  collection_name)   (* The name of the collection as a string (not a
                          [Parsetree.vname] to prevent mutual depency between
                          the [types.ml] and [parsetree.ml] modules. And indeed,
                          a simple string is eally sufficient ! *)
@@ -445,20 +425,15 @@ let pp_type_name ppf (hosting_module, constructor_name) =
 
 
 let (pp_type_simple, pp_type_scheme) =
-  (* *********************************************************************** *)
-  (* ((type_simple * string) list) ref                                       *)
   (** {b Descr} : The mapping giving for each variable already seen the
                 name used to denote it while printing it.
 
       This mapping is purely local to the pretty-print function of type into
       the FoCaLize syntax. It is especially not shared with the type
       printing routine used to generate the OCaml, Coq or Dedukti code.
-      {b Exported} : No.                                                     *)
-  (* *********************************************************************** *)
+      {b Exported} : No. *)
   let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
 
-  (* ************************************************************************ *)
-  (* int ref                                                                  *)
   (** {b Descr} : The counter counting the number of different variables
       already seen hence printed. It serves to generate a fresh name to
       new variables to print.
@@ -467,20 +442,16 @@ let (pp_type_simple, pp_type_scheme) =
       the FoCaLize syntax. It is especially not shared with the type printing
       routine used to generate the OCaml, Coq or Dedukti code.
 
-      {b Exported} : No.                                                      *)
-  (* ************************************************************************ *)
+      {b Exported} : No. *)
   let type_variables_counter = ref 0 in
 
-  (* ************************************************************* *)
-  (* unit -> unit                                                  *)
   (** {b Descr} : Resets the variables names mapping an counter.
       This allows to stop name-sharing between type prints.
 
      {b Rem} : Not exported. This counter is purely local to the
       pretty-print function of type into the FoCaLize syntax. It is
       especially not shared with the type printing routine used to
-      generate the OCaml, Coq or Dedukti code.                     *)
-  (* ************************************************************* *)
+      generate the OCaml, Coq or Dedukti code. *)
   let reset_type_variables_mapping () =
     type_variable_names_mapping := [] ;
     type_variables_counter := 0 in
@@ -585,16 +556,13 @@ let (specialize, specialize_with_args) =
 
 
 
-  ((* ********************************************************************* *)
-   (* specialize                                                            *)
-   (* type_scheme -> type_simple                                            *)
-   (* {b Descr} : Instanciates a type scheme. This means that is makes a
+  ((* specialize
+      {b Descr} : Instanciates a type scheme. This means that is makes a
       copy of its body, replacing generalized variables by fresh variables.
       If a generalized variable appears several times it will be replace
       by the same fresh variable at these different locations.
 
-      {b Rem} : Exported oustide this module.                               *)
-   (* ********************************************************************* *)
+      {b Rem} : Exported oustide this module. *)
    (fun scheme ->
      (* Copy the type scheme's body. *)
      let instance = copy_type_simple scheme.ts_body in
@@ -604,15 +572,12 @@ let (specialize, specialize_with_args) =
 
 
 
-   (* *************************************************************** *)
-   (* specialize_with_args                                            *)
-   (* type_scheme -> type_simple list -> type_simple                  *)
-   (* {b Descr} : Performs the same job than [specialize] on the type
+   (* specialize_with_args
+      {b Descr} : Performs the same job than [specialize] on the type
       scheme but directly instanciate the scheme's parameters by the
       types provided in the list.
 
-      {b Rem} : Exported oustide this module.                         *)
-   (* *************************************************************** *)
+      {b Rem} : Exported oustide this module. *)
    (fun scheme tys ->
      (* Initialize the variable mapping with the types to simulate the fact
         that these variables have already be seen and are bound the types we
@@ -628,7 +593,7 @@ let (specialize, specialize_with_args) =
 
 
 
-(* ******************************************************************** *)
+
 (* and_abstract: (fname * collection_name) option -> type_simple ->     *)
 (*   type_simple                                                        *)
 (** {b Descr} : Copies the [ty] type expression (hence breaking sharing
@@ -638,8 +603,7 @@ let (specialize, specialize_with_args) =
     [~and_abstract] collection's carrier type if provided
     (i.e. different from [None]).
 
-    {b Rem} Exported outside this module.                               *)
-(* ******************************************************************** *)
+    {b Rem} Exported outside this module. *)
 let copy_type_simple_but_variables ~and_abstract =
   let seen = ref [] in
   (* Internal recursive copy same stuff than for [specialize] stuff. *)
@@ -679,8 +643,6 @@ let copy_type_simple_but_variables ~and_abstract =
 
 
 
-(* ************************************************************************ *)
-(* type_collection -> type_scheme -> type_scheme                            *)
 (** {b Descr} : Like [copy_type_simple_but_variables] but operate on the
     [type_simple] making the scheme's body. This function is needed for
     the collection substitution because we make it also operating on the
@@ -689,8 +651,7 @@ let copy_type_simple_but_variables ~and_abstract =
     {b Rem} : Because the compiler doesn't use the [Parsetree.ast_type] field
     of the AST, the result of this function will never be used internally
     by the compiler.
-    Exported outside this module.                                           *)
-(* ************************************************************************ *)
+    Exported outside this module. *)
 let abstract_in_scheme coll_to_abstract sch =
   let body' =
     copy_type_simple_but_variables
@@ -700,14 +661,10 @@ let abstract_in_scheme coll_to_abstract sch =
 
 
 
-(* *************************************************************** *)
-(* type_simple -> type_scheme                                      *)
-(** {b Descr} : Generalize a type in order to create a type scheme
-    having the type's as body. The scheme body physically shares
-    the type's structure.
+(** {b Descr} : Generalize a type in order to create a type scheme having the
+    type's as body. The scheme body physically shares the type's structure.
 
-    {b Rem} : Exported oustide this module.                        *)
-(* *************************************************************** *)
+    {b Rem} : Exported oustide this module. *)
 let generalize =
   (* The list of found generalizable variables. We accumulate inside it by
      side effect. *)
@@ -769,29 +726,24 @@ let build_type_def_scheme ~variables ~body =
 
 
 
-(* ************************************************************************ *)
-(* type_simple -> type_scheme                                               *)
 (** {b Descr} : Creates a type scheme whose body is the type passed as
     argument in which we do not perform any generalisation. Hence, the type
     scheme is trivially non-polymorphic.
     This is very useful to insert the scheme of a recursive function in the
     typing environment used to type-check the body of this function.
 
-   {b Exported} : Yes.                                                      *)
-(* ************************************************************************ *)
+   {b Exported} : Yes. *)
 let trivial_scheme ty = { ts_vars = [] ; ts_body = ty } ;;
 
 
 
-(* ************************************************************************** *)
 (** {b Descr} : Splits a type scheme in two parts:
     - the list of generalized variables
     - the body
     WITHOUT doing any specialization ! In other words, what we get with this
     function, is not an instance of the scheme, but simply the scheme itself
     dissecated in its 2 components.
-   {b Exported} : Yes.                                                        *)
-(* ************************************************************************** *)
+   {b Exported} : Yes. *)
 let scheme_split sch = sch.ts_vars, sch.ts_body ;;
 
 
@@ -812,14 +764,12 @@ let rec lowerize_levels max_level ty =
 
 
 
-(* *********************************************************************** *)
 (** {b Descr} : Checks if a scheme contains type variables (generalized or
     not generalized).
     Such a check is required because species methods are not polymorphic
     (c.f. Virgile Prevosto's Phd section 3.3, page 24).
 
-    {b Rem} : Exported oustide this module.                                *)
-(* *********************************************************************** *)
+    {b Rem} : Exported oustide this module. *)
 let scheme_contains_variable_p scheme =
   let rec rec_check ty =
     let ty = repr ty in
@@ -835,8 +785,6 @@ let scheme_contains_variable_p scheme =
 
 
 
-(* *********************************************************************** *)
-(* type_simple -> type_simple                                              *)
 (** {b Descr} : Extracts from a functionnal type the right-hand part of
     the arrow. This function assumes that the type IS an arrow and must be
     called only with an arrow type. It is designed to recover the part of
@@ -853,8 +801,7 @@ let scheme_contains_variable_p scheme =
     a unification (and not by the physical equality ensured by the
     "in-place" modifications of the unification).
 
-    {b Rem} : Exported outside this module.                                *)
-(* *********************************************************************** *)
+    {b Rem} : Exported outside this module. *)
 let extract_fun_ty_result ~self_manifest ty =
   let ty = repr ty in
   match ty with
@@ -874,12 +821,12 @@ let extract_fun_ty_result ~self_manifest ty =
    | _ -> assert false
 ;;
 
-(* *********************************************************************** *)
-(* type_simple -> type_simple                                              *)
-(** {b Descr} : Extracts from a product type the list of simple types it is composed of.
-                Sum arguments are considered as a product
-    {b Rem} : Exported outside this module.                                *)
-(* *********************************************************************** *)
+
+
+(** {b Descr} : Extracts from a product type the list of simple types it is
+    composed of. Sum arguments are considered as a product.
+
+    {b Rem} : Exported outside this module. *)
 let extract_prod_ty ~self_manifest ty =
   let ty = repr ty in
   match ty with
@@ -900,8 +847,6 @@ let extract_prod_ty ~self_manifest ty =
 
 
 
-(* *********************************************************************** *)
-(* type_simple -> type_simple                                              *)
 (** {b Descr} : Extracts from a functionnal type the left-hand part of the
     arrow. This function assumes that the type IS an arrow and must be
     called only with an arrow type. It is designed to recover the part of
@@ -918,8 +863,7 @@ let extract_prod_ty ~self_manifest ty =
     a unification (and not by the physical equality ensured by the
     "in-place" modifications of the unification).
 
-    {b Rem} : Exported outside this module.                                *)
-(* *********************************************************************** *)
+    {b Rem} : Exported outside this module. *)
 let extract_fun_ty_arg ~self_manifest ty =
   let ty = repr ty in
   match ty with
@@ -941,14 +885,12 @@ let extract_fun_ty_arg ~self_manifest ty =
 
 
 
-(* ********************************************************************* *)
-(* type_simple -> bool                                                   *)
 (** {b Descr} : Check if a [type_simple] contains a reference to "Self".
 
-[Unsure] Ne devra plus être exportée une fois que les dépendances sur "rep"
-seront correctement utilisées.
-    {b Rem} : Exported oustide this module.                              *)
-(* ********************************************************************* *)
+    [Unsure] Ne devra plus être exportée une fois que les dépendances sur "rep"
+    seront correctement utilisées.
+
+    {b Rem} : Exported oustide this module. *)
 let refers_to_self_p ty =
   let rec test t =
     let t =  repr t in
@@ -965,12 +907,9 @@ let refers_to_self_p ty =
 
 
 
-(* ********************************************************************* *)
-(* type_simple -> bool                                                   *)
 (** {b Descr} : Check if a [type_simple] contains a reference to "prop".
 
-    {b Rem} : Exported oustide this module.                              *)
-(* ********************************************************************* *)
+    {b Rem} : Exported oustide this module. *)
 let refers_to_prop_p ty =
   let rec test t =
     let t =  repr t in
@@ -987,6 +926,7 @@ let refers_to_prop_p ty =
 ;;
 
 
+
 let (reset_deps_on_rep,
      get_def_dep_on_rep, set_def_dep_on_rep,
      get_decl_dep_on_rep, set_decl_dep_on_rep,
@@ -994,59 +934,60 @@ let (reset_deps_on_rep,
   let found_decl = ref false in
   let found_def = ref false in
   (
-   (* *********************************************************************** *)
-   (* reset_deps_on_rep : unit -> unit                                        *)
-   (** {b Descr} : Reset to [false] the flags telling if decl and def
+   (* reset_deps_on_rep
+      {b Descr} : Reset to [false] the flags telling if decl and def
        dependencies on the carrier were found. Because research of such
        dependencies are performed in the scope of a species field (i.e. "let",
        "let ...rec", "property", "theorem"), the liveness of these 2 flags is
        the same. Hence they always get reset at the same time.
 
-       {b Rem} : Exported outside this module.                                *)
-   (* *********************************************************************** *)
+       {b Rem} : Exported outside this module. *)
    (fun () ->
      found_decl := false ;
      found_def := false),
-   (* get_def_dep_on_rep : unit -> bool *)
+
+
+   (* get_def_dep_on_rep *)
    (fun () -> !found_def),
-   (* ********************************************************************* *)
-   (* set_def_dep_on_rep : unit -> unit                                     *)
-   (** {b Descr} : Turns on the flag telling that a def-dependency on the
+
+   
+   (* set_def_dep_on_rep
+      {b Descr} : Turns on the flag telling that a def-dependency on the
        carrier was found.
        This function is only called by the unification function when one of
        the [SELF] rules of Virgile Prevosto's Phd is used (c.f. Definition
        28 page 50) and rules in Definition 9 page 27).
 
-       [Rem] : Not exported outside this module.                            *)
-   (* ********************************************************************* *)
+       [Rem] : Not exported outside this module. *)
    (fun () -> found_def := true),
-   (* get_decl_dep_on_rep : unit -> bool *)
+
+
+   (* get_decl_dep_on_rep *)
    (fun () -> !found_decl),
-   (* ********************************************************************* *)
-   (* set_decl_dep_on_rep : unit -> unit                                    *)
-   (** {b Descr} : Turns on the flag telling that a decl-dependency on the
-       carrier was found.
 
-       [Rem] : Not exported outside this module.                            *)
-   (* ********************************************************************* *)
+
+   (* set_decl_dep_on_rep
+      {b Descr} : Turns on the flag telling that a decl-dependency on the
+      carrier was found.
+
+      {b Rem} : Not exported outside this module. *)
    (fun () -> found_decl := true),
-   (* ********************************************************************** *)
-   (* check_for_decl_dep_on_self : type_simple -> unit                       *)
-   (** {b Descr} : Turns on the flag telling that a decl-dependency on the
-       carrier was found.
-       This function is called by the type inference on expressions to
-       check if the type of the expression is "Self". If so, then there is a
-       decl-dependency and the flag is turned on.
 
-       [Rem] : Exported outside this module .                                *)
-   (* ********************************************************************** *)
+
+   (* check_for_decl_dep_on_self
+      {b Descr} : Turns on the flag telling that a decl-dependency on the
+      carrier was found.
+      This function is called by the type inference on expressions to
+      check if the type of the expression is "Self". If so, then there is a
+      decl-dependency and the flag is turned on.
+
+       {b Rem} : Exported outside this module. *)
    (fun ty -> if refers_to_self_p ty then found_decl := true)
   )
 ;;
 
 
 
-(* ************************************************************************* *)
 (** {b Descr} : Test if [var] occurs inside the structure of [ty] to prevent
     creating cyclic types. This is used when unifying a variable with
     something else.
@@ -1054,8 +995,7 @@ let (reset_deps_on_rep,
     take benefit of this to check if the unified type [ty] involved "Self",
     hence has a dependency on the carrier.
 
-    {b Rem} : Non exported oustide this module.                              *)
-(* ************************************************************************* *)
+    {b Rem} : Non exported oustide this module. *)
 let occur_check ~loc var ty =
   let rec test t =
     let t = repr t in
@@ -1175,27 +1115,28 @@ let unify ~loc ~self_manifest type1 type2 =
   rec_unify type1 type2
 ;;
 
-(* ************************************************************************* *)
+
+
 (** {b Descr} : Returns a copy of the variable [v].
 
-    {b Rem} : Not exported oustide this module.                              *)
-(* ************************************************************************* *)
+    {b Rem} : Not exported oustide this module. *)
 let clone_variable v =
   {tv_value = v.tv_value;
    tv_level = v.tv_level}
 ;;
 
-(* ************************************************************************* *)
+
+
 (** {b Descr} : Copy the content of variable [v1] in [v2].
 
-    {b Rem} : Not exported oustide this module.                              *)
-(* ************************************************************************* *)
+    {b Rem} : Not exported oustide this module. *)
 let copy_variable v1 v2 =
   v2.tv_value <- v1.tv_value;
   v2.tv_level <- v1.tv_level
 ;;
 
-(* ************************************************************************* *)
+
+
 (** {b Descr} : Unifies the type scheme [ts]
     with the simple type [st].
 
@@ -1207,8 +1148,7 @@ let copy_variable v1 v2 =
     This funcition is used in the Dedukti backend to fill
     type arguments which are passed as underscores to Coq.
 
-    {b Rem} : Exported oustide this module.                              *)
-(* ************************************************************************* *)
+    {b Rem} : Exported oustide this module. *)
 let unify_with_instance ts st =
   (* First make a copy because we don't want to change the scheme. *)
   let ts_vars = List.map clone_variable ts.ts_vars in
@@ -1226,7 +1166,7 @@ let unify_with_instance ts st =
 ;;
 
 
-(* ********************************************************************* *)
+
 (** {b Descr} : Describes the kind of collection must be used to replace
     (i.e. that will be inserted instead of the replaced one) while
     performing a substitution on types.
@@ -1234,8 +1174,7 @@ let unify_with_instance ts st =
     but since it also operate on types' structure (which is abstract
     outside here) the only solution is to put it here.
 
-    {b Rem} : Exported outside this module.                              *)
-(* ********************************************************************* *)
+    {b Rem} : Exported outside this module. *)
 type substitution_by_replacement_collection_kind =
   (** The collection to put instead of the replaced is the one named in
       the argument. *)
@@ -1245,8 +1184,6 @@ type substitution_by_replacement_collection_kind =
 
 
 
-(* ************************************************************************* *)
-(* type_collection -> type_collection -> type_simple -> type_simple          *)
 (** {b Descr} : Performs the collection name substitution
     [(fname1, spe_name1)] <- [c2] inside a [type_simple].
 
@@ -1254,8 +1191,7 @@ type substitution_by_replacement_collection_kind =
       - [(fname1, spe_name1)] : The "collection type" to replace.
       - [c2] : The "collection type" to put everywhere [(fname1, spe_name1)]
              is found.
-    {b Rem} : Exported outside this module.                                  *)
-(* ************************************************************************* *)
+    {b Rem} : Exported outside this module. *)
 let subst_type_simple (fname1, spe_name1) c2 =
   let seen = ref [] in
   (* Internal recursive copy same stuff than for [specialize] stuff except
@@ -1312,12 +1248,9 @@ let subst_type_scheme (fname1, spe_name1) c2 scheme =
 
 
 
-(* ***************************************************************** *)
-(* Format.formatter -> type_collection_name -> unit                  *)
 (** {b Descr} : Pretty prints a collection' type (not carrier type).
 
-    {b Rem} : Exported outside this module.                          *)
-(* ***************************************************************** *)
+    {b Rem} : Exported outside this module. *)
 let pp_type_collection ppf (coll_module, coll_name) =
   Format.fprintf ppf "%s#%s" coll_module coll_name
 ;;
@@ -1332,16 +1265,14 @@ type species_collection_kind =
 
 
 
-(* ********************************************************************** *)
-(* {b Descr}: Describes in the [scc_collections_carrier_mapping] the kind
-   of species parameter.
-   It can either be a "IS" parameter.
-   Otherwise, it is a "IN" parameter. For Coq and Dedukti, we hence need to know
-   if the type of this parameter is built from another of our species
-   parameters of from a toplevel species/collection.
+(** {b Descr}: Describes in the [scc_collections_carrier_mapping] the kind
+    of species parameter.
+    It can either be a "IS" parameter.
+    Otherwise, it is a "IN" parameter. For Coq and Dedukti, we hence need to
+    know if the type of this parameter is built from another of our species
+    parameters of from a toplevel species/collection.
 
-   {b Rem} : Exported outside this module.                                *)
-(* ********************************************************************** *)
+    {b Rem} : Exported outside this module. *)
 type collection_carrier_mapping_info =
     (** The parameter is a "is" parameter. *)
   | CCMI_is
@@ -1360,13 +1291,11 @@ type collection_carrier_mapping =
 
 
 
-(* ************************************************************************ *)
 (** {b Descr} : Just for debug purpose, dumps the content of a collection
     carrier mapping.
 
     {b Rem} : Exported outside this module when needed, but should disapear
-    once no more need to debug.                                             *)
-(* ************************************************************************ *)
+    once no more need to debug. *)
 let debug_collection_carrier_mapping cmap =
   Format.eprintf "debug_collection_carrier_mapping START:@." ;
   List.iter
@@ -1400,15 +1329,12 @@ module SpeciesCarrierTypeSet = Set.Make (SpeciesCarrierType) ;;
 
 
 
-(* ******************************************************************** *)
-(* type_simple -> SpeciesCarrierTypeSet.t                               *)
 (** {b Descr} : This function searches for species carrier types inside
     a [simple_type]. This will serve to determine which extra argument
     will have to be added in Coq and Dedukti to make these species carrier
     type abstracted by a parameter of type "Set".
 
-    {b Rem} : Exported outside this module.                             *)
-(* ******************************************************************** *)
+    {b Rem} : Exported outside this module. *)
 let rec get_species_types_in_type ty =
   match repr ty with
    | ST_var _ -> SpeciesCarrierTypeSet.empty
@@ -1434,20 +1360,15 @@ let rec get_species_types_in_type ty =
 
 let (pp_type_simple_to_xml, pp_type_variable_to_xml,
      purge_type_simple_to_xml_variable_mapping) =
-  (* ********************************************************************* *)
-  (* ((type_simple * string) list) ref                                     *)
   (** {b Descr} : The mapping giving for each variable already seen the
                 name used to denote it while printing it.
 
       {b Rem} : Not exported. This mapping is purely local to the
               pretty-print function of type into the FoCaLize syntax. It is
               especially not shared with the type printing routine used to
-              generate the OCaml, Coq or Dedukti code.                     *)
-  (* ********************************************************************* *)
+              generate the OCaml, Coq or Dedukti code. *)
   let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
 
-  (* ******************************************************************* *)
-  (* int ref                                                             *)
   (** {b Descr} : The counter counting the number of different variables
       already seen hence printed. It serves to generate a fresh name to
       new variables to print.
@@ -1455,20 +1376,16 @@ let (pp_type_simple_to_xml, pp_type_variable_to_xml,
       {b Rem} : Not exported. This counter is purely local to the
       pretty-print function of type into the FoCaLize syntax. It is
       especially not shared with the type printing routine used to
-      generate the OCaml, Coq or Dedukti code.                           *)
-  (* ******************************************************************* *)
+      generate the OCaml, Coq or Dedukti code. *)
   let type_variables_counter = ref 0 in
 
-  (* ************************************************************* *)
-  (* unit -> unit                                                  *)
   (** {b Descr} : Resets the variables names mapping an counter.
       This allows to stop name-sharing between type prints.
 
      {b Rem} : Not exported. This counter is purely local to the
       pretty-print function of type into the FoCaLize syntax. It is
       especially not shared with the type printing routine used to
-      generate the OCaml, Coq or Dedukti code.                     *)
-  (* ************************************************************* *)
+      generate the OCaml, Coq or Dedukti code. *)
   let reset_type_variables_mapping () =
     type_variable_names_mapping := [] ;
     type_variables_counter := 0 in
@@ -1598,30 +1515,32 @@ let rec type_simple_to_local_type ty =
 let type_scheme_to_local_type ts = type_simple_to_local_type ts.ts_body ;;
 
 (* for focaltest : *)
-let extract_type_simple 
-        (fvar : unit -> 'a)
-        (farrow : type_simple -> type_simple -> 'a)
-        (ftuple : type_simple list -> 'a)
-        (fsum : type_simple list -> 'a)
-        (fconstruct : string -> string -> type_simple list -> 'a)
-        (fprop : unit -> 'a)
-        (frep : unit -> 'a)
-        (fspecrep : fname -> collection_name -> 'a) ts =
-         let ts = repr ts in
-         match ts with
-         | ST_var _ -> fvar ()
-         | ST_arrow ((t1,t2)) -> farrow t1 t2
-         | ST_tuple(t_l) -> ftuple t_l
-         | ST_sum_arguments(t_l) -> fsum t_l
-         | ST_construct((t, t_l)) -> fconstruct (fst t) (snd t) t_l
-         | ST_prop -> fprop ()
-         | ST_self_rep -> frep ()
-         | ST_species_rep((fn, cn)) -> fspecrep fn cn;;
+let extract_type_simple
+    (fvar : unit -> 'a)
+    (farrow : type_simple -> type_simple -> 'a)
+    (ftuple : type_simple list -> 'a)
+    (fsum : type_simple list -> 'a)
+    (fconstruct : string -> string -> type_simple list -> 'a)
+    (fprop : unit -> 'a)
+    (frep : unit -> 'a)
+    (fspecrep : fname -> collection_name -> 'a) ts =
+  let ts = repr ts in
+  match ts with
+  | ST_var _ -> fvar ()
+  | ST_arrow ((t1 ,t2)) -> farrow t1 t2
+  | ST_tuple (t_l) -> ftuple t_l
+  | ST_sum_arguments (t_l) -> fsum t_l
+  | ST_construct ((t, t_l)) -> fconstruct (fst t) (snd t) t_l
+  | ST_prop -> fprop ()
+  | ST_self_rep -> frep ()
+  | ST_species_rep ((fn, cn)) -> fspecrep fn cn
+;;
 
-let nb_variable_type_scheme t = List.length t.ts_vars;;
+
+
+let nb_variable_type_scheme t = List.length t.ts_vars ;;
 let type_variable_eq t1 t2 =
   match t1, t2 with
   | ST_var e2, ST_var e1 -> Some (e1 == e2)
-  | _, _ -> None;;
-
-(* *************** *)
+  | _, _ -> None
+;;
