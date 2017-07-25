@@ -42,7 +42,7 @@ and $+2^{30}-1$.
 
 New type constructors are introduced by
 {\bf type definitions}.
-Types constructors can be parameterised by  {\bf type expressions}
+Types constructors can be parameterised by {\bf type expressions}
 separated by commas and between parentheses.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -500,6 +500,15 @@ type pair ('a, 'b) = {
 type int_bool_pair = pair (int, bool) ;;
 \end{lstlisting}}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Mutually Recursive Types Definitions}
+\TODO{Only sums. Syntax: \lstinline{type} \ ldots \lstinline{with} \ldots}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Type-checking}
 The type-checking process is roughly similar to ML
 type-checking. Polymorphic types are allowed at top-level. However,
@@ -1258,6 +1267,10 @@ See other examples in the standard library where this construction is
 used to define associativity, commutativity, \ldots
 
 % TODO local.
+
+
+\subsubsection{{\tt final (logical) let}}
+\TODO{Cannot be redefined by inheritance.}
 
 
 

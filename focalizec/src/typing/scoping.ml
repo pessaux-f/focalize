@@ -88,7 +88,7 @@ exception Module_not_specified_as_used of
 
     {b Exported} : Yes.                                                    *)
 (* *********************************************************************** *)
-exception Self_cant_parameterize_itself of Location.t;;
+exception Self_cant_parameterize_itself of Location.t ;;
 
 
 
@@ -103,7 +103,7 @@ exception Self_cant_parameterize_itself of Location.t;;
 
     {b Exported} : Yes.                                                   *)
 (* ********************************************************************** *)
-exception Is_parameter_only_coll_ident of Location.t;;
+exception Is_parameter_only_coll_ident of Location.t ;;
 
 
 
@@ -147,44 +147,38 @@ exception Invalid_external_binding_identifier of
 
     {b Exported} : Yes.                                                    *)
 (* *********************************************************************** *)
-exception Invalid_external_binding_number of Location.t;;
+exception Invalid_external_binding_number of Location.t ;;
 
 
 
-(* ********************************************************************* *)
 (** {b Descr} : Exception raised when a termination proof mentions a
     decreasing ident that is not an argument of the function.
 
-    {b Exported} :  Yes.                                                 *)
-(* ********************************************************************* *)
+    {b Exported} :  Yes. *)
 exception Termination_only_on_fun_arg of
   (Location.t * Parsetree.vname)
 ;;
 
 
 
-(* ********************************************************************* *)
 (** {b Descr} : Exception raised when a delayed termination proof uses a
     profile mentionning a method identifier that is not bound to one of
     the current species methods.
 
-    {b Exported} :Yes.                                                   *)
-(* ********************************************************************* *)
+    {b Exported} :Yes. *)
 exception Termination_proof_delayed_only_on_self_meth of
   (Location.t *  Parsetree.vname)
 ;;
 
 
 
-(* ******************************************************************** *)
 (** {b Descr} : Exception raised when a logical expression contains an
     a \/ with at least one argument being a -> or a <-> without
     parentheses around this argument.
     Since this is not clear of how to associate, we prefer to asks the
     user to explicitely add parentheses.
 
-    {b Exported} : Yes.                                                 *)
-(* ******************************************************************** *)
+    {b Exported} : Yes. *)
 exception Ambiguous_logical_expression_or of
   (int *  (** 0 means left argument must be parenthesed, 1 means right. *)
    Location.t)
@@ -192,15 +186,13 @@ exception Ambiguous_logical_expression_or of
 
 
 
-(* ******************************************************************** *)
 (** {b Descr} : Exception raised when a logical expression contains an
     a /\ with at least one argument being a -> or a <-> without
     parentheses around this argument.
     Since this is not clear of how to associate, we prefer to asks the
     user to explicitely add parentheses.
 
-    {b Exported} : Yes.                                                 *)
-(* ******************************************************************** *)
+    {b Exported} : Yes. *)
 exception Ambiguous_logical_expression_and of
   (int *  (** 0 means left argument must be parenthesed, 1 means right. *)
    Location.t)
@@ -208,50 +200,60 @@ exception Ambiguous_logical_expression_and of
 
 
 
-(* ******************************************************************** *)
 (** {b Descr} : Exception raised when an hypothesis, notation or variable
     name is introduced although there already exists on in the current
     scope of a proof.
 
-    {b Exported} : Yes.                                                 *)
-(* ******************************************************************** *)
+    {b Exported} : Yes. *)
 exception Rebound_hyp_notation_or_var_in_proof of
   (Parsetree.vname * Location.t)
 ;;
 
 
 
-(* ******************************************************************** *)
 (** {b Descr} : Exception raised when a proof fact uses the property of a
     species instead of a collection.
 
-    {b Exported} : Yes.                                                 *)
-(* ******************************************************************** *)
+    {b Exported} : Yes. *)
 exception Proof_by_species_property of (Parsetree.expr_ident * Location.t) ;;
 
 
 
-(* ************************************************************************** *)
 (** {b Descr} : Exception raised when a toplevel species is used as effective
     parameter in a species expression.
 
-    {b Exported} : Yes.                                                       *)
-(* ************************************************************************** *)
+    {b Exported} : Yes. *)
 exception Toplevel_species_as_effective_param of
   (Parsetree.ident * Location.t)
 ;;
 
 
 
-(* ********************************************************************** *)
+(** {b Descr} : Exception raised when mutually recursive type definitions
+    mixes external and regular definitions. *)
+exception Mix_tydefs_external_regular of (Location.t) ;;
+
+
+
+(** {b Descr} : Exception raised when mutually recursive type definitions
+    mixes sum and/or record and/or alias definitions. *)
+exception Mix_tydefs_union_alias_sum of (Location.t) ;;
+
+
+
+(** {b Descr} : Exception raised when a mutually recursive type definition
+    contains several external definitions. *)
+exception Mix_tydefs_external of (Location.t) ;;
+
+
+
 (** {b Descr} : Datastructure recording various the information required
     and propagated during the scoping pass. It is much more convenient to
     group the various flags and stuff needed than passing them all the
     time as arguments of each recursive call.
     This datastructure serves especially this purpose.
 
-    {b Exported} : Yes.                                                   *)
-(* ********************************************************************** *)
+    {b Exported} : Yes. *)
 type scoping_context = {
   (** The name of the currently analysed compilation unit. *)
   current_unit : Types.fname;
@@ -265,27 +267,25 @@ type scoping_context = {
 
 
 
-(* ************************************************************************* *)
-(* {b Descr}: Ensures that the mentionned hosting compilation unit (if some)
-   of the [qualified_vname] was mentionned to be "used" or "opened".
+(** {b Descr}: Ensures that the mentionned hosting compilation unit (if some)
+    of the [qualified_vname] was mentionned to be "used" or "opened".
 
-   {b Args} :
-     - [ctx] : The current scoping context.
+    {b Args} :
+      - [ctx] : The current scoping context.
 
-     - [loc] : The location of the occurrence of the identifier where the
-       check is performed. This will be used in case of error to add this
-       location to the error message to help the user to find out where he
-       must make his correction.
+      - [loc] : The location of the occurrence of the identifier where the
+        check is performed. This will be used in case of error to add this
+        location to the error message to help the user to find out where he
+        must make his correction.
 
-     - unnammed: The identifier (more accurately the [qualified_vname]) that
-       may contain a compilation unit qualification that must be checked.
+      - unnammed: The identifier (more accurately the [qualified_vname]) that
+        may contain a compilation unit qualification that must be checked.
 
     {b Ret} :
-      - [unit] : If the verification is successful, otherwise an exception
-        is raised to exhibit the error.
+       - [unit] : If the verification is successful, otherwise an exception
+         is raised to exhibit the error.
 
-   {b Exported} : No.                                                        *)
-(* ************************************************************************* *)
+    {b Exported} : No. *)
 let ensure_qual_vname_allowed_qualified ctx loc = function
   | Parsetree.Vname _ -> ()
   | Parsetree.Qualified (mod_name, _) ->
@@ -295,23 +295,21 @@ let ensure_qual_vname_allowed_qualified ctx loc = function
 
 
 
-(* ************************************************************************* *)
-(* {b Descr}: Ensures that the mentionned hosting compilation unit (if some)
-   of the [ident] was mentionned to be "used" or "opened".
+(** {b Descr}: Ensures that the mentionned hosting compilation unit (if some)
+    of the [ident] was mentionned to be "used" or "opened".
 
-   {b Args} :
+    {b Args} :
 
-     - [ctx] : The current scoping context.
+      - [ctx] : The current scoping context.
 
-     - [ident]: The identifier that may contain a compilation unit
-       qualification that must be checked.
+      - [ident]: The identifier that may contain a compilation unit
+        qualification that must be checked.
 
-    {b Ret} :
-      - [unit] : If the verification is successful, otherwise an exception
-        is raised to exhibit the error.
+     {b Ret} :
+       - [unit] : If the verification is successful, otherwise an exception
+         is raised to exhibit the error.
 
-   {b Exported} : No.                                                        *)
-(* ************************************************************************* *)
+    {b Exported} : No. *)
 let ensure_ident_allowed_qualified ctx ident =
   match ident.Parsetree.ast_desc with
    | Parsetree.I_local _ -> ()
@@ -322,23 +320,21 @@ let ensure_ident_allowed_qualified ctx ident =
 
 
 
-(* ************************************************************************* *)
-(* {b Descr}: Ensures that the mentionned hosting compilation unit (if some)
-   of the [expr_ident] was mentionned to be "used" or "opened".
+(** {b Descr}: Ensures that the mentionned hosting compilation unit (if some)
+    of the [expr_ident] was mentionned to be "used" or "opened".
 
-   {b Args} :
+    {b Args} :
 
-     - [ctx] : The current scoping context.
+      - [ctx] : The current scoping context.
 
-     - [expr_ident]: The identifier that may contain a compilation unit
-       qualification that must be checked.
+      - [expr_ident]: The identifier that may contain a compilation unit
+        qualification that must be checked.
 
     {b Ret} :
       - [unit] : If the verification is successful, otherwise an exception
         is raised to exhibit the error.
 
- {b Exported} : No.                                                          *)
-(* ************************************************************************* *)
+    {b Exported} : No. *)
 let ensure_expr_ident_allowed_qualified ctx expr_ident =
   match expr_ident.Parsetree.ast_desc with
    | Parsetree.EI_local _ | Parsetree.EI_global (Parsetree.Vname _) -> ()
@@ -1018,17 +1014,68 @@ let rec scope_type_defs_bodies ctx env_with_types env_accu = function
 ;;
 
 
-(* ************************************************************************* *)
-(* scoping_context -> Env.ScopingEnv.t -> Parsetree.type_def ->              *)
-(*   (Parsetree.type_def * Env.ScopingEnv.t)                                 *)
+
+(** {b Descr} :Check if there is a mix of type definition kinds. Since we do
+    not know how to translate this into Coq, if Coq code generation is active
+    then raise an error message.
+    Mixes are regular/external and sum/record/alias and mutually recursive
+    external.
+
+    {b Exported} : No. *)
+let check_typedefs_mix ty_defs =
+  if (Configuration.get_generate_coq ()) then
+    ignore
+      (List.fold_left
+         (fun (nb_alias, nb_union, nb_record, nb_reg, nb_ext) ty_def ->
+           match ty_def.Parsetree.ast_desc.Parsetree.td_body.Parsetree.ast_desc
+           with
+           | Parsetree.TDB_abstract body | Parsetree.TDB_private body
+           | Parsetree.TDB_public body | Parsetree.TDB_relational body ->
+               match body.Parsetree.ast_desc with
+               | Parsetree.TDBS_regular reg_t_d_body -> (
+                   match reg_t_d_body.Parsetree.ast_desc with
+                   | Parsetree.RTDB_alias _ ->
+                       if (nb_union <> 0 || nb_record <> 0) then
+                         raise
+                           (Mix_tydefs_union_alias_sum
+                              ty_def.Parsetree.ast_loc) ;
+                       (nb_alias + 1, nb_union, nb_record, nb_reg + 1, nb_ext)
+                   | Parsetree.RTDB_union _ ->
+                       if (nb_alias <> 0 || nb_record <> 0) then
+                         raise
+                           (Mix_tydefs_union_alias_sum
+                              ty_def.Parsetree.ast_loc) ;
+                       (nb_alias, nb_union + 1, nb_record, nb_reg + 1, nb_ext)
+                   | Parsetree.RTDB_record _ ->
+                       if (nb_alias <> 0 || nb_union <> 0) then
+                         raise
+                           (Mix_tydefs_union_alias_sum
+                              ty_def.Parsetree.ast_loc) ;
+                       (nb_alias, nb_union, nb_record + 1, nb_reg + 1, nb_ext)
+                  )
+               | Parsetree.TDBS_external _ ->
+                   if nb_reg <> 0 then
+                     raise
+                       (Mix_tydefs_external_regular ty_def.Parsetree.ast_loc) ;
+                   if nb_ext <> 0 then
+                     raise
+                       (Mix_tydefs_external ty_def.Parsetree.ast_loc) ;
+                   (nb_alias, nb_union, nb_record, nb_reg, nb_ext +1)
+         )
+         (0, 0, 0, 0, 0) ty_defs)
+;;
+
+
+
 (** {b Descr} : Scopes type definitions by scoping their internal bodies.
     Return the extended environment with bindings for the possible sum type
     constructors or record type fields label and a binding to these types
     names with the current compilation unit.
 
-    {b Exported} : No.                                                       *)
-(* ************************************************************************* *)
+    {b Exported} : No. *)
 let scope_type_defs ctx env ty_defs =
+  (* Check if the definitions mixes different kinds. *)
+  check_typedefs_mix ty_defs ;
   (* We must first extend the environment with the types' names themselves in
      case the definitions are recursive. This is done in the environment that
      will be used while scoping the bodies but will not be extended.

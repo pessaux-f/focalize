@@ -242,6 +242,58 @@ the function's parameter can appear at this place.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Types definition mixes regular and external kinds \ldots}
+
+{\em Description}: A types definition contains both regular types and
+externally mapped ones. Mutually recursive type definitions must only
+contains regular (sum) types.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{A mutually recursive types definition must only contain sum
+  types \ldots}
+
+{\em Description}: Mutually recursive type definitions must only
+contains regular sum types to be compiled to \coq\ which requires this
+constraints.
+
+{\em Hints}: If you mix alias and unions, consider transforming the aliases
+into sums by adding a dummy constructor. For instance, instead of:
+
+\noindent
+{\scriptsize
+\begin{lstlisting}
+type t = (int * u)
+with u = | A | B (t) ;;
+\end{lstlisting}
+}
+
+\noindent
+you may write:
+
+\noindent
+{\scriptsize
+\begin{lstlisting}
+type t = Dummy (int * u)
+with u = | A | B (t) ;;
+\end{lstlisting}
+}
+
+Note that if the \coq\ code generation is disabled (option {\tt -no-coq-code}),
+the check is relaxed and the error message will not appear. However, there
+will be no \coq\ material produced.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Types definition contains several external types.}
+
+{\em Description}: Externally mapped types cannot currently be mutually
+recursively defined.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Unbound sum type value constructor '$name$'.}
 {\em Description}: An identifier representing a sum type value constructor
 was not found among the available sum type definitions.
