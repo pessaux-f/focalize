@@ -197,12 +197,12 @@ let top_preambule =
           list_nth(l, 1)\n\
         else\n\
           @PRED(0)"
-  ]) @ 
+  ]) @
    (* The species which calculate the coverage *)
   [create_toplevel_spec(
     spec_create top_coverage_spec_name [] [] (Some (TAtom(None, foctunit))) (List.map (fun x -> Unique x) (top_coverage_meths ()))
              );
-    let m = Whattodo.get_output_module () in 
+    let m = Whattodo.get_output_module () in
     create_toplevel_coll(coll_create top_coverage_coll_name
                                      (create_species_name m top_coverage_spec_name,[]))
   ] @
@@ -219,7 +219,7 @@ let top_preambule =
                   Coll_xml!xml_close_elementaire(res, 1, nb);
                   b
                  )
-             | @CONS(cur,r) -> 
+             | @CONS(cur,r) ->
                  (let pval = fun_precond(cur) in
                   let vars = fun_to_strings(cur) in
                   let cval = fun_conclu(cur) in
@@ -237,7 +237,7 @@ let top_preambule =
 ;;
 
 
-(** Returns an expression of the type string * list(bool * (string * string)) 
+(** Returns an expression of the type string * list(bool * (string * string))
     which is the definition of the species under test. *)
 let species_test () =
   let expr_of_string_list l =
@@ -252,8 +252,8 @@ let species_test () =
     match get_test_context () with
     | None -> failwith "We need a test context"
 (*
-        let spec_name,p_instance = get_species_test () in 
-        let p_name = List.map get_name_prmexp (Focalize_inter.get_parameters spec_name) in 
+        let spec_name,p_instance = get_species_test () in
+        let p_name = List.map get_name_prmexp (Focalize_inter.get_parameters spec_name) in
         let coll_xml = List.map (fun e -> is_coll_param e,
                                           xml_string_of_parameters_instance e) p_instance in
         let n_i = try List.combine p_name coll_xml with
@@ -267,7 +267,7 @@ let species_test () =
         let spec_name =  Context_test.sc_get_name spec in
         let p_name = Context_test.sc_get_parameters spec in
         let colls = Context_test.tc_get_parameters tc in
-        let colls = List.map (fun e -> Context_test.bc_get_name e, 
+        let colls = List.map (fun e -> Context_test.bc_get_name e,
                              (Context_test.bc_get_name2 e,
                               Context_test.bc_get_parameters e
                              )) colls in
@@ -328,35 +328,41 @@ let call_test_prop_from_testset c l =
 
 
 (** [top_postambule coll_list] takes a list of collection name. Assuming these
-collections exist, it returns the list of expressions calling the harness
-implemented within the collections. *)
+    collections exist, it returns the list of expressions calling the harness
+    implemented within the collections. *)
 let top_postambule coll_list =
   match coll_list with
   | [] -> []
-  | e::r -> 
-      parse_foc_topexpr ("let random in @UNIT = caml import init_rand")::
-      ObjToplet("value",Some (TAtom(None, foctbool)),call_test_prop e r) ::
-      [parse_foc_topexpr
-        "if #value then\n\
+  | e::r ->
+      parse_foc_topexpr ("let random in @UNIT = caml import init_rand") ::
+      ObjToplet ("value",Some (TAtom (None, foctbool)), call_test_prop e r) ::
+      [ parse_foc_topexpr
+          "if #value then\n\
            #print_string(\"-> All test cases have successfully passed\\n\")\n\
-         else\n\
-           #print_string(\"-> At least one test case has failed\\n\")"];;
+           else\n\
+           #print_string(\"-> At least one test case has failed\\n\")" ]
+;;
 
+
+(** [top_postambule_ts coll_ts_list] takes a list of collection name, test
+    set.
+    Assuming these collections exist, it returns the list of expressions
+    calling the harness implemented within the collections testing with the
+    corresponding test set. *)
 let top_postambule_ts coll_list =
   match coll_list with
   | [] -> []
-  | e::r -> 
-      parse_foc_topexpr ("let random in @UNIT = caml import init_rand")::
-      ObjToplet("value",Some (TAtom(None, foctbool)),call_test_prop_from_testset e r) ::
-      [parse_foc_topexpr
-        "if #value then\n\
-           #print_string(\"-> All test cases have successfully passed\\n\")\n\
-         else\n\
-           #print_string(\"-> At least one test case has failed\\n\")"];;
-(** [top_postambule_ts coll_ts_list] takes a list of collection name, test set.
-Assuming these collections exist, it returns the list of expressions calling the
-harness implemented within the collections testing with the corresponding test
-set. *)
+  | e :: r ->
+      parse_foc_topexpr ("let random in @UNIT = caml import init_rand") ::
+      ObjToplet
+        ("value", Some (TAtom (None, foctbool)),
+         call_test_prop_from_testset e r) ::
+      [ parse_foc_topexpr
+          "if #value then\n\
+          #print_string(\"-> All test cases have successfully passed\\n\")\n\
+          else\n\
+          #print_string(\"-> At least one test case has failed\\n\")" ]
+;;
 
 
 
@@ -478,4 +484,3 @@ let top_import xml : import =
            get_word (pos + 1) in\n\
      get_word 0"
   ];;
-

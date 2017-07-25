@@ -21,7 +21,7 @@ type focalize_species = Env.TypeInformation.species_description;;
 type focalize_species_field = Env.TypeInformation.species_field;;
 type focalize_species_param = Env.TypeInformation.species_param;;
 
-type myfield = 
+type myfield =
   | Signature of string * Own_types.typ
   | Definition of string * Parsetree.expr
   | RecDef     of myfield list
@@ -140,7 +140,7 @@ let convert_ident_no =
 let type_simple_of_typ t =
   let i = Types.make_type_constructor in
   let rec aux t =
-  match t with 
+  match t with
   | TAtom (Some m, s) -> Types.type_basic (i m s) []
   | TAtom (None, s) -> Types.type_basic (i "basics" s) []
   | TProp -> Types.type_prop ()
@@ -169,7 +169,7 @@ let rec string_of_type_simple =
   let farrow t1 t2 = aux t1 ^ " -> " ^ aux t2 in
   let ftuple l =
     "(" ^ Own_basics.add_string_args l ", " aux ^ ")" in
-  let fsum l = "{" ^ Own_basics.add_string_args l ", " aux ^ "}" in 
+  let fsum l = "{" ^ Own_basics.add_string_args l ", " aux ^ "}" in
   let fconstruct _ tn args =
     tn ^ "(" ^ Own_basics.add_string_args args ", " aux ^ ")" in
   let frep () = "Self" in
@@ -224,7 +224,7 @@ Open the module [m].
 
 let open_module (_m : Parsetree.module_name) =
 (*   get_env ();; *)
-  Env.type_open_module ~loc:Location.none _m (Env.TypingEnv.empty ());; 
+  Env.type_open_module ~loc:Location.none _m (Env.TypingEnv.empty ());;
 
 let open_module_cumul (m : Parsetree.module_name) =
   let env = get_env () in
@@ -242,7 +242,7 @@ Gets the list of species defined in module [module].
 let focalize_get_species_list m =
   List.map extract_vname (Env.get_species_list (open_module m));;
 
-(** focalize_get_species_def m s 
+(** focalize_get_species_def m s
 
 Gets the definition of the species [s] in module [m].
 *)
@@ -286,7 +286,7 @@ let focalize_get_properties_list =
   let rec flatten_def l tail =
     match l with
     | [] -> tail
-    | (ET.SF_theorem((_,n,l,p,_,_)))::r 
+    | (ET.SF_theorem((_,n,l,p,_,_)))::r
     | (ET.SF_property((_,n,l,p,_)))::r ->
         if l <> [] then
           failwith "focalize_get_properties_list: non empty list, what does it mean ???"
@@ -307,7 +307,7 @@ let focalize_get_representation sn =
     match l with
     | [] -> raise (Rep_not_defined (string_of_species_name sn))
     | (ET.SF_sig(param))::_r ->
-        let (_,_s,t) = param in 
+        let (_,_s,t) = param in
           typ_of_type_scheme t
     | _e::r -> get_rep r in
   let s = focalize_get_species sn in
@@ -366,10 +366,10 @@ let get_parameters species =
 
 let focalize_get_ident_modules_dep i l=
   match i.ast_desc with
-  | I_local _ -> l 
+  | I_local _ -> l
   | I_global (Vname _) -> l
   | I_global (Qualified(m, _)) -> m::l;;
-  
+
 let focalize_get_expr_ident_modules_dep i l =
   match i.ast_desc with
   | EI_local _ -> l
@@ -378,11 +378,11 @@ let focalize_get_expr_ident_modules_dep i l =
   | EI_method (None, _) -> l
   | EI_method (Some (Vname _), _) -> l
   | EI_method (Some (Qualified(m, _)), _) -> m::l;;
-  
+
 let focalize_get_constructor_ident_modules_dep i l =
   match i.ast_desc with
   | CI c -> focalize_get_ident_modules_dep c l;;
-  
+
 let rec focalize_get_pat_modules_dep p l =
   let rec get p l =
     match p with
@@ -399,8 +399,8 @@ let rec focalize_get_pat_modules_dep p l =
         (match l'.ast_desc with
         | LI i ->
             focalize_get_ident_modules_dep
-            i 
-            (focalize_get_pat_modules_dep p l) 
+            i
+            (focalize_get_pat_modules_dep p l)
         )
     | P_tuple [] -> l
     | P_tuple(e::r) ->
@@ -420,7 +420,7 @@ let focalize_get_binding_modules_dep b l =
     | [] -> l
     | e::r -> get_bs r (get_b_ e l)
   and get_ e l =
-    get e.ast_desc l 
+    get e.ast_desc l
   and     get e (l : Parsetree.module_name list) =
     match e with
     | E_self | E_const _ -> l
@@ -429,9 +429,9 @@ let focalize_get_binding_modules_dep b l =
         get (E_tuple l')
             (focalize_get_constructor_ident_modules_dep c l)
     | E_match(e1,[]) -> get_ e1 l
-    | E_match(e1,(p,e)::l') -> 
+    | E_match(e1,(p,e)::l') ->
         get (E_match(e1,l'))
-            (get_ e 
+            (get_ e
                  (focalize_get_pat_modules_dep p l)
             )
     | E_let(ld,_e) -> get_bs ld.ast_desc.ld_bindings l
@@ -442,8 +442,8 @@ let focalize_get_binding_modules_dep b l =
     | E_paren(e) -> get_ e l
     | E_fun(_,e) -> get_ e l
     | E_record([]) -> l
-    | E_record((li,e)::l') -> 
-        get_ e 
+    | E_record((li,e)::l') ->
+        get_ e
             (focalize_get_label_ident_modules_dep li
                                                   (get (E_record(l')) l)
             )
@@ -559,10 +559,10 @@ let get_constructors_of_a_type t =
 Example :
   [get_constructor_scheme [e1; e2; e3] t ] gives
     'a -> 'b -> 'c -> t
-useful when the constructor as type 
+useful when the constructor as type
     'a -> int -> float -> t('b,'a).
 If we want to instanciate the constructor for t(float,string) we have to unify
-it with 
+it with
     'a -> 'b -> 'c -> t(float, string)
 *)
 let get_constructor_scheme i right =
@@ -578,7 +578,7 @@ let get_constructor_scheme i right =
 
 (** Get the definition (list of constructor) of a concrete type when the
  parameters are instanciated *)
-let get_concrete_def : typ -> constructor list = 
+let get_concrete_def : typ -> constructor list =
   let get_simple e = Types.specialize e.ET.cstr_scheme in
   fun concret ->
     match concret with
@@ -598,8 +598,8 @@ let get_concrete_def : typ -> constructor list =
               let convert (name, desc) =
                 let args, _ = split_constructor (get_simple desc) in
                 let cons_scheme = get_constructor_scheme args right in
-                let result = 
-                  try Types.unify ~loc:locnone ~self_manifest:None 
+                let result =
+                  try Types.unify ~loc:locnone ~self_manifest:None
                                   (Types.specialize desc.ET.cstr_scheme)
                                   (cons_scheme)
                   with
@@ -615,10 +615,10 @@ let get_concrete_def : typ -> constructor list =
                 convert_vname name,
                 List.map typ_of_type_simple typs in
               List.map convert constructors
-        end 
+        end
     | _ -> raise (Not_a_concrete_type None);;
 
-let focalize_get_all_types () = 
+let focalize_get_all_types () =
   let qualify m e = Qualified(m,e) in
   let all_modules = focalize_get_all_open () in
   List.fold_left
@@ -637,7 +637,7 @@ let get_type_arity t : int option =
     let fconstruct _ tn _args = (tn = t) in
       Types.extract_type_simple nok farrow nok nok fconstruct nok nok nok2 typ in
     let cons = focalize_get_all_constructors () in
-    match List.filter 
+    match List.filter
             (fun r ->
                is_ok (Types.specialize (snd r).ET.cstr_scheme)
             )
@@ -699,46 +699,45 @@ let rec typ_of_foctyp =
   function
     | TE_ident (s) ->
         let m,s = convert_ident_no s.ast_desc in
-        if Char.lowercase (String.get s 0) = String.get s 0 then
-          TAtom(m, s) 
-        else
-          TSpecPrm(s)
-    | TE_fun(e1,e2) -> TFct(typ_of_foctyp e1.ast_desc,
-                            typ_of_foctyp e2.ast_desc)
-    | TE_prod([e1;e2]) -> TProd(typ_of_foctyp e1.ast_desc,
-                                typ_of_foctyp e2.ast_desc)
-    | TE_prod(_) -> failwith "typ_of_foctyp : prod not yet implemented"
-    | TE_app(n,t_l) ->
-        let m, s = convert_ident_no n.ast_desc in
-        TPrm(m, s, List.map (fun e -> typ_of_foctyp e.ast_desc) t_l)
+        if Char.lowercase_ascii (String.get s 0) = String.get s 0 then
+          TAtom(m, s)
+        else TSpecPrm(s)
+    | TE_fun (e1,e2) ->
+        TFct (typ_of_foctyp e1.ast_desc, typ_of_foctyp e2.ast_desc)
+    | TE_prod ([e1; e2]) ->
+        TProd (typ_of_foctyp e1.ast_desc, typ_of_foctyp e2.ast_desc)
+    | TE_prod (_) -> failwith "typ_of_foctyp : prod not yet implemented"
+    | TE_app (n, t_l) ->
+        let (m, s) = convert_ident_no n.ast_desc in
+        TPrm (m, s, List.map (fun e -> typ_of_foctyp e.ast_desc) t_l)
     | TE_self -> TAtom(None, "Self")
-        (**)
     | TE_prop  -> raise (Cant_convert_typ "Prop")
     | TE_paren t -> typ_of_foctyp t.ast_desc
+;;
+
 
 let rec pattern_of_tpattern p =
   let aux p =
     match p.ast_desc with
-    | P_var(Vlident s) -> Some s
-    | P_var(_) -> failwith("Hahah")
-    | P_wild -> None 
-    | P_as(_, _) -> failwith "Bad pattern : P_as"
-    | P_constr(_, _) -> failwith "Bad pattern : P_constr" 
-    | P_const _ -> failwith "Bad pattern : P_const" 
-    | P_record _ -> failwith "Bad pattern: P_record" 
-    | P_tuple _ -> failwith "Bad pattern: P_tuple" 
-    | P_paren _ -> failwith "Bad pattern: P_paren" 
-    in
+    | P_var (Vlident s) -> Some s
+    | P_var (_) -> failwith("Hahah")
+    | P_wild -> None
+    | P_as (_, _) -> failwith "Bad pattern : P_as"
+    | P_constr (_, _) -> failwith "Bad pattern : P_constr"
+    | P_const _ -> failwith "Bad pattern : P_const"
+    | P_record _ -> failwith "Bad pattern: P_record"
+    | P_tuple _ -> failwith "Bad pattern: P_tuple"
+    | P_paren _ -> failwith "Bad pattern: P_paren" in
   match p.ast_desc with
   | P_tuple _  -> failwith "Bad pattern: P_tuple"
   | P_record _
-  | P_wild | P_as(_,_)
-  | P_const _ | P_var _ ->
-      failwith "Bad pattern"
+  | P_wild | P_as (_, _)
+  | P_const _ | P_var _ -> failwith "Bad pattern"
   | P_paren _t -> pattern_of_tpattern p
-  | P_constr(c,ps) ->
-      convert_ident (match c.ast_desc with CI t -> t).ast_desc,
-      List.map aux ps;;
+  | P_constr (c, ps) ->
+      convert_ident (match c.ast_desc with CI t -> t).ast_desc, List.map aux ps
+;;
+
 
 (*
 let search_binding n let_def =
@@ -766,24 +765,26 @@ let get_ast_type e =
   | ANTI_irrelevant
   | ANTI_none -> None (* failwith "Lack of type information" *)
   | ANTI_type t -> Some(typ_of_type_simple t)
-  | ANTI_scheme _s -> failwith "Type scheme found";;
+  | ANTI_scheme _s -> failwith "Type scheme found"
+;;
+
 
 (** A function converting a focal expression to my expression *)
 let rec myexpr_of_texpr m_name bv texpr : Own_expr.myexpr =
   let add_s_o s_o l =
-    List.fold_left (fun s -> (function None -> s | Some t -> t::s)) l s_o in
+    List.fold_left (fun s -> (function None -> s | Some t -> t :: s)) l s_o in
   let get_typ t =
     match t.ast_type with
     | ANTI_type t -> let t = typ_of_type_simple t in t
     | _ -> failwith "myexpr_of_texpr: get_typ" in
   let split_function_typ t =
     match t with
-    | TFct(t1, t2) -> (t1, t2)
+    | TFct (t1, t2) -> (t1, t2)
     | _ -> failwith "myexpr_of_texpr: Not a functional type (2)" in
   let expr_typ bv e =
     myexpr_of_texpr m_name bv e,
     match e.ast_type with
-    | ANTI_irrelevant 
+    | ANTI_irrelevant
     | ANTI_none -> failwith "myexpr_of_texpr: we require a type information"
     | ANTI_type t -> let t = typ_of_type_simple t in t
     | ANTI_scheme t -> typ_of_type_scheme t in
@@ -795,24 +796,22 @@ let rec myexpr_of_texpr m_name bv texpr : Own_expr.myexpr =
         match n.ast_desc with
         | I_global (Vname v)
         | I_local v -> MGlob_id (convert_vname v)
-        | I_global (Qualified(m, v)) ->
-            MGlob_id(convert_vname_m (Some m) v) in
-      if e_l = [] then
-        id
+        | I_global (Qualified (m, v)) ->
+            MGlob_id (convert_vname_m (Some m) v) in
+      if e_l = [] then id
       else
         let args = List.map (expr_typ bv) e_l in
-        let res = MApp(id, None (* Some (get_typ s) *), args) in
-          res
-  | E_const { ast_desc = C_bool s } ->
-    ( match s with
-     | "true" -> expr_glob Own_basics.foctrue
-     | "false" -> expr_glob Own_basics.focfalse
-     | _ -> failwith "myexpr_of_texpr: bad bool"
-    )
+        MApp(id, None (* Some (get_typ s) *), args)
+  | E_const { ast_desc = C_bool s } -> (
+      match s with
+      | "true" -> expr_glob Own_basics.foctrue
+      | "false" -> expr_glob Own_basics.focfalse
+      | _ -> failwith "myexpr_of_texpr: bad bool"
+     )
   | E_const { ast_desc = C_int r } -> MInt (int_of_string r)
   | E_const { ast_desc = C_string s } -> MString s
-  | E_var x ->
-     (match x.ast_desc with
+  | E_var x -> (
+      match x.ast_desc with
       | EI_local vn ->
           if List.mem (extract_vname vn) bv then
             expr_var_typ (extract_vname vn) (get_typ x)
@@ -820,152 +819,157 @@ let rec myexpr_of_texpr m_name bv texpr : Own_expr.myexpr =
             let n = extract_vname vn in
 (*             print_debug ("nom de la variable :  " ^ n ^ "\n"); *)
             MVar(n, Some (get_typ x))
-      | EI_global qn ->
-         (match qn with
-          | Vname vn -> MGlob_id(convert_vname vn)
-          | Qualified(m,vn) -> MGlob_id(convert_vname_m (Some m) vn)
+      | EI_global qn -> (
+          match qn with
+          | Vname vn -> MGlob_id (convert_vname vn)
+          | Qualified (m, vn) -> MGlob_id (convert_vname_m (Some m) vn)
          )
-      | EI_method (qno,vn) ->
+      | EI_method (qno, vn) ->
 (*           let n = extract_vname vn in *)
 (*           print_debug ("nom de la methode :  " ^ n ^ "\n"); *)
-         (match qno with
-          | None -> MMeth(None, extract_vname vn)
-          | Some(Vname vn2) ->
-              MMeth(Some (extract_vname vn2), extract_vname vn)
-          | Some(Qualified(_m,vn2)) ->
-              MMeth(Some (extract_vname vn2), extract_vname vn)
+          (match qno with
+          | None -> MMeth (None, extract_vname vn)
+          | Some (Vname vn2) ->
+              MMeth (Some (extract_vname vn2), extract_vname vn)
+          | Some (Qualified (_m, vn2)) ->
+              MMeth (Some (extract_vname vn2), extract_vname vn)
 (*
               failwith ("Can't call a method of others module collection" ^ m  ^
               "\n")
 *)
 (*               MMeth((m, convert_vname vn2), convert_vname vn) *)
-         )
+          )
      )
-  | E_fun([], e) ->
-      aux bv e
-  | E_fun(l, e') ->
-    let rec decompose_fun l t =
-      match l with
-      | [] -> aux bv e'
-      | e::r ->
-        let (t1,t2) = split_function_typ t in
-        MFun(extract_vname e, Some t1, decompose_fun r t2) in
-    decompose_fun l (get_typ expr)
+  | E_fun ([], e) -> aux bv e
+  | E_fun (l, e') ->
+      let rec decompose_fun l t =
+        match l with
+        | [] -> aux bv e'
+        | e :: r ->
+            let (t1,t2) = split_function_typ t in
+            MFun (extract_vname e, Some t1, decompose_fun r t2) in
+      decompose_fun l (get_typ expr)
  (* | TCase(e,l) -> MMatch(myexpr_of_texpr e *)
   (*
   | TVarloc(s,expr1,expr2) ->
       MVarloc(false,s,myexpr_of_texpr expr1,aux expr2 typ)
   *)
-  | E_if(c,e1,e2) ->
-      MIfte(aux bv c,
-            aux bv e1,
-            aux bv e2)
-  | E_app(m,args) ->
-     let args = List.map (expr_typ bv) args in 
-     let res = MApp(aux bv m, Some (get_typ m), args) in
-     res
+  | E_if(c, e1, e2) -> MIfte (aux bv c, aux bv e1, aux bv e2)
+  | E_app (m, args) ->
+      let args = List.map (expr_typ bv) args in
+      MApp(aux bv m, Some (get_typ m), args)
   (*| TMeth(s,meth),_ -> MMeth(myexpr_of_texpr s, meth) *)
   | E_sequence _ -> failwith "myexpr_of_texpr: sequence"
   | E_record _ -> failwith "myexpr_of_texpr: record"
   | E_record_access _ -> failwith "myexpr_of_texpr: record_access"
   | E_record_with _ -> failwith "myexpr_of_texpr: record_with"
-  | E_tuple([e1;e2]) ->
-      MApp(expr_glob Own_basics.foccrp, None, [expr_typ bv e1; expr_typ bv e2])
-  | E_tuple(_) -> failwith "myexpr_of_texpr: e_tuple"
-  | E_external(_) -> failwith "myexpr_of_texpr: e_external"
-  | E_paren(e) -> aux bv e
-  | E_let(e1,e2) ->
-      let e1' = try(List.hd e1.ast_desc.ld_bindings).ast_desc with | Not_found -> failwith "Internal Error :/" in
+  | E_tuple ([e1; e2]) ->
+      MApp (expr_glob Own_basics.foccrp, None, [expr_typ bv e1; expr_typ bv e2])
+  | E_tuple (_) -> failwith "myexpr_of_texpr: e_tuple"
+  | E_external (_) -> failwith "myexpr_of_texpr: e_external"
+  | E_paren (e) -> aux bv e
+  | E_let (e1, e2) ->
+      let e1' =
+        try (List.hd e1.ast_desc.ld_bindings).ast_desc with
+        | Not_found -> failwith "Internal Error :/" in
       (* Take into account of parameters *)
       let add_params =
-          List.fold_right (fun e s ->
-                             match e with
-                             | vn, Some t -> (fun e -> MFun(extract_vname vn,
-                                                            Some(typ_of_foctyp t.ast_desc), s e))
-                             | vn, None -> failwith ("myexpr_of_texpr : E_let lack of type for " ^ extract_vname vn ^ " in local function " ^ extract_vname e1'.b_name)
-                          ) e1'.b_params (fun e -> e)
-      in
+        List.fold_right
+          (fun e s ->
+            match e with
+            | (vn, Some t) ->
+                (fun e ->
+                  MFun (extract_vname vn, Some (typ_of_foctyp t.ast_desc), s e))
+            | (vn, None) ->
+                failwith
+                  ("myexpr_of_texpr : E_let lack of type for " ^
+                   extract_vname vn ^ " in local function " ^
+                   extract_vname e1'.b_name))
+          e1'.b_params (fun e -> e) in
       let x = extract_vname e1'.b_name in
       let _x_t = e1'.b_type in
-      let e1',tttt = match e1'.b_body with
-               | BB_logical _ -> failwith "myexpr_of_texpr: logical E_let"
-               | BB_computational e -> aux bv e, get_ast_type e in
+      let (e1',tttt) =
+        match e1'.b_body with
+        | BB_logical _ -> failwith "myexpr_of_texpr: logical E_let"
+        | BB_computational e -> aux bv e, get_ast_type e in
 (*       let tttt = get_ast_type e1 in *)
-      (if tttt = None then failwith (string_of_myexpr e1'));
-      MVarloc(false,(x, tttt), add_params e1', aux (x::bv) e2)
-  | E_match(e,l) ->
+      (if tttt = None then failwith (string_of_myexpr e1')) ;
+      MVarloc (false, (x, tttt), add_params e1', aux (x :: bv) e2)
+  | E_match (e, l) ->
       let tttt = get_ast_type e in
-      let res = MMatch((aux bv e, tttt),
-                       List.map
-                         (fun (p,e) ->
-                            let a,b = pattern_of_tpattern p in
-                              a,b,aux (add_s_o b bv) e
-                         ) l
-                      ) in
+      let res =
+        MMatch ((aux bv e, tttt),
+                List.map
+                  (fun (p, e) ->
+                    let (a,b) = pattern_of_tpattern p in
+                    a,b,aux (add_s_o b bv) e)
+                  l) in
 (*       print_debug (dbg_string_myexpr res); *)
         res
                        (***)
   | _ -> raise Cant_convert_texpr in
-    aux bv texpr;;
+  aux bv texpr
+;;
 
 
 (* convert a Typed_elt.tprop to a proposition *)
 let proposition_of_tprop m =
-  let rec aux l =
-  function
-    | Pr_forall([], _, p) -> aux l p.ast_desc
-    | Pr_forall(v::r, t, p) -> 
+  let rec aux l = function
+    | Pr_forall ([], _, p) -> aux l p.ast_desc
+    | Pr_forall (v :: r, t, p) ->
         let v = extract_vname v in
-         PUniv(v, typ_of_foctyp t.ast_desc,
-                  aux (v::l) (Pr_forall(r,t,p)))
-    | Pr_exists([], _, p) -> aux l p.ast_desc
-    | Pr_exists(v::r, t, p) -> 
+        PUniv (v, typ_of_foctyp t.ast_desc,
+               aux (v :: l) (Pr_forall (r, t, p)))
+    | Pr_exists ([], _, p) -> aux l p.ast_desc
+    | Pr_exists (v :: r, t, p) ->
         let v = extract_vname v in
-         PEx(v, typ_of_foctyp t.ast_desc,
-                aux (v::l) (Pr_exists(r,t,p)))
-    | Pr_and (p1,p2) -> PAnd(aux l p1.ast_desc,aux l p2.ast_desc)
-    | Pr_or (p1,p2) -> POr(aux l p1.ast_desc,aux l p2.ast_desc)
-    | Pr_imply(p1,p2) -> PImp(aux l p1.ast_desc,aux l p2.ast_desc)
-    | Pr_equiv(p1,p2) -> PEq(aux l p1.ast_desc,aux l p2.ast_desc)
+        PEx (v, typ_of_foctyp t.ast_desc, aux (v :: l) (Pr_exists (r, t, p)))
+    | Pr_and (p1, p2) -> PAnd (aux l p1.ast_desc,aux l p2.ast_desc)
+    | Pr_or (p1, p2) -> POr (aux l p1.ast_desc,aux l p2.ast_desc)
+    | Pr_imply (p1, p2) -> PImp (aux l p1.ast_desc,aux l p2.ast_desc)
+    | Pr_equiv (p1, p2) -> PEq (aux l p1.ast_desc,aux l p2.ast_desc)
     | Pr_not p -> PNot(aux l p.ast_desc)
-    | Pr_expr e -> PCall(myexpr_of_texpr m l e)
+    | Pr_expr e -> PCall (myexpr_of_texpr m l e)
     | Pr_paren e -> aux l e.ast_desc in
-  aux [];;
+  aux []
+;;
+
 
 type expr_or_logic =
 | FExpr of  myexpr
-| FLogic of proposition;;
+| FLogic of proposition
+;;
 
-let expr_or_logic_of_body =
-  function
+
+let expr_or_logic_of_body = function
   | Parsetree.BB_logical p -> FLogic (proposition_of_tprop "" p.ast_desc)
-  | Parsetree.BB_computational e -> FExpr (myexpr_of_texpr "" [] e);;
+  | Parsetree.BB_computational e -> FExpr (myexpr_of_texpr "" [] e)
+;;
 
 
 let get_prop_def species prop =
-  Whattodo.print_verbose ("Getting prop : " ^ prop ^ "...\n");
+  Whattodo.print_verbose ("Getting prop : " ^ prop ^ "...\n") ;
   let rec search_prop nn l =
     match l with
-    | [] ->
-        raise (Property_doesnt_exists prop)
-    | (ET.SF_theorem((_,n,l,p,_,_)))::r 
-    | (ET.SF_property((_,n,l,p,_)))::r ->
+    | [] -> raise (Property_doesnt_exists prop)
+    | (ET.SF_theorem ((_, n, l, p, _, _))) :: r
+    | (ET.SF_property ((_, n, l, p, _))) :: r ->
         if extract_vname n = nn then
           if l <> [] then
             failwith "get_prop_def: non empty list, what does it mean ???"
-          else
-            p
-        else
-          search_prop nn r
-    | _e::r -> search_prop nn r in
+          else p
+        else search_prop nn r
+    | _e :: r -> search_prop nn r in
   let ss = focalize_get_species species in
-    proposition_of_tprop (fst species) (search_prop prop ss.ET.spe_sig_methods).ast_desc
+  proposition_of_tprop
+    (fst species) (search_prop prop ss.ET.spe_sig_methods).ast_desc
 ;;
+
 
 let rec add_meth_params p t e =
   match p, t with
   | p::r, TFct(t1,t2) ->
-      let expr, typ_final = add_meth_params r t2 e in 
+      let expr, typ_final = add_meth_params r t2 e in
       MFun(p, Some t1, expr), typ_final
   | [], _ ->
       e, t
@@ -1000,7 +1004,7 @@ let get_meth_def sn meth =
 ;;
 
 let is_concrete_type typ =
-  let aux t m = 
+  let aux t m =
      Env.TypingEnv.find_type ~loc:Location.none ~current_unit:"???" (get_lident t) m in
   match typ with
   | TAtom(None, s) | TPrm(None, s, _) ->
@@ -1034,9 +1038,9 @@ let focalize_init install_lib_dir m =
 
 let get_rep = focalize_get_representation;;
 
-let expr_for_prolog_of_texpr _ = failwith "expr_for_prolog_of_texpr: Not yet implemented" 
-let typ_of_const _ = failwith "typ_of_const: Not yet implemented" 
-let foctyp_of_typ _ = failwith "foctyp_of_typ: Not yet implemented" 
+let expr_for_prolog_of_texpr _ = failwith "expr_for_prolog_of_texpr: Not yet implemented"
+let typ_of_const _ = failwith "typ_of_const: Not yet implemented"
+let foctyp_of_typ _ = failwith "foctyp_of_typ: Not yet implemented"
 let is_complete_def s = s.ET.spe_is_closed;;
 
 let is_complete m s = is_complete_def (focalize_get_species (m, s));;
@@ -1046,7 +1050,7 @@ let get_meth_def_split sn m =
 (*   print_debug (dbg_string_myexpr def); *)
   let rec aux s =
     match s with
-    | MFun(x, t, e) -> 
+    | MFun(x, t, e) ->
         let (args, e_t) = aux e in
         (x, t)::args, e_t
     | _ -> [], (s, typ) in
@@ -1091,7 +1095,7 @@ let is_collection spc =
 ;;
 
 
-let focalize_get_params spec = spec.ET.spe_sig_params;; 
+let focalize_get_params spec = spec.ET.spe_sig_params;;
 
 let focalize_param_is_ent param =
   match param with
