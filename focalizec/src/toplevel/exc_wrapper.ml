@@ -571,6 +571,12 @@ let print_focalize_exception ppf = function
         Location.pp_location at header
         Handy.pp_set_underlined node_num node_name
         Handy.pp_reset_effects
+  | Species_coq_generation.Termination_is_not_structural (at, arg_name) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tTermination@ proof@ is@ stated@ as@ structural@ on@ the\
+         @ parameter@ '%t%a%t'@ which@ does@ not@ syntactically@ decrease.@]@."
+        Location.pp_location at header Handy.pp_set_underlined
+        Sourcify.pp_vname arg_name Handy.pp_reset_effects
   | Species_record_type_coq_generation.Wrong_decreasing_argument
       (at, species_name, def_name, decr_arg) ->
       Format.fprintf ppf

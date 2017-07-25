@@ -25,12 +25,11 @@ exception Attempt_proof_by_def_of_local_ident of
 exception Attempt_proof_by_prop_of_local_ident of
   (Location.t * Parsetree.expr_ident)
 
-exception Attempt_proof_by_unknown_hypothesis of
-  (Location.t * Parsetree.vname)
+exception Attempt_proof_by_unknown_hypothesis of (Location.t * Parsetree.vname)
 
-exception Attempt_proof_by_unknown_step of
-  (Location.t * Parsetree.node_label)
+exception Attempt_proof_by_unknown_step of (Location.t * Parsetree.node_label)
 
+exception Termination_is_not_structural of (Location.t * Parsetree.vname)
 
 val generate_defined_recursive_let_definition_With_Function :
   Context.species_compil_context ->
@@ -60,7 +59,7 @@ val generate_defined_recursive_let_definition_With_Fixpoint :
   Types.type_scheme ->
   Parsetree.binding_body ->
   Env.TypeInformation.field_abstraction_info ->
-  is_first: bool -> is_last: bool ->
+  self_manifest:Types.type_simple option -> is_first: bool -> is_last: bool ->
     Misc_common.compiled_field_memory
 
 val species_compile :

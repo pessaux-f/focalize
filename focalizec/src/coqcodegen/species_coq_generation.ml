@@ -15,10 +15,8 @@
 (* ************************************************************************** *)
 
 
-(* *************************************************************** *)
 (** {b Descr} : This module performs the compilation from FoCaL to
-    Coq of FoCaL's collections and species.                        *)
-(* *************************************************************** *)
+    Coq of FoCaL's collections and species. *)
 
 exception Attempt_proof_by_def_of_species_param of
   (Location.t * Parsetree.expr_ident) ;;
@@ -42,6 +40,11 @@ exception Attempt_proof_by_unknown_hypothesis of
 
 exception Attempt_proof_by_unknown_step of
   (Location.t * Parsetree.node_label) ;;
+
+
+(** A structural termination proof was stated but it appears that the given
+    argument does not syntactically structurally decrease. *)
+exception Termination_is_not_structural of (Location.t * Parsetree.vname) ;;
 
 
 let section_gen_sym =
@@ -1187,8 +1190,8 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
                  (match pr_kind with
                  | Env.RPK_struct n -> n
                  | Env.RPK_other ->
-                    (* Currently, we shamely assume that the function is
-                       structural on it first argument. *)
+                    (* [Unsure] Currently, we shamely assume that the function
+                       is structural on it first argument. *)
                     List.hd params) in
                generate_defined_method_proto_postlude
                  ctx print_ctx env ~self_manifest params scheme
@@ -3423,7 +3426,24 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
  *************************************************************************** *)
 let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
     generated_fields from name params decr_arg_name proof_loc scheme body ai
-    ~is_first ~is_last =
+    ~self_manifest ~is_first ~is_last =
+  (* First, ensure that the stated structural termination proof is valid. *)
+  let body_expr =
+    (match body with
+    | Parsetree.BB_logical _ -> assert false
+    | Parsetree.BB_computational e -> e) in
+  let (params_with_type, _, _) =
+    MiscHelpers.bind_parameters_to_types_from_type_scheme
+      ~self_manifest (Some scheme) params in
+  let params_with_type =
+    List.map
+      (fun (n, opt_ty) ->
+        match opt_ty with None -> assert false | Some t -> (n, t))
+      params_with_type in
+  if not (Recursion.is_structural
+            ~current_unit: ctx.Context.scc_current_unit name
+            params_with_type decr_arg_name body_expr) then
+    raise (Termination_is_not_structural (proof_loc, decr_arg_name)) ;
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Now, generate the prelude of the method introduced by "let rec". *)
   if is_first then
@@ -3504,7 +3524,7 @@ let rec generate_recursive_let_definitions ctx print_ctx env ~self_manifest
                    generate_defined_recursive_let_definition_With_Fixpoint
                      ctx print_ctx env generated_fields from name params
                      decr_arg_name term_pr.Parsetree.ast_loc scheme body ai
-                     ~is_first ~is_last: (q = [])
+                     ~self_manifest ~is_first ~is_last: (q = [])
                | Parsetree.TP_lexicographic _
                | Parsetree.TP_measure (_, _, _)
                | Parsetree.TP_order (_, _, _) ->

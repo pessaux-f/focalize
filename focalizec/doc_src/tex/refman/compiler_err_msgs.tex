@@ -983,15 +983,27 @@ proof step that was not found in the current proof tree.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Termination proof is stated as structural on the parameter '$name$' which does not syntactically decrease.}
+
+{\em Description}: A termination proof was given for a recursive function
+by a structural criterion. However, the syntactical analysis of the argument
+used for the recursive call does not show that the given argument stricly
+decreases.
+
+{\em Hints}: May be you stated a wrogn parameter name, or your recursive
+call(s) really do not strictly decrease(s).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Mutual recursion is not yet supported for Coq code
   generation. At least functions '$name_1$' and '$name_2$' are
   involved in a mutual recursion.}
 
 {\em Description}: The current version of {\focal} does not yet handle
-{\coq} code generation for mutual recursive functions. At least the two
-functions $name_1$ and $name_2$ were found as mutually recursive but
-may be the recursion involves more functions. It is then impossible to
-produce {\coq} source code.
+{\coq} code generation for non-structural mutual recursive functions. At
+least the two such functions $name_1$ and $name_2$ were found as mutually
+recursive but may be the recursion involves more functions. It is then
+impossible to produce {\coq} source code.
 
 
 {\em Hints}: Until this feature is available in {\focal}, do not try to

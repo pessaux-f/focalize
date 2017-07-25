@@ -142,7 +142,7 @@ let toplevel_let_def_compile ctx env let_def =
                           lbpc_params_with_type)
                      decr_arg term_pr_loc
                      def_scheme one_bnd.Parsetree.ast_desc.Parsetree.b_body
-                     ~is_first: true ~is_last: true
+                     ~self_manifest: None ~is_first: true ~is_last: true
                      dummy_abstr_info) ;
                 (* No need to extended the environment. This was done by
                    [pre_compute_let_bindings_infos_for_rec] because we are
