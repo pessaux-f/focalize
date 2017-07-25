@@ -1,21 +1,19 @@
-(***********************************************************************)
-(*                                                                     *)
-(*                        FoCaLize compiler                            *)
-(*                                                                     *)
-(*            François Pessaux                                         *)
-(*            Pierre Weis                                              *)
-(*            Damien Doligez                                           *)
-(*                                                                     *)
-(*                               LIP6  --  INRIA Rocquencourt          *)
-(*                                                                     *)
-(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
-(*  Distributed only by permission.                                    *)
-(*                                                                     *)
-(***********************************************************************)
-
-
-
 (* ************************************************************************** *)
+(*                                                                            *)
+(*                        FoCaLiZe compiler                                   *)
+(*                                                                            *)
+(*            François Pessaux                                                *)
+(*            Pierre Weis                                                     *)
+(*            Damien Doligez                                                  *)
+(*                                                                            *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
+(*                                                                            *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
+(*            2012 - ... ENSTA ParisTech                                      *)
+(*  Distributed only by permission.                                           *)
+(*                                                                            *)
+(* ************************************************************************** *)
+
 (** {b Descr} : Lower-level species field (relevant for collection generator)
         description recording information about dependency and extra
         parameters already computed while generating the methods and that
@@ -25,8 +23,7 @@
         that the extra parameters discovered will appear in the same order
         between method declaration and method application).
 
-    {b Rem} : Exported outside this module.                                   *)
-(* ************************************************************************** *)
+    {b Rem} : Exported outside this module. *)
 type compiled_field_memory = {
   (** Boolean telling if the method is logical, i.e. is either a logical let
       or a property or a theorem. *)
@@ -97,10 +94,6 @@ type collection_effective_arguments =
 
 
 
-(* ************************************************************************* *)
-(* Parsetree.species_param list ->                                           *)
-(*   (Parsetree.vname * Env.ScopeInformation.species_parameter_kind) list    *)
-(*     collection_effective_arguments list                                   *)
 (** {b Descr} : Extract the collections names used in an "implements" clause
        as arguments of the species that it used to make the collection.
        The parsetree encodes these parameters [Parsetree.expr]s but this
@@ -108,8 +101,7 @@ type collection_effective_arguments =
        Then we extracts here just the names of effective collections hidden
        in these [Parsetree.expr]s.
 
-    {b Rem} : Exported outside this module.                                  *)
-(* ************************************************************************* *)
+    {b Rem} : Exported outside this module. *)
 let get_implements_effectives species_params_exprs species_formals_info =
   List.map2
     (fun param_expr (_, param_kind) ->
@@ -167,15 +159,10 @@ let find_entity_params_with_position params =
 
 
 
-(* ************************************************************************** *)
-(* Context.species_compil_context -> Abstractions.environment_kind->          *)
-(* Parsetree.vname -> Parsetree.module_name -> int ->                         *)
-(*     (Parsetree.qualified_species * Parsetree_utils.simple_species_expr)    *)
-(*       list -> Parsetree.expr                                               *)
 (** {b Descr} : Takes the index of the parameter we want to instanciate
     among the list of parameters of the species where this parameter
     lives. Reminds that this parameter belongs to the species who DEFINED
-    the method we are processing to create the collection generator (i.e. 
+    the method we are processing to create the collection generator (i.e.
     the method whose method generator is inherited in the currently
     compiled species).
 
@@ -194,7 +181,7 @@ let find_entity_params_with_position params =
     Once the process ends, we return the expression obtained by applying
     all the found substitutions of effective to formal parameters along
     the inheritance.
-   
+
     {b Args} :
     - [ctx] : The current OCaml code generation context.
 
@@ -216,8 +203,7 @@ let find_entity_params_with_position params =
       currently processed method was defined and how it is propagated by
       inheritance up to the currently compiled species.
 
-    {b Rem} : Exported outside this module.                                     *)
-(* ************************************************************************** *)
+    {b Rem} : Exported outside this module. *)
 let follow_instanciations_for_in_param ctx env original_param_name
     original_param_unit original_param_index inheritance_steps =
   let current_species_parameters = ctx.Context.scc_species_parameters_names in
@@ -349,7 +335,6 @@ let follow_instanciations_for_in_param ctx env original_param_name
 
 
 
-(* ************************************************************************* *)
 (** {b Descr} : Describes by what a parameter of collection generator must
     be instanciated. In effect, during inheritance "is" (i.e. collection
     parameters) are instanciated. When creating the collection generator,
@@ -369,8 +354,7 @@ let follow_instanciations_for_in_param ctx env original_param_name
         and that lambda-lifts the dependency on the method of this
         parameter.
 
-    {b Rem} Not exported outside this module.                                *)
-(* ************************************************************************* *)
+    {b Rem} Not exported outside this module. *)
 type is_parameter_instanciation =
   | IPI_by_toplevel_collection of Types.type_collection
   | IPI_by_species_parameter of Env.TypeInformation.species_param
@@ -378,15 +362,10 @@ type is_parameter_instanciation =
 
 
 
-(* ************************************************************************** *)
-(* Context.species_compil_context -> Abstractions.environment_kind -> int ->  *)
-(*  (Parsetree.qualified_species * Parsetree_utils.simple_species_expr)       *)
-(*    list ->                                                                 *)
-(*      is_parameter_instanciation                                            *)
 (** {b Descr} : Takes the index of the parameter we want to instanciate
     among the list of parameters of the species where this parameter
     lives. Remind that this parameter belongs to the species who DEFINED
-    the method we are processing to create the collection generator (i.e. 
+    the method we are processing to create the collection generator (i.e.
     the method whose method generator is inherited in the currently
     compiled species and from -- by multiple steps possibly -- the species
     in which the index is meaningful).
@@ -430,8 +409,7 @@ type is_parameter_instanciation =
       recent steps, in tail the older. This list will be processed in reverse
       order to "go back to the future".
 
-    {b Rem} : Exported outside this module.                                    *) 
-(* ************************************************************************* *)
+    {b Rem} : Exported outside this module. *)
 let follow_instanciations_for_is_param ctx env original_param_index
     inheritance_steps =
   let current_species_parameters = ctx.Context.scc_species_parameters_names in
@@ -564,10 +542,6 @@ let follow_instanciations_for_is_param ctx env original_param_index
 
 
 
-(* ************************************************************************** *)
-(*  Abstractions.environment_kind -> current_unit: Parsetree.module_name ->   *)
-(*    start_spec_mod: Parsetree.module_name -> start_spec_name: string ->     *)
-(*      method_name: Parsetree.vname -> (Parsetree.module_name * string)      *)
 (** {b Descr} : This function looks for the real species that defines
     the method [method_name] of the species [(start_spec_mod,start_spec_name)]
     along its inheritance tree. The species in which we start looking is one
@@ -580,14 +554,14 @@ let follow_instanciations_for_is_param ctx env original_param_index
     species Sp1 inherits Sp0 = rep = int ; let n = 5 ; end ;;
     species Foo0 (A0 is Sp0) = rep = int ; let v = A0!m ; end ;;
     species Foo1_1_1 inherits Foo0 (Sp1) = end ;;
-    
+
     In Foo1_1_1, wer want to get the OCaml code
          let local_v = Foo0.v Sp0.m.
     In effect, the method generator for the method 'm' on which we depend
     if not really in 'Sp1' ('Sp1' is the effective instanciation of the
     parameter 'Sp0' of 'Foo0' during inheritance in 'Foo1_1_1').
     The method generator is in the parent of 'Sp1', i.e. 'Sp0'.
-      
+
     So, we just need to recover the species description, find the method's
     description and see in which species the method was comming "from".
     We return the pair containing the species module name and the species
@@ -604,8 +578,7 @@ let follow_instanciations_for_is_param ctx env original_param_index
     - [method_name] : The name of the method fow which we are searching the
       definition.
 
-    {b Rem} : Exported outside this module.                                   *)
-(* ************************************************************************** *)
+    {b Rem} : Exported outside this module. *)
 let find_toplevel_spe_defining_meth_through_inheritance env ~current_unit
     ~start_spec_mod ~start_spec_name ~method_name  =
   try
@@ -648,7 +621,6 @@ let find_toplevel_spe_defining_meth_through_inheritance env ~current_unit
 
 
 
-(* *********************************************************************** *)
 (** {b Descr} : Describes when starting the code of a let binding how it
     must be linked to the possible previous code. If the binding is the
     first of a non-recursive definition, then it must be introduced by
@@ -656,8 +628,7 @@ let find_toplevel_spe_defining_meth_through_inheritance env ~current_unit
     introduced by "let rec ". If it is not the first of a multiple
     definition, then it must be introduced by "and ".
 
-    {b Rem} : Not exported outside this module.                            *)
-(* *********************************************************************** *)
+    {b Rem} : Not exported outside this module. *)
 type let_connector =
   | LC_first_non_rec   (** The binding is the first of a non-recursive
                            definition. *)
@@ -668,7 +639,6 @@ type let_connector =
 
 
 
-(* ******************************************************************** *)
 (** {b Descr} : Build the list of abstract parameters according to the
     information found in the [abstraction_info] [ai]. This is similar
     to create the list of strings represented by the sequence of
@@ -696,8 +666,7 @@ type let_connector =
         first, in the order of species parameters, then those from the
         methods of ourselves).
 
-    {b Rem} : Not exported outside this module.                         *)
-(* ******************************************************************** *)
+    {b Rem} : Not exported outside this module. *)
 let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
   (* Build the list by side effect in reverse order for efficiency. *)
   let the_list_reversed = ref [] in
@@ -781,7 +750,6 @@ let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
 
 
 
-(* ************************************************************************* *)
 (** {b Descr} : Finds among the fields abstractions if there is the
     signature "representation". If finds some, then returns an instance of
     its type scheme. If doesn't find any, returns [None].
@@ -804,8 +772,7 @@ let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
           let empty(v in Val) = false ;
         end ;;
 
-    {b Exported} : No.                                                       *)
-(* ************************************************************************* *)
+    {b Exported} : No. *)
 let rec find_self_representation_if_some = function
   | [] -> None
   | h :: q -> (

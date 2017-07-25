@@ -25,11 +25,10 @@ exception NestedRecursiveCalls of Parsetree.vname * Location.t ;;
 exception PartialRecursiveCall of Parsetree.vname * Location.t ;;
 exception MutualRecursion of (Parsetree.vname * Parsetree.vname) ;;
 
-(** ***************************************************************************
-  Useful for storing bindings that were made between one point of a program
-  and another. These constructs express constraints that must hold in
-  order to have arrived at a certain point of a program.
- *************************************************************************** *)
+
+(** Useful for storing bindings that were made between one point of a program
+    and another. These constructs express constraints that must hold in
+    order to have arrived at a certain point of a program. *)
 type binding =
   | B_let of Parsetree.binding (** The variable was bound to the expression. *)
   | B_match of
@@ -42,8 +41,7 @@ type binding =
 
 
 
-(** ***************************************************************************
-    {b Descr} : Tests whether a given function applied to given arguments
+(** {b Descr} : Tests whether a given function applied to given arguments
     constitutes a recursive call.
 
     @param function_name the qualified name of the recursive function.
@@ -58,8 +56,7 @@ type binding =
     @return [true] if the application constitutes a valid recursive
     call; [false] otherwise.
 
-  {b Visibility}: Not exported outside this module.
- *************************************************************************** *)
+  {b Visibility}: Not exported outside this module. *)
 let is_recursive_call ~current_unit function_name argument_list expr_list
     fexpr =
   match fexpr.Parsetree.ast_desc with
@@ -100,14 +97,12 @@ let is_recursive_call ~current_unit function_name argument_list expr_list
 
 
 
-(** ***************************************************************************
-    {b Descr}: Traverse a pattern and replace catch-alls by fresh variables.
+(** {b Descr}: Traverse a pattern and replace catch-alls by fresh variables.
     This is needed to prevent Coq from complaining about *value* placeholders
     for which it can't find a value. This only happen in the generated
     termination theorems.
 
-    {b Visibility}: Not exported outside this module.
- *************************************************************************** *)
+    {b Visibility}: Not exported outside this module. *)
 let name_catchalls pattern =
   (* Counter to generate unique fresh variables in an expression. These
      variables serve to name catch-all patterns. *)
@@ -144,20 +139,17 @@ type typed_vname = (Parsetree.vname * Types.type_simple) ;;
 
 
 
-(** ***************************************************************************
-    {b Descr}: Just to give a name to the result type of [list_recursive_calls]
+(** {b Descr}: Just to give a name to the result type of [list_recursive_calls]
     to manipulate easier.
 
-    {b Visibility}: Exported outside this module.
- *************************************************************************** *)
+    {b Visibility}: Exported outside this module. *)
 type recursive_calls_description =
   ((typed_vname * Parsetree.expr) list * binding list) list
 ;;
 
 
 
-(** ***************************************************************************
-    {b Descr} : Compiles a list of information about recursive calls made in a
+(** {b Descr} : Compiles a list of information about recursive calls made in a
     function body.
     Information included is :
       - An association list between the declared arguments of the function and
@@ -169,8 +161,7 @@ type recursive_calls_description =
     @raise PartialRecursiveCall in the event that a recursive call is
     incomplete.
 
-    {b Visibility}: Exported outside this module.
- *************************************************************************** *)
+    {b Visibility}: Exported outside this module. *)
 let rec list_recursive_calls ~current_unit function_name argument_list
     bindings expr =
   match expr.Parsetree.ast_desc with
