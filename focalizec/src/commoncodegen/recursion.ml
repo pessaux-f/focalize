@@ -97,6 +97,23 @@ let is_recursive_call ~current_unit function_name argument_list expr_list
 
 
 
+(** {b Descr}: Counter to generate unique fresh variables in an expression.
+    These variables serve to name catch-all patterns.
+
+    {b Attention}: Having a global variable is a bit uggly, but allows a fast
+    fix for nama capture in nested patterns. Before, [name_catchalls] was
+    resetting this variable at each call. Then with nested patterns, there
+    were some conflicts.
+    Hence, this variable can safely be reset only before analysing a new
+    function body to search for recursive calls in the function
+    [is_structural].
+
+    {b Exported} : No no no no ! Especially not !
+ *)
+let fresh_catchall_vars_cnt = ref 0 ;;
+
+
+
 (** {b Descr}: Traverse a pattern and replace catch-alls by fresh variables.
     This is needed to prevent Coq from complaining about *value* placeholders
     for which it can't find a value. This only happen in the generated
@@ -104,19 +121,17 @@ let is_recursive_call ~current_unit function_name argument_list expr_list
 
     {b Visibility}: Not exported outside this module. *)
 let name_catchalls pattern =
-  (* Counter to generate unique fresh variables in an expression. These
-     variables serve to name catch-all patterns. *)
-  let fresh_vars_cnt = ref 0 in
   let rec __rec_name p =
     match p.Parsetree.ast_desc with
     | Parsetree.P_const _ | Parsetree.P_var _ -> p
     | Parsetree.P_as (p, v) ->
         { p with Parsetree.ast_desc = Parsetree.P_as((__rec_name p), v) }
     | Parsetree.P_wild ->
-        incr fresh_vars_cnt ;
+        incr fresh_catchall_vars_cnt ;
         { p with Parsetree.ast_desc =
             Parsetree.P_var
-              (Parsetree.Vlident ("__" ^ (string_of_int !fresh_vars_cnt))) }
+              (Parsetree.Vlident
+                 ("__" ^ (string_of_int !fresh_catchall_vars_cnt))) }
     | Parsetree.P_constr (cstr, p_list) ->
         { p with Parsetree.ast_desc =
             Parsetree.P_constr (cstr, (List.map __rec_name p_list)) }
@@ -130,7 +145,6 @@ let name_catchalls pattern =
     | Parsetree.P_paren p ->
         { p with Parsetree.ast_desc = Parsetree.P_paren (__rec_name p) } in
   (* Now really do the job. *)
-  fresh_vars_cnt := 0 ;
   __rec_name pattern
 ;;
 
@@ -500,6 +514,10 @@ let get_smaller_variables variables bindings =
  *************************************************************************** *)
 let is_structural ~current_unit function_name arguments structural_argument
     body =
+  (* Reset the catchall renamer by fresh variable. See the comment on
+     [fresh_catchall_vars_cnt] to understand why this reset must be done
+     here and only here. *)
+  fresh_catchall_vars_cnt := 0 ;
   let recursive_calls = list_recursive_calls function_name arguments [] body in
   let analyse_recursive_call (arguments_assoc_list, bindings) =
     (* Just forget the type while searching in the assoc list. *)
