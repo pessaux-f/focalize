@@ -171,6 +171,7 @@ let zenon_loc file (_: string * string) data loc oc =
       flush stderr;
   | _ -> assert false;
   end;
+  let file = Printf.sprintf "%s-%d" file !lemma_number in
   let problem_extension = match !input_format with I_coq -> "coz" | I_dk -> "skp" in
   let proof_extension = match !input_format with I_coq -> "v" | I_dk -> "sk" in
   let tmp_in = (file ^ "-zvtmp." ^ problem_extension) in
