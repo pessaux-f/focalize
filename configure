@@ -421,7 +421,7 @@ else
 fi
 
 # Check that the file $ZENONM is executable
-if [[ "$ZENONM" == "" || ! `which $ZENONM` ]] ;
+if [ "$ZENONM" = "" ] || [ ! `which $ZENONM` ] ;
 then
     ZENONM=""
     ZENONM_LIB_DIR=""

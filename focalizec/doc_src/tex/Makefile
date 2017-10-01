@@ -24,7 +24,7 @@ include $(ROOT_DIR)/Makefile.common
 
 # Only enter these directories if doc was requested and if LaTeX was found.
 all clean depend install doc:
-	@ if [ "$(MAKE_DOC)" == "true" ] && [ "$(LATEX)" != "" ] ; \
+	@ if [ "$(MAKE_DOC)" = "true" ] && [ "$(LATEX)" != "" ] ; \
 		then \
 			for i in $(SUB_DIRS); do \
 				echo "--> $$i ..." >&2 && \
