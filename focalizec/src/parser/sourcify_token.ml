@@ -103,6 +103,7 @@ let token ppf = function
   | CAML -> Format.fprintf ppf "%s" "CAML"
   | COLLECTION -> Format.fprintf ppf "%s" "COLLECTION"
   | CONCLUDE -> Format.fprintf ppf "%s" "CONCLUDE"
+  | CONSTRUCTOR -> Format.fprintf ppf "%s" "CONSTRUCTOR"
   | COQ -> Format.fprintf ppf "%s" "COQ"
   | COQ_REQUIRE -> Format.fprintf ppf "%s" "COQ_REQUIRE"
   | DEDUKTI -> Format.fprintf ppf "%s" "DEDUKTI"

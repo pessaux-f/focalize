@@ -1,0 +1,21 @@
+open "basics" ;;
+
+type t = | A | B (t) ;;
+
+species S =
+  signature f : unit -> bool ;
+end ;;
+
+
+species T (P is S) =
+  let rec f (x) =
+    match x with
+    | A -> ()
+    | B (v) -> if P!f (()) then g (v) else f (v)
+  and g (y) =
+    match y with
+    | A -> ()
+    | B (v) -> if P!f (()) then f (v) else g (v)
+  termination proof = structural x
+  termination proof = structural y ;
+end ;;

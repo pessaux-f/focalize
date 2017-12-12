@@ -1,0 +1,23 @@
+(** Must pass. Illustrate the need to reset the catchall renamer (for Coq code)
+    *not before each pattern*. Ths caused the same "fresh" variable used several
+    times in case of some nested pattern-matchings. Hence the last bound
+    variable was hidding the previous one, causing the generated Coq to be
+    ill-typed. *)
+open "basics" ;;
+
+type occurrence = alias (int * bool) ;;
+
+type particle = alias (unit * occurrence) ;;
+
+type opt = | None | Some (occurrence) ;;
+
+
+let rec f (pl : list (particle), l : list (int)) =
+  match (pl, l) with
+  | (((_, occ)  :: q) , a :: b) -> (
+      match occ with
+      | (0, _) -> f (q, b)
+      | (_, _) ->  None
+  )
+  | (_, _) -> None
+;;

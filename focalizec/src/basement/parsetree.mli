@@ -369,7 +369,7 @@ and let_def_desc = {
   ld_final : final_flag;
   ld_local : local_flag;
   ld_bindings : binding list;
-  ld_termination_proof : termination_proof option;
+  ld_termination_proofs : (termination_proof option) list
 }
 
 and param = (vname * type_expr option)
@@ -599,7 +599,7 @@ and phrase_desc =
   | Ph_species of species_def
   | Ph_collection of collection_def
   | Ph_testing of testing_def
-  | Ph_type of type_def
+  | Ph_type of type_def list
   | Ph_let of let_def
   | Ph_theorem of theorem_def
   | Ph_expr of expr_def

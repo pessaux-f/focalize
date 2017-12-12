@@ -98,7 +98,7 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
       Format.fprintf ppf "_focty_%s" constructor_name'
     else
       Format.fprintf ppf "%s._focty_%s"
-        (String.capitalize hosting_module) constructor_name' in
+        (String.capitalize_ascii hosting_module) constructor_name' in
 
   let rec rec_pp_to_ml ~current_unit collections_carrier_mapping prio ppf ty =
     match ty with
@@ -165,7 +165,7 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
             Format.fprintf ppf "%s.me_as_carrier" collection_name
           else
             Format.fprintf ppf "%s.%s.me_as_carrier"
-              (String.capitalize module_name) collection_name
+              (String.capitalize_ascii module_name) collection_name
         end) in
 
   (* ************************************************** *)

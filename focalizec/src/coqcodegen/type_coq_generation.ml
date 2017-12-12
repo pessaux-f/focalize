@@ -123,7 +123,8 @@ let extend_coq_gen_env_with_type_external_mapping env nb_extra_args
 
     {b Exported} : Yes.                                                      *)
 (* ************************************************************************* *)
-let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
+let type_def_compile ~as_zenon_fact ctx env ~is_first ~is_last type_def_name
+    type_descr =
   let out_fmter = ctx.Context.rcc_out_fmter in
   (* Build the print context for the methods once for all. *)
   let print_ctx = {
@@ -159,9 +160,10 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
            ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
            type_descr env
        else env
-   | Env.TypeInformation.TK_external (external_expr, external_mapping) ->
-       (begin
-       Format.fprintf out_fmter "@[<2>Definition %a__t@ "
+   | Env.TypeInformation.TK_external (external_expr, external_mapping) -> (
+       if is_first then Format.fprintf out_fmter "@[<2>Definition "
+       else Format.fprintf out_fmter "@[<2>with " ;
+       Format.fprintf out_fmter "%a__t@ "
          Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
        (* Print the parameter(s) stuff if any. *)
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
@@ -177,7 +179,9 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                | (Parsetree.EL_Dk, _)
                | ((Parsetree.EL_external _), _) -> false)
              external_expr.Parsetree.ast_desc in
-         Format.fprintf out_fmter "%s.@]@.@\n" coq_binding
+         Format.fprintf out_fmter "%s" coq_binding ;
+         if is_last then Format.fprintf out_fmter ".@]@\n"
+         else Format.fprintf out_fmter "@]@\n"
        with Not_found ->
          (* We didn't find any correspondance for Coq. *)
          raise
@@ -195,7 +199,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
            ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
            type_descr env_with_external_mapping
        else env
-       end)
+      )
    | Env.TypeInformation.TK_variant cstrs ->
        (begin
        (* To ensure variables names sharing, rely on the type definition being
@@ -214,8 +218,10 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
              let (_, sum_cstr_ty) = Types.scheme_split sum_cstr_scheme in
                (sum_cstr_name, sum_cstr_ty))
            cstrs in
-       Format.fprintf out_fmter "@[<2>Inductive %a__t@ "
-         Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
+       if is_first then Format.fprintf out_fmter "@[<2>Inductive"
+       else Format.fprintf out_fmter "@[<2>with" ;
+       Format.fprintf out_fmter " %a__t@ "
+         Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
        (* Print the parameter(s) stuff if any. Do it only now the unifications
           have been done with the sum constructors to be sure that thanks to
           unifications, "sames" variables will have the "same" name everywhere
@@ -239,7 +245,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
          else "" in
        (* And finally really print the constructors definitions. *)
        List.iter
-         (fun (sum_cstr_name, cstr_ty) ->            
+         (fun (sum_cstr_name, cstr_ty) ->
            (* The sum constructor name. *)
            Format.fprintf out_fmter "@\n| %s%a"
              qualif
@@ -247,10 +253,11 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
            (* The type of the constructor. *)
            Format.fprintf out_fmter " :@ (@[<1>%a@])"
              (Coq_pprint.pp_type_simple_to_coq print_ctx) cstr_ty)
-         sum_constructors_to_print;
-       Format.fprintf out_fmter ".@]@\n@\n";
-       if not as_zenon_fact then
-         (begin
+         sum_constructors_to_print ;
+       (* End the definition if it it the last one. *)
+       if is_last then Format.fprintf out_fmter "." ;
+       Format.fprintf out_fmter "@]@\n@\n" ;
+       if not as_zenon_fact then (
          (* Since any variant type constructors must be inserted in the
             environment in order to know the number of extra leading "_" due to
             polymorphism, we return the extended environment. *)
@@ -269,7 +276,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
          Env.CoqGenEnv.add_type
            ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
            type_descr env_with_value_constructors
-         end)
+        )
        else env
        end)
    | Env.TypeInformation.TK_record fields ->
@@ -292,7 +299,9 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                   succeed. *)
                assert false)
            fields in
-       Format.fprintf out_fmter "@[<2>Record@ %a__t@ "
+       if is_first then Format.fprintf out_fmter "@[<2>Record"
+       else Format.fprintf out_fmter "@[<2>with" ;
+       Format.fprintf out_fmter "@ %a__t@ "
          Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
        (* Print the parameter(s) stuff if any. *)
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
@@ -318,7 +327,8 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
              local_print_fields q in
        (* Do the printing job... *)
        local_print_fields record_fields_to_print ;
-       Format.fprintf out_fmter " }.@]@\n " ;
+       if is_last then Format.fprintf out_fmter " }.@]@\n"
+       else Format.fprintf out_fmter " }@]@\n" ;
        if not as_zenon_fact then (
          (* Add the record labels in the environment like we do for constructors
             in sum types. Same remarks, same process. *)
@@ -340,4 +350,38 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
         )
        else env
        end)
+;;
+
+
+
+let type_defs_compile env out_fmter ~current_unit ~as_zenon_fact ty_descrs =
+  let rec fold_compile ~is_first accu_env = function
+    | [] -> accu_env
+    | (type_def_name, type_descr) :: q ->
+        Coq_pprint.purge_type_simple_to_coq_variable_mapping () ;
+        (* Create the initial context for compiling the type definition. *)
+        let ctx = {
+          Context.rcc_current_unit = current_unit ;
+          (* Not under a species, hence no species parameter. *)
+          Context.rcc_species_parameters_names = [] ;
+          (* Not under a species, hence empty carriers mapping. *)
+          Context.rcc_collections_carrier_mapping = [] ;
+          (* Not in the context of generating a method's body code, then
+             empty. *)
+          Context.rcc_lambda_lift_params_mapping = [] ;
+          Context.rcc_out_fmter = out_fmter } in
+        (* Since we are on the definition of the type, this type doesn't already
+           exists normally. Hence, we want the code generation to enrich the
+           environment with the components (record labels, sum value
+           constructors) and the type the definition induces. In effect, this is
+           not a "fake" type definition provided to Zenon as a fact. *)
+        let accu_env' =
+          type_def_compile
+            ~as_zenon_fact ctx accu_env ~is_first ~is_last: (q = [])
+            type_def_name type_descr in
+        (* Generate the remaining of the type definitions in the extended
+           environment. The next call is no more the first one. *)
+        fold_compile ~is_first: false accu_env' q in
+  (* Initial call: [is_first] is true. *)
+  fold_compile ~is_first: true env ty_descrs
 ;;

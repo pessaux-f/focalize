@@ -30,6 +30,10 @@ exception Ambiguous_logical_expression_and of (int * Location.t)
 exception Rebound_hyp_notation_or_var_in_proof of (Parsetree.vname * Location.t)
 exception Proof_by_species_property of (Parsetree.expr_ident * Location.t)
 exception Toplevel_species_as_effective_param of (Parsetree.ident * Location.t)
+exception Mix_tydefs_external_regular of (Location.t)
+exception Mix_tydefs_union_alias_sum of (Location.t)
+exception Mix_tydefs_external of (Location.t)
+
 
 val scope_file :
   Types.fname -> Parsetree.file -> Parsetree.file * Env.ScopingEnv.t

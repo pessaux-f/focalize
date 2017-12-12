@@ -81,19 +81,8 @@ let toplevel_compile env ~current_unit out_fmter = function
          testing is activated, testing instructions are compiled
          separatly. *)
       env
-  | Infer.PCM_type (type_def_name, type_descr) ->
-      Ml_pprint.purge_type_simple_to_ml_variable_mapping () ;
-      (* Create the initial context for compiling the type definition. *)
-      let ctx = {
-        Context.rcc_current_unit = current_unit;
-        (* Not under a species, hence no species parameter. *)
-        Context.rcc_species_parameters_names = [];
-        (* Not under a species, hence empty carriers mapping. *)
-        Context.rcc_collections_carrier_mapping = [];
-        (* Not in the context of generating a method's body code, then empty. *)
-        Context.rcc_lambda_lift_params_mapping = [];
-        Context.rcc_out_fmter = out_fmter } in
-      Type_ml_generation.type_def_compile ctx env type_def_name type_descr
+  | Infer.PCM_type ty_descrs ->
+      Type_ml_generation.type_defs_compile env out_fmter ~current_unit ty_descrs
   | Infer.PCM_let_def (let_def, def_schemes) ->
       Ml_pprint.purge_type_simple_to_ml_variable_mapping () ;
       (* Create the initial context for compiling the let-definition. *)

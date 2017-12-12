@@ -125,6 +125,23 @@ let print_focalize_exception ppf = function
         Location.pp_location at header
         Handy.pp_set_underlined Sourcify.pp_vname vname
         Handy.pp_reset_effects
+  | Scoping.Mix_tydefs_external_regular at ->
+      Format.fprintf ppf
+        "%a:@\n@[%tTypes@ definition@ mixes@ regular@ and@ external@ kinds.\
+         @ Compilation@ to@ Coq@ is@ not@ possible. Either@ avoid@ \
+         mixing@ or@ disable@ Coq@ code@ generation@ (-no-coq-code)@]@."
+        Location.pp_location at header
+  | Scoping.Mix_tydefs_union_alias_sum at ->
+      Format.fprintf ppf
+        "%a:@\n@[%tA@ mutually@ recursive@ types@ definition@ must@ only@ \
+         contain@ sum@ types.@ Compilation@ to@ Coq@ is@ not@ possible.@ \
+         Either@ avoid@ mixing@ or@ disable@ Coq@ code@ generation@ \
+         (-no-coq-code).@]@."
+        Location.pp_location at header
+  | Scoping.Mix_tydefs_external at ->
+      Format.fprintf ppf
+        "%a:@\n@[%tTypes@ definition@ contains several external types.@]@."
+        Location.pp_location at header
   (* *************************** *)
   (* Generic environments stuff. *)
   | Env.Unbound_constructor (vname, at) ->
@@ -554,6 +571,12 @@ let print_focalize_exception ppf = function
         Location.pp_location at header
         Handy.pp_set_underlined node_num node_name
         Handy.pp_reset_effects
+  | Species_coq_generation.Termination_is_not_structural (at, arg_name) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tTermination@ proof@ is@ stated@ as@ structural@ on@ the\
+         @ parameter@ '%t%a%t'@ which@ does@ not@ syntactically@ decrease.@]@."
+        Location.pp_location at header Handy.pp_set_underlined
+        Sourcify.pp_vname arg_name Handy.pp_reset_effects
   | Species_record_type_coq_generation.Wrong_decreasing_argument
       (at, species_name, def_name, decr_arg) ->
       Format.fprintf ppf

@@ -227,6 +227,7 @@ let mk_proof_label (s1, s2) =
 %token CAML
 %token COLLECTION
 %token CONCLUDE
+%token CONSTRUCTOR
 %token COQ
 %token COQ_REQUIRE
 %token DEDUKTI
@@ -402,8 +403,8 @@ phrase:
     { mk (Ph_let $1) }
   | define_theorem SEMI_SEMI
     { mk (Ph_theorem $1) }
-  | define_type SEMI_SEMI
-    { mk (Ph_type $1) }
+  | define_types SEMI_SEMI
+    { mk (Ph_type (List.rev $1)) }
   | define_species SEMI_SEMI
     { mk (Ph_species $1) }
   | define_collection SEMI_SEMI
@@ -452,7 +453,17 @@ external_val:
 
 define_type:
   | opt_annot TYPE type_vname define_type_params EQUAL define_type_body
-    { mk_annot $1 {td_name = $3; td_params = $4; td_body = $6; } }
+      { mk_annot $1 {td_name = $3; td_params = $4; td_body = $6; } }
+;
+
+define_types:
+  | define_type { [$1] }
+  | define_types and_define_type { $2 :: $1 } /* Attention, reversed order. */
+;;
+
+and_define_type:
+  | opt_annot WITH type_vname define_type_params EQUAL define_type_body
+      { mk_annot $1 {td_name = $3; td_params = $4; td_body = $6; } }
 ;
 
 define_type_params:
@@ -509,7 +520,7 @@ define_type_body_external:
 
 external_mapping:
   | { [] }
-  | WITH external_binding external_binding_list
+  | CONSTRUCTOR external_binding external_binding_list
     { $2 :: $3 }
 ;
 
@@ -812,24 +823,32 @@ define_let_semi_list:
 let_binding:
   | opt_local_final LET binding following_binding_list
     { let (local, final) = $1 in
+      let bindings = $3 :: $4 in
       mk {
         ld_rec = RF_no_rec;
         ld_logical = LF_no_logical;
         ld_final = final;
         ld_local = local;
         ld_bindings = $3 :: $4;
-        ld_termination_proof = None;
+        (* See comment below. *)
+        ld_termination_proofs =
+          MiscHelpers.map2_opt2 (fun _ tp_opt -> tp_opt) bindings [];
       }
     }
-  | opt_local_final LET REC binding following_binding_list opt_termination_proof
-    { let (local, final) = $1 in
+  | opt_local_final LET REC binding following_binding_list opt_termination_proofs
+     { let (local, final) = $1 in
+      let bindings = $4 :: $5 in
       mk {
        ld_rec = RF_rec;
        ld_logical = LF_no_logical;
        ld_final = final;
        ld_local = local;
-       ld_bindings = $4 :: $5;
-       ld_termination_proof = $6;
+       ld_bindings = bindings;
+       (* Force the list of termination proofs to have the same length than
+          the list of recursive bindings. Where there is no termination
+          proof, a [None] appears, otherwise a [Some] appears. *)
+       ld_termination_proofs =
+         MiscHelpers.map2_opt2 (fun _ tp_opt -> tp_opt) bindings $6;
       }
     }
 ;
@@ -885,10 +904,10 @@ binding:
     }
 ;
 
-opt_termination_proof:
-  | { None }
-  | TERMINATION PROOF EQUAL termination_proof
-    { Some $4 }
+opt_termination_proofs:
+  | { [] }
+  | TERMINATION PROOF EQUAL termination_proof opt_termination_proofs
+    { $4 :: $5 }
 ;
 
 termination_proof:

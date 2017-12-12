@@ -3,147 +3,160 @@ open Own_types;;
 open Own_prop;;
 open Own_basics;;
 
+(** The [xml_tree] defines the abstract syntax type of the xml tree. *)
 type xml_tree =
   | Node of string * xml_tree list
          (** A node has a name and contains zero or more xml tree as son. *)
   | Leave of string * string option
          (** A leave has a name and can contains a value of type string. *)
-(** The [xml_tree] defines the abstract syntax type of the xml tree. *)
+;;
 
 
+(** A test case is a list of values. *)
+type test_case = myexpr list ;;
 
 
-(** The three report types. All xml_tree should be converted to these types *)
-type test_case = myexpr list;; (** a test case is a list of values *)
-type report_property = string * string *
-                       ((variables * elementaire) * test_case list) list
-             (** The report on a property is defined by its name, statement and
-                 list of elementary forms and test sets *)
-type report = Context_test.test_context * report_property list
+(** The report on a property is defined by its name, statement and list of
+    elementary forms and test sets. *)
+type report_property =
+    string * string * ((variables * elementaire) * test_case list) list
+;;
+
+
 (** A report is a species under test and a list of property reports *)
+type report = Context_test.test_context * report_property list
 
 
-exception Bad_xml of string;;
 (** Exception raise when a xml tree is malformed *)
+exception Bad_xml of string;;
 
 
+(* For verbose puporses *)
 let string_of_test_case : test_case -> string =
   fun e ->
-  "\nTestcase : (" ^ List.fold_left (fun s e -> string_of_myexpr e ^ "|" ^ s) ")"
-                                    e;;
-(** For verbose puporses *)
+    "\nTestcase : (" ^
+    List.fold_left (fun s e -> string_of_myexpr e ^ "|" ^ s) ")" e
+;;
 
+
+
+(* For verbose puporses *)
 let string_of_report_property ((n,f,elem_l) : report_property) =
   let null s t = if s = "" then "" else t  in
   "Propriete : " ^ n ^ "\n  " ^ f ^ "\n" ^
   "Elementaire : \n  " ^
   List.fold_left
     (fun s ((vars, elem_form),tc_l) ->
-           let pred = list_of_precond (get_precond elem_form) in
-           let con = list_of_conclusion (get_conclusion elem_form) in
-           let forall = string_of_variables vars in
-           let precond = (List.fold_left (fun s e ->
-                                           s ^
-                                           null s " and " ^ string_of_myexpr e) "" pred) in
-           (null forall ("all " ^ forall)) ^ " " ^
-           null precond (precond ^ " -> ") ^
-           (List.fold_left (fun s e -> string_of_myexpr e ^ null s " or " ^ s) "" con) ^ "\n" ^
-          (List.fold_left (fun s e -> string_of_test_case e ^ " " ^ s) "" tc_l) ^ "\n" ^  s
-    )
+      let pred = list_of_precond (get_precond elem_form) in
+      let con = list_of_conclusion (get_conclusion elem_form) in
+      let forall = string_of_variables vars in
+      let precond =
+        (List.fold_left
+           (fun s e ->
+             s ^ null s " and " ^ string_of_myexpr e) ""
+           pred) in
+      (null forall ("all " ^ forall)) ^ " " ^
+      null precond (precond ^ " -> ") ^
+      (List.fold_left
+         (fun s e -> string_of_myexpr e ^ null s " or " ^ s) "" con) ^
+      "\n" ^
+      (List.fold_left
+         (fun s e -> string_of_test_case e ^ " " ^ s) "" tc_l) ^
+      "\n" ^  s)
     "" elem_l
 ;;
-(** For verbose puporses *)
 
+
+
+(* For verbose puporses *)
 let string_of_report ((_s,e) : report) =
 (*   print_string "Contexte de test :\n"; *)
 (*   print_string (Context_test.string_of_tc s); *)
 (*   print_string "\n\n"; *)
   List.fold_left (fun s e -> string_of_report_property e ^ s) "" e;;
-(** For verbose puporses *)
 
-let get_xml_tag_name t =
-  match t with
-  | Leave(tn, _)
-  | Node(tn, _) ->
-      tn;;
+
 (** [get_xml_tag_name t] returns the name of the tag, root of the xml tree [t].
 
-@raise Bad_xml if [t] does not contains a list of tags or is not of name [n]. *)
+    @raise Bad_xml if [t] does not contains a list of tags or is not of
+    name [n]. *)
+let get_xml_tag_name t = match t with Leave (tn, _) | Node (tn, _) -> tn ;;
 
 
 
-
-let get_xml_ldef t n =
-  match t with
-  | Node(tn, t_l) ->
-      if tn = n then t_l else raise (Bad_xml ("expect <" ^ n ^ "> encounter <" ^ tn ^ ">"))
-  | Leave(a, _) ->
-      raise (Bad_xml ("Leave :" ^ n ^ "<>" ^ a));;
 (** [get_xml_ldef t n] gets the list of tags within the tag [t] of name [n].
 
-@raise Bad_xml if [t] does not contains a list of tags or is not of name [n]. *)
+    @raise Bad_xml if [t] does not contains a list of tags or is not of
+    name [n]. *)
+let get_xml_ldef t n =
+  match t with
+  | Node (tn, t_l) ->
+      if tn = n then t_l
+      else raise (Bad_xml ("expect <" ^ n ^ "> encounter <" ^ tn ^ ">"))
+  | Leave (a, _) -> raise (Bad_xml ("Leave :" ^ n ^ "<>" ^ a))
+;;
 
 
 
+(** [get_xml_1def t n] same as [get_xml_ldef] but the tag should contain one
+    tag, it returns this tag.
 
+    @raise Bad_xml if [t] contains several tags or is not of name [n]. *)
 let get_xml_1ldef t n =
   match t with
-  | Node(tn, t_l) ->
-      (match t_l with
-      | e::[] ->
-         if tn = n then e else raise (Bad_xml n)
+  | Node (tn, t_l) -> (
+      match t_l with
+      | [e] -> if tn = n then e else raise (Bad_xml n)
       | _ -> raise (Bad_xml n)
-      )
-  | Leave(_, _) ->
-      raise (Bad_xml n);;
-(** get_xml_1def t n same as [get_xml_ldef] but the tag should contain one tag,
-it returns this tag.
-
-@raise Bad_xml if [t] contains several tags or is not of name [n]. *)
+     )
+  | Leave (_, _) -> raise (Bad_xml n)
+;;
 
 
 
-
-let get_xml_def x s =
-  match x with
-  | Leave(_, None) -> ""
-  | Node(_,_) -> raise (Bad_xml ("get_xml_def searching for " ^ s))
-  | Leave(xs,Some o) ->
-      if xs = s then o else raise (Bad_xml ("get_xml_def : " ^ xs ^ "<>" ^ s));;
 (** get_xml_def t n get the string within the tag [t] of name [n].
 
-@raise Bad_xml if [t] does not contains a list of tags or is not of name [n]. *)
+    @raise Bad_xml if [t] does not contains a list of tags or is not of
+    name [n]. *)
+let get_xml_def x s =
+  match x with
+  | Leave (_, None) -> ""
+  | Node (_, _) -> raise (Bad_xml ("get_xml_def searching for " ^ s))
+  | Leave (xs, Some o) ->
+      if xs = s then o else raise (Bad_xml ("get_xml_def : " ^ xs ^ "<>" ^ s))
+;;
 
 
 
-
-let xml_get_pentvalue l =
-  match l with
-  | _n::v::[] -> get_xml_1ldef v "pentvalue"
-  | _ -> raise (Bad_xml "xml_get_pent_value");;
 (** [xml_get_pentvalue l] takes a list of xml tree which represents :
 
-<pentname>string</pentname>
-<pentvalue>...</pententvalue> (... is a focal expression represented in xml).
+    <pentname>string</pentname>
+    <pentvalue>...</pententvalue> (... is a focal expression represented
+    in xml).
 
-returns the expression inside the pentvalue tags.
+    returns the expression inside the pentvalue tags.
 
-@raise Bad_xml if [l] if the xml tree is malformed. *)
+    @raise Bad_xml if [l] if the xml tree is malformed. *)
+let xml_get_pentvalue l =
+  match l with
+  | [_n; v] -> get_xml_1ldef v "pentvalue"
+  | _ -> raise (Bad_xml "xml_get_pent_value")
+;;
 
 
 
-
-let xml_get_pcollvalue = function
-  | _n::v::[] -> get_xml_def v "pcollvalue"
-  | _ -> raise (Bad_xml "xml_get_pent_value") ;;
 (** [xml_get_pcollvalue l] takes a list of xml tree which represents :
 
-<pcollname>string</pcollname>
-<pcollvalue>string</pcollvalue>
+    <pcollname>string</pcollname>
+    <pcollvalue>string</pcollvalue>
 
-returns the expression inside the pcollvalue tags.
+    returns the expression inside the pcollvalue tags.
 
-@raise Bad_xml if [l] if the xml tree is malformed. *)
+    @raise Bad_xml if [l] if the xml tree is malformed. *)
+let xml_get_pcollvalue = function
+  | [_n; v] -> get_xml_def v "pcollvalue"
+  | _ -> raise (Bad_xml "xml_get_pent_value")
+;;
 
 
 
@@ -151,7 +164,7 @@ returns the expression inside the pcollvalue tags.
 let xml_vartype_to_typ xml =
   let rec aux xml =
     match get_xml_tag_name xml with
-    | "typeatom" -> TAtom(None, get_xml_def xml "typeatom") 
+    | "typeatom" -> TAtom(None, get_xml_def xml "typeatom")
     | "typeprmatom" -> TSpecPrm(get_xml_def xml "typeprmatom")
     | "typefct" ->
         (match get_xml_ldef xml "typefct" with
@@ -175,7 +188,7 @@ let xml_vartype_to_typ xml =
                  List.map (fun e -> aux (get_xml_1ldef e "prmlist")) r
                         )
         end
-    | _ -> raise (Bad_xml "xml_vartype_to_typ") in 
+    | _ -> raise (Bad_xml "xml_vartype_to_typ") in
   let body = get_xml_ldef xml "vartype" in
   match body with
   | _e::[] ->
@@ -221,7 +234,7 @@ let rec xml_pat_to_pat p =
   let rec aux l =
    match l with
    | [] -> raise (Bad_xml "exprpattern")
-   | e::[] -> [], xml_focexpr_to_expr (get_xml_1ldef e "patexpr")  
+   | e::[] -> [], xml_focexpr_to_expr (get_xml_1ldef e "patexpr")
    | e::r ->
        let a,e' = aux r in
          Some (get_xml_def e "patappl")::a,e'
@@ -233,110 +246,116 @@ let rec xml_pat_to_pat p =
         (xml_ident_to_ident r,a,e)
   | _ -> raise (Bad_xml "exprpattern")
 
-and xml_focexpr_to_expr x = 
+
+
+and xml_focexpr_to_expr x =
   match get_xml_tag_name x with
-  | "exprif" ->
-     (let x = get_xml_ldef x "exprif" in
+  | "exprif" -> (
+      let x = get_xml_ldef x "exprif" in
       match x with
-      | econd::ethen::eelse::[] ->
-          MIfte(xml_focexpr_to_expr (get_xml_1ldef econd "cond"),
-                xml_focexpr_to_expr (get_xml_1ldef ethen "then"),
-                xml_focexpr_to_expr (get_xml_1ldef eelse "else"))
+      | [econd ; ethen ; eelse] ->
+          MIfte
+            (xml_focexpr_to_expr (get_xml_1ldef econd "cond"),
+             xml_focexpr_to_expr (get_xml_1ldef ethen "then"),
+             xml_focexpr_to_expr (get_xml_1ldef eelse "else"))
       | _ -> raise (Bad_xml "exprif")
      )
-  | "exprapp" ->
-     (let x = get_xml_ldef x "exprapp" in
+  | "exprapp" -> (
+      let x = get_xml_ldef x "exprapp" in
       match x with
-      | l::rs ->
+      | l :: rs ->
           expr_app
-              (xml_focexpr_to_expr (get_xml_1ldef l "appleft"))
-              (List.map
-                 (fun e -> xml_focexpr_to_expr (get_xml_1ldef e "appright"))
-                 rs
-              )
+            (xml_focexpr_to_expr (get_xml_1ldef l "appleft"))
+            (List.map
+               (fun e -> xml_focexpr_to_expr (get_xml_1ldef e "appright"))
+               rs)
       | _ -> raise (Bad_xml "exprapp")
      )
-  | "exprfun" ->
-     (let x = get_xml_ldef x "exprfun" in
+  | "exprfun" -> (
+      let x = get_xml_ldef x "exprfun" in
       match x with
-      | v::t::e::[] -> MFun(get_xml_def v "funvar",
-                            (Some (xml_vartype_to_typ (get_xml_1ldef t "funtype"))),
-                            xml_focexpr_to_expr (get_xml_1ldef e "funexpr"))
+      | [v; t; e] ->
+          MFun
+            (get_xml_def v "funvar",
+             (Some (xml_vartype_to_typ (get_xml_1ldef t "funtype"))),
+             xml_focexpr_to_expr (get_xml_1ldef e "funexpr"))
       | _ -> raise (Bad_xml "exprfun")
      )
-  | "exprvar" ->
-     (match get_xml_ldef x "exprvar" with
-      | n::t::[] ->
+  | "exprvar" -> (
+      match get_xml_ldef x "exprvar" with
+      | [n; t] ->
           expr_var_typ (get_xml_def n "varname") (xml_vartype_to_typ t)
       | _ -> raise (Bad_xml "xml_variable_to_variable")
-     )
-  | "exprint" -> MInt(int_of_string (get_xml_def x "exprint"))
-  | "exprstring" -> MString(get_xml_def x "exprstring")
-  | "exprcaml_def" -> MCaml_def(get_xml_def x "exprcaml_def")
-  | "exprmeth" ->
-     (let x = get_xml_ldef x "exprmeth" in
+      )
+  | "exprint" -> MInt (int_of_string (get_xml_def x "exprint"))
+  | "exprstring" -> MString (get_xml_def x "exprstring")
+  | "exprcaml_def" -> MCaml_def (get_xml_def x "exprcaml_def")
+  | "exprmeth" -> (
+      let x = get_xml_ldef x "exprmeth" in
       match x with
-      | m::[] -> MMeth(None, get_xml_def m "methname")
-      | s::m::[] -> 
-         MMeth(Some (get_xml_def s "collname"),
-               get_xml_def m "methname"
-              )
+      | [m] -> MMeth (None, get_xml_def m "methname")
+      | [s; m] ->
+          MMeth (Some (get_xml_def s "collname"), get_xml_def m "methname")
       | _ -> raise (Bad_xml "exprfun")
      )
-
-  | "exprmatch" ->
-     (let x = get_xml_ldef x "exprmatch" in
+  | "exprmatch" -> (
+      let x = get_xml_ldef x "exprmatch" in
       match x with
-      | e::p -> MMatch((xml_focexpr_to_expr (get_xml_1ldef e "matchval"), None),
-                           List.map
-                             (fun e -> xml_pat_to_pat e) p
-                          )
+      | e::p ->
+          MMatch
+            ((xml_focexpr_to_expr (get_xml_1ldef e "matchval"), None),
+             List.map (fun e -> xml_pat_to_pat e) p)
       | _ -> raise (Bad_xml "exprmatch")
      )
-  | "exprlet" ->
-     (let x = get_xml_ldef x "exprlet" in
+  | "exprlet" -> (
+      let x = get_xml_ldef x "exprlet" in
       match x with
-      | v::e1::e2::[] ->
-          MVarloc(false, (get_xml_def v "letvar", None),
-                  xml_focexpr_to_expr (get_xml_1ldef e1 "letvarexpr"),
-                  xml_focexpr_to_expr (get_xml_1ldef e2 "letexpr"))
+      | [v; e1; e2] ->
+          MVarloc
+            (false, (get_xml_def v "letvar", None),
+             xml_focexpr_to_expr (get_xml_1ldef e1 "letvarexpr"),
+             xml_focexpr_to_expr (get_xml_1ldef e2 "letexpr"))
       | _ -> raise (Bad_xml "exprif")
      )
   | "exprglobid" ->
-     (let x = get_xml_1ldef x "exprglobid" in
-     MGlob_id (xml_ident_to_ident x)
-     )
-  | s -> raise (Bad_xml ("focexpr -> " ^ s));;
+      let x = get_xml_1ldef x "exprglobid" in MGlob_id (xml_ident_to_ident x)
+  | s -> raise (Bad_xml ("focexpr -> " ^ s))
+;;
+
 
 
 let xml_param_to_param e =
   let p = get_xml_1ldef e "specparameter" in
-  try
-    create_instprmcoll (xml_get_pcollvalue (get_xml_ldef p "paramcoll"))
+  try create_instprmcoll (xml_get_pcollvalue (get_xml_ldef p "paramcoll"))
   with
   | Bad_xml _ ->
       create_instprment
         (xml_focexpr_to_expr
-          (xml_get_pentvalue
-            (get_xml_ldef p "parament")));;
-(** xml_species_to_param e takes a parameter tag, returns the
-[species_test] encoded inside [xml].
+           (xml_get_pentvalue (get_xml_ldef p "parament")))
+;;
 
-@raise Bad_xml for obvious reasons. *)
+
 
 let xml_parameters_to_string_list xml : string list =
   let defs = get_xml_ldef xml "specparameters" in
   List.map (fun e -> get_xml_def e "specparameter") defs
 ;;
 
+
+
 let xml_species_to_species_context xml : Context_test.species_context =
   let defs = get_xml_ldef xml "species" in
   match defs with
-  | m::s::[]    -> Context_test.create_sc (xml_specname_to_specname m s) [] (* no parameters *)
-  | m::s::r::[] -> Context_test.create_sc (xml_specname_to_specname m s) 
-                                       (xml_parameters_to_string_list r)
-  | _       -> raise (Bad_xml "xml_species_to_species_test")
+  | m :: s :: []    ->
+      Context_test.create_sc
+        (xml_specname_to_specname m s) [] (* no parameters *)
+  | m :: s :: r :: [] ->
+      Context_test.create_sc
+        (xml_specname_to_specname m s) (xml_parameters_to_string_list r)
+  | _ -> raise (Bad_xml "xml_species_to_species_test")
 ;;
+
+
 
 let xml_collection_to_binding_context xml : Context_test.binding_context =
   let defs = get_xml_ldef xml "collection" in
@@ -347,27 +366,32 @@ let xml_collection_to_binding_context xml : Context_test.binding_context =
   | _ -> raise (Bad_xml "xml_collection_to_binding_context")
 ;;
 
+(** xml_species_to_species_test xml takes a species tag, returns the
+    [species_test] encoded inside [xml].
+
+    @raise Bad_xml for obvious reasons. *)
 let xml_species_to_test_context xml : Context_test.test_context =
   let defs = get_xml_ldef xml "context_test" in
   match defs with
-  | []       -> raise (Bad_xml "xml_species_to_species_test")
-  | e::[]    -> Context_test.create_tc [] (xml_species_to_species_context e) (* no parameters *)
-  | e::r::[] ->
-      begin
-        let defs = get_xml_ldef e "collections" in
-        Context_test.create_tc (List.map (xml_collection_to_binding_context) defs)
-                  (xml_species_to_species_context r)
-      end
-  | _ -> raise (Bad_xml "xml_species_to_sepcies_test");;
-(** xml_species_to_species_test xml takes a species tag, returns the
-[species_test] encoded inside [xml].
+  | [] -> raise (Bad_xml "xml_species_to_species_test")
+  | e :: [] ->
+      Context_test.create_tc
+        [] (xml_species_to_species_context e) (* no parameters *)
+  | e :: r :: [] -> (
+      let defs = get_xml_ldef e "collections" in
+      Context_test.create_tc
+        (List.map (xml_collection_to_binding_context) defs)
+        (xml_species_to_species_context r)
+     )
+  | _ -> raise (Bad_xml "xml_species_to_sepcies_test")
+;;
 
-@raise Bad_xml for obvious reasons. *)
+
 
 let xml_forme_to_elementary : xml_tree -> variables * elementaire =
    let xml_focexpr_to_expr xml =
      let x = get_xml_1ldef xml "focexpr" in xml_focexpr_to_expr x in
-   fun xml -> 
+   fun xml ->
   let body = get_xml_ldef xml "forme" in
   match body with
   | [con] ->
@@ -380,7 +404,7 @@ let xml_forme_to_elementary : xml_tree -> variables * elementaire =
       if get_xml_tag_name vp = "variables" then
         let v = get_xml_ldef vp "variables" in
         let c = get_xml_ldef con "conclusions" in
-        List.fold_right (fun e s -> add_variable (xml_variable_to_variable e) s) v variables_null, 
+        List.fold_right (fun e s -> add_variable (xml_variable_to_variable e) s) v variables_null,
         List.fold_right (fun c s -> add_elem_conclusion (xml_focexpr_to_expr c) s)
                         c
                         elementaire_null
@@ -389,7 +413,7 @@ let xml_forme_to_elementary : xml_tree -> variables * elementaire =
 (*       | Bad_xml _ -> *)
         let p = get_xml_ldef vp "preconditions" in
         let c = get_xml_ldef con "conclusions" in
-        let elem_c = 
+        let elem_c =
           List.fold_right (fun c s -> add_elem_conclusion (xml_focexpr_to_expr c) s)
                           c
                           elementaire_null in
@@ -401,11 +425,11 @@ let xml_forme_to_elementary : xml_tree -> variables * elementaire =
       let v = get_xml_ldef vars "variables" in
       let p = get_xml_ldef pre "preconditions" in
       let c = get_xml_ldef con "conclusions" in
-      let elem_c = 
+      let elem_c =
         List.fold_right (fun c s -> add_elem_conclusion (xml_focexpr_to_expr c) s)
                         c
                         elementaire_null in
-        List.fold_right (fun e s -> add_variable (xml_variable_to_variable e) s) v variables_null, 
+        List.fold_right (fun e s -> add_variable (xml_variable_to_variable e) s) v variables_null,
         List.fold_right (fun c s -> add_elem_precond (xml_focexpr_to_expr c) s)
                         p
                         elem_c
@@ -444,14 +468,14 @@ let xml_elementary_to_test_elementary xml : (variables * elementaire) * test_cas
   | f::((_::_) as l) ->
       let vars = xml_forme_to_elementary f in
       let ts = xml_test_case_set_to_test_case_set l in
-      vars,ts 
-  | _ -> raise (Bad_xml "xml_elementary_to_test_elementary") 
+      vars,ts
+  | _ -> raise (Bad_xml "xml_elementary_to_test_elementary")
 ;;
 
 let xml_property_to_property xml : report_property =
   let l = get_xml_ldef xml "propriete" in
   match l with
-  | n::f::l_e -> 
+  | n::f::l_e ->
      get_xml_def n "name",
      get_xml_def f "forme",
      (List.map xml_elementary_to_test_elementary l_e)
@@ -465,4 +489,3 @@ let xml_report_to_report xml : report =
       let good = List.map xml_property_to_property props in
          bad,good
   | _ -> raise (Bad_xml "xml_report_to_report");;
-

@@ -968,7 +968,7 @@ let make_fake_let_def_from_methods meths_infos =
     match List.hd meths_infos with (_, _, _, _, op, _) -> op in
   let fake_bindings =
     List.map
-      (fun (name, pnames, sch, body, opt_term_proof, lflags) ->
+      (fun (name, pnames, sch, body, _, _) ->
         let fake_binding_desc = {
           Parsetree.b_name = name ;
           Parsetree.b_params = List.map (fun n -> (n, None)) pnames ;
@@ -985,7 +985,7 @@ let make_fake_let_def_from_methods meths_infos =
     Parsetree.ld_final = flags.Env.TypeInformation.ldf_final ;
     Parsetree.ld_local = Parsetree.LF_no_local ; (* Not implemented. *)
     Parsetree.ld_bindings = fake_bindings ;
-    Parsetree.ld_termination_proof = opt_term_proof } in
+    Parsetree.ld_termination_proofs = [ opt_term_proof ] } in
   (* Finally return the [let_def]. *)
   { Parsetree.ast_loc = Location.none ;
     Parsetree.ast_desc = fake_let_def_desc ;
@@ -1208,7 +1208,7 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
        gen_doc_external_translation out_fmt ext_transl ;
        List.iter
          (fun ext_binding ->
-           let (vname, ext_trans) = ext_binding.Parsetree.ast_desc in
+           let (vname, _) = ext_binding.Parsetree.ast_desc in
            Format.fprintf out_fmt "<@[<h 2>foc:external-ty-value-mapping>@\n" ;
            Format.fprintf out_fmt "<foc:fcl-name>%a</foc:fcl-name>@\n"
              Utils_docgen.pp_xml_vname vname ;
@@ -1262,11 +1262,14 @@ let gen_doc_pcm out_fmt env ~current_unit = function
          </foc:directive>@\n"
         comp_unit ;
       env
-  | Infer.PCM_type (ty_vname, ty_descrip) ->
-      Types.purge_type_simple_to_xml_variable_mapping () ;
-      gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip ;
+  | Infer.PCM_type ty_descrs ->
+      List.iter
+        (fun (ty_vname, ty_descrip) ->
+          Types.purge_type_simple_to_xml_variable_mapping () ;
+          gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip)
+        ty_descrs ;
       env
-  | Infer.PCM_let_def (let_def, schemes) ->
+  | Infer.PCM_let_def (let_def, _) ->
       Types.purge_type_simple_to_xml_variable_mapping () ;
       (* Build as many fake history and doc as there are bindings. *)
       let empty_from_n_docs =

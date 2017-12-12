@@ -14,7 +14,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: miscHelpers.mli,v 1.10 2012-10-26 14:55:19 pessaux Exp $ *)
 
 val bind_parameters_to_types_from_type_scheme :
   self_manifest: Types.type_simple option ->
@@ -22,3 +21,19 @@ val bind_parameters_to_types_from_type_scheme :
     (((Parsetree.vname * Types.type_simple option) list) *
        (Types.type_simple option) *
        (Types.type_variable list))
+
+val map2_opt2 : ('a -> 'b option -> 'c) -> 'a list -> 'b list -> 'c list
+
+val fold_left3 :
+  ('a -> 'b -> 'c -> 'd -> 'a) -> 'a -> 'b list -> 'c list -> 'd list -> 'a
+
+val iter3 : ('a -> 'b -> 'c -> 'd) -> 'a list -> 'b list -> 'c list -> unit
+
+val map3 :
+  ('a -> 'b -> 'c -> 'd) -> 'a list -> 'b list -> 'c list -> 'd list
+
+val list_fill : 'a -> int -> 'a list
+
+val iter4 :
+  ('a -> 'b -> 'c -> 'd -> 'e) -> 'a list -> 'b list -> 'c list -> 'd list ->
+    unit

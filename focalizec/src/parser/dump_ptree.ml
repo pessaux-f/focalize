@@ -1088,8 +1088,16 @@ let rec pp_phrase_desc ppf = function
   | Parsetree.Ph_testing testing_def ->
       Format.fprintf ppf "@[<2>Ph_testing@ (%a)@]@ "
         pp_testing_def testing_def
-  | Parsetree.Ph_type type_def ->
-      Format.fprintf ppf "@[<2>Ph_type@ (%a)@]@ " pp_type_def type_def
+  | Parsetree.Ph_type type_defs -> (
+      match type_defs with
+      | [] -> assert false
+      | h :: q ->
+          Format.fprintf ppf "@[<2>Ph_type@ (%a)@]@ " pp_type_def h ;
+          List.iter
+            (fun dt ->
+              Format.fprintf ppf "@[<2>Ph_type and @ (%a)@]@ " pp_type_def dt)
+            q
+     )
   | Parsetree.Ph_let let_def ->
       Format.fprintf ppf "@[<2>Ph_let@ (%a)@]@ " pp_let_def let_def
   | Parsetree.Ph_theorem theorem_def ->

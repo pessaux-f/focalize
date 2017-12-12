@@ -115,10 +115,8 @@ let non_rec_let_binding_compile ctx
     pre_computed_bd_info.Expr_dk_generation.lbpc_value_body env
 ;;
 
-let rec_let_binding_compile ctx
-    ~in_recursive_let_section_of ~local_idents ~self_methods_status
-    ~recursive_methods_status env bd
-    pre_computed_bd_info =
+let rec_let_binding_compile ctx ~local_idents ~self_methods_status
+    ~recursive_methods_status env bd pre_computed_bd_info =
   let out_fmter = ctx.Context.scc_out_fmter in
   let fun_name = bd.Parsetree.ast_desc.Parsetree.b_name in
   (* Generate the binder and the bound name for the function. *)
@@ -251,14 +249,13 @@ let let_binding_compile ctx
     pre_computed_bd_info =
   match rec_status with
   | Env.RC_rec _ ->
-     rec_let_binding_compile
-       ctx ~in_recursive_let_section_of:[] ~local_idents ~self_methods_status
-       ~recursive_methods_status env bd
-    pre_computed_bd_info
+      rec_let_binding_compile
+        ctx  ~local_idents ~self_methods_status ~recursive_methods_status env bd
+        pre_computed_bd_info
   | Env.RC_non_rec ->
-     non_rec_let_binding_compile
-       ctx ~in_recursive_let_section_of ~local_idents ~self_methods_status
-       ~recursive_methods_status ~toplevel env bd pre_computed_bd_info
+      non_rec_let_binding_compile
+        ctx ~in_recursive_let_section_of ~local_idents ~self_methods_status
+        ~recursive_methods_status ~toplevel env bd pre_computed_bd_info
 ;;
 
 

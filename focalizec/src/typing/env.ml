@@ -537,7 +537,7 @@ module TypeInformation = struct
      (Parsetree.vname list) *
      Types.type_scheme *       (** Type scheme of the let-bound definition. *)
      Parsetree.binding_body *  (** Body of the let-bound definition. *)
-     (** The termination proof if provided. *)
+     (** The termination proof is provided for this function. *)
      (Parsetree.termination_proof option) *
      (** Tells if the method has dependencies on the carrier ("rep"). *)
      dependency_on_rep *

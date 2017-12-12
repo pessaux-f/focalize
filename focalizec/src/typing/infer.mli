@@ -73,7 +73,7 @@ type please_compile_me =
       (Parsetree.collection_def * Env.TypeInformation.species_description *
        (DepGraphData.name_node list))
   | PCM_testing of Parsetree.testing_def
-  | PCM_type of (Parsetree.vname * Env.TypeInformation.type_description)
+  | PCM_type of (Parsetree.vname * Env.TypeInformation.type_description) list
   | PCM_let_def of (Parsetree.let_def * (Types.type_scheme list))
   | PCM_theorem of
       (Parsetree.theorem_def * ((Parsetree.vname * Types.type_simple) list))

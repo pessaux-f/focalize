@@ -13,20 +13,20 @@ let ident_name s =
 let prefix s = Prefix(None, s);;
 let prefix_m m s = Prefix(Some m, s);;
 
-let focself = (* Keywords.sobj;; *) (* TODO : focalize *) "Self";;
-(* let focselfkey = "Self";; *)
-let focexception = "Ml_builtins.Focalize_error";; (* defined by focalizec *)
-let focbasics = "basics";;
+let focself = (* Keywords.sobj;; *) (* TODO : focalize *) "Self" ;;
+(* let focselfkey = "Self" ;; *)
+let focexception = "Ml_builtins.Focalize_error" ;; (* defined by focalizec *)
+let focbasics = "basics" ;;
 
-let focequal = Infix "=";;
-let focintequal = Infix "=0x";;
-let focintgt = Infix ">";;
-let focintgeq = Infix ">=";;
-let focintleq = Infix "<=";;
-(* let focintmod = Prefix "int_mod";; *)
+let focequal = Infix "=" ;;
+let focintequal = Infix "=0x" ;;
+let focintgt = Infix ">" ;;
+let focintgeq = Infix ">=" ;;
+let focintleq = Infix "<=" ;;
+(* let focintmod = Prefix "int_mod" ;; *)
 
-let focaddint = Infix "+";;
-let focstringconcat = Infix "^";;
+let focaddint = Infix "+" ;;
+let focstringconcat = Infix "^" ;;
 let focpred = Prefix(Some "basics", "int_pred");;
 let focsucc = Prefix(Some "basics", "int_succ");;
 let focunit = Prefix(Some "basics", "()");;
@@ -36,12 +36,12 @@ let foccrp = Prefix(Some "basics", "pair");;
 let focfst = Prefix(Some "basics", "fst");;
 let focsnd = Prefix(Some "basics", "snd");;
 let focnot = Prefix(None, "~~");;
-let focor = Infix "||";;
-let focand = Infix "&&";;
+let focor = Infix "||" ;;
+let focand = Infix "&&" ;;
 
-let foctself = "Self";;
+let foctself = "Self" ;;
 let focnil = Prefix(Some "basics", "[]");;
-let foccons = Infix "::";;
+let foccons = Infix "::" ;;
 let focnonfailed = Prefix(Some "basics", "non_failed");;
 let focisfailed = Prefix(Some "basics", "is_failed");;
 let focunfailed = Prefix(Some "basics", "Unfailed");;
@@ -49,46 +49,43 @@ let focfailed = Prefix(Some "basics", "Failed");;
 let focerror = Prefix(Some "basics", "focalize_error");;
 
 (* The types *)
-let foctoption = "partiel";;
-let foctint = "int";;
-let foctbool = "bool";;
-let foctunit = "unit";;
-let foctstring = "string";;
-let foctchar = "char";;
-let foctfloat = "float";;
-let foctlist = "list";;
+let foctoption = "partiel" ;;
+let foctint = "int" ;;
+let foctbool = "bool" ;;
+let foctunit = "unit" ;;
+let foctstring = "string" ;;
+let foctchar = "char" ;;
+let foctfloat = "float" ;;
+let foctlist = "list" ;;
 
-let focparseint = Prefix(Some "basics", "int_of_string");;
-let focprintint = Prefix(Some "basics", "string_of_int");;
-let focprintstring = Prefix(Some "basics", "print_string");;
+let focparseint = Prefix (Some "basics", "int_of_string") ;;
+let focprintint = Prefix (Some "basics", "string_of_int") ;;
+let focprintstring = Prefix (Some "basics", "print_string") ;;
 
 (* Methods to get the name of *)
 
 let suffixe_id =
   let i = ref 0 in
-    fun s ->
-      i := !i + 1;
-      s ^ "__" ^ string_of_int (!i);;
+  fun s -> i := !i + 1; s ^ "__" ^ string_of_int (!i)
+;;
 
 let spec_instru_name s l =
-  suffixe_id (s ^ "_instru" ^ List.fold_left (fun s e -> s ^ "_" ^ e) "" l);;
+  suffixe_id (s ^ "_instru" ^ List.fold_left (fun s e -> s ^ "_" ^ e) "" l) ;;
 
-let spec_test_name s =
-  suffixe_id (snd s ^ "_test");;
+let spec_test_name s = suffixe_id (snd s ^ "_test") ;;
 
-let coll_name s =
-  "coll_" ^ s;;
+let coll_name s = "coll_" ^ s ;;
 
-let param_name i  = "p" ^ (string_of_int i);;
+let param_name i  = "p" ^ (string_of_int i) ;;
 
-let result_type = "result";;
-let result_ok = "Ok", [];;
-let result_ko = "Ko", [];;
-let result_raise = "Raise",[foctstring];;
+let result_type = "result" ;;
+let result_ok = ("Ok", []) ;;
+let result_ko = ("Ko", []) ;;
+let result_raise = "Raise",[foctstring] ;;
 
-let verdict_type = "verdict";;
-let verdict_precond_ok = "PreOk", ["result * list(result)"];;
-let verdict_precond_ko = "PreKo", ["result * list(result)"];;
+let verdict_type = "verdict" ;;
+let verdict_precond_ok = "PreOk", ["result * list(result)"] ;;
+let verdict_precond_ko = "PreKo", ["result * list(result)"] ;;
 
 
 (* Convenient functions *)
@@ -126,13 +123,13 @@ let add_string_args l s f =
 
 (* prend une liste de variables et met sous la forme
  *    (var1,var2,var3 ... )          *)
-let to_args f l = "(" ^ (add_string_args l ", " f)  ^ ")";;
+let to_args f l = "(" ^ (add_string_args l ", " f)  ^ ")" ;;
+
 
 let rec int_list min max =
-  if min > max then
-     []
-  else
-    min::int_list (min+1) max;;
+  if min > max then [] else min::int_list (min+1) max
+;;
+
 
 (* Returns l1@l2 where duplicate associations have been deleted.
 The order is preserved. *)
@@ -140,44 +137,43 @@ let merge_assoc_list l1 l2 =
   let rec aux cumul l =
     match l with
     | [] -> cumul
-    | ((e,_) as e')::r ->
-        if List.mem_assoc e cumul then
-           aux cumul r
-        else
-           aux (e'::cumul) r in
-   List.rev (aux (aux [] l1) l2);;
+    | ((e, _) as e') :: r ->
+        if List.mem_assoc e cumul then aux cumul r
+        else aux (e'::cumul) r in
+  List.rev (aux (aux [] l1) l2)
+;;
 
-let ( @-@ ) = merge_assoc_list;;
+
+let ( @-@ ) = merge_assoc_list ;;
+
 
 (** string_of_list f l *)
 let string_of_list f l =
-  let rec aux =
-    function
-      | [] -> "]"
-      | e::r ->
-          ";" ^ f e ^ aux r in
+  let rec aux = function
+    | [] -> "]"
+    | e::r -> ";" ^ f e ^ aux r in
   match l with
   | [] -> "[]"
-  | e::r ->
-      "[" ^ f e ^ aux r;;
+  | e::r -> "[" ^ f e ^ aux r
+;;
+
 
 let list_create f n =
   let rec aux n l =
-    if n <= 0 then
-      []
-    else
-      aux (n - 1) (f ():: l) in
-  aux n [];;
+    if n <= 0 then [] else aux (n - 1) (f ():: l) in
+  aux n []
+;;
+
 
 let replace pat dest s =
   let tmp = ref "" in
-  String.iter (fun e ->
-                if e = pat then
-                  tmp := !tmp ^ dest
-                else
-                  tmp := !tmp ^ String.make 1 e
-              ) s;
-  !tmp;;
+  String.iter
+    (fun e ->
+      if e = pat then tmp := !tmp ^ dest
+      else tmp := !tmp ^ String.make 1 e)
+    s ;
+  !tmp
+;;
 
   (*
   let rec comp pat ip lp s i ls =
@@ -218,25 +214,26 @@ let to_prolog_assoc = [
   '[', "foctest_lbracket" ;
   ']', "foctest_rbracket" ;
   ')', "foctest_rparen" ;
-  '(', "foctest_lparen" ] ;;
+  '(', "foctest_lparen" ]
+;;
 
 
-let string_letter_name s =
-  string_assoc s to_prolog_assoc;;
+let string_letter_name s = string_assoc s to_prolog_assoc ;;
 
 let ident_letter_name s =
   let s = ident_name s in
-  string_assoc s to_prolog_assoc;;
+  string_assoc s to_prolog_assoc
+;;
 
 let atom_of_cons_name n =
   let n1 = (string_letter_name n) in
-  if n1 = "" then
-    failwith "Un constructeur a pour nom une chaine vide ???"
-  else
-    n1.[0] <- Char.lowercase (n1.[0]);
-    n1;;
+  if n1 = "" then failwith "Un constructeur a pour nom une chaine vide ???"
+  else n1.[0] <- Char.lowercase_ascii (n1.[0]) ;
+  n1
+;;
 
 let string_of_option f t =
   match t with
   | None -> "none"
-  | Some t -> "some(" ^ f t ^ ")";;
+  | Some t -> "some (" ^ f t ^ ")"
+;;

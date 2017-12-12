@@ -1,21 +1,19 @@
 
-val top_xml_def : unit -> Own_expr.toplevel_def list 
+val top_xml_def : unit -> Own_expr.toplevel_def list
 (* val top_xml_spec_name : string *)
 val top_xml_coll_name : string
 
-(** [ast_seq expr1 expr2] returns the ast call [expr1] and [expr2] in sequence
-  *)
-
-val xml_string_of_typ : Own_types.typ -> string;;
 (** [xml_string_of_typ t] converts a type to a string in xml format. *)
+val xml_string_of_typ : Own_types.typ -> string;;
 
-val xml_string_of_expr : Own_expr.myexpr -> string;;
 (** [xml_string_of_expr e] converts an expression to a string in xml format. *)
+val xml_string_of_expr : Own_expr.myexpr -> string;;
 
+(** [xml_string_of_parameters_instance p] converts a parameters instance [p]
+    to a string in xml format, for the collection parameters it consists in
+    the name of the collection, for a entity parameters it converts to a xml
+    tree value. *)
 val xml_string_of_parameters_instance : Own_expr.parameters_instance -> string;;
-(** [xml_string_of_parameters_instance p] converts a parameters instance [p] to
-a string in xml format, for the collection parameters it consists in the name
-of the collection, for a entity parameters it converts to a xml tree value. *)
 
 (*
 (** {6 xml printing} *)
@@ -41,7 +39,7 @@ val ast_print_file_newline : unit -> Own_expr.myexpr
 val xml_print_header : Own_expr.myexpr
 (** The ast printing on the xml file the xml header. *)
 
-(** {6 Markup printing} *)                                       
+(** {6 Markup printing} *)
 
 val xml_print_property : string -> string -> Own_expr.myexpr
 (** [xml_print_property n p] prints to xml the open mark {e property} for property
@@ -79,7 +77,7 @@ val xml_print_value : Own_expr.myexpr -> Own_expr.myexpr
 markup {e value} which print the value of variable [v]. *)
 
 val xml_result_test : Own_expr.myexpr -> Own_expr.myexpr
-(** [xml_result_test cond] prints on xml file the complete markup {e resultat}. *) 
+(** [xml_result_test cond] prints on xml file the complete markup {e resultat}. *)
 *)
 
 val safe_replace : string -> string;;

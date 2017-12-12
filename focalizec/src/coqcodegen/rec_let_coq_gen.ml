@@ -171,7 +171,7 @@ let transform_recursive_calls_args_into_tuple ctx ~current_unit ~local_idents
        | Parsetree.E_paren e ->
            let (e', rec_found) = rec_transform_expr e in
            ((Parsetree.E_paren e'), rec_found) in
-    ({ initial_expr with Parsetree.ast_desc = new_desc }, recursive_call_found)
+    ({ expr with Parsetree.ast_desc = new_desc }, recursive_call_found)
 
 
 

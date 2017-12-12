@@ -1,3 +1,14 @@
+- Mutually recursive structural methods allowed.
+- Mutually recursive type definitions allowed.
+- Multiple structural termination proofs for mutually recursive functions.
+- Fix missing lambda-liftings in some mutually recursive functions.
+- ANSI escape sequences in error/warning messages are no more used when the
+  compilation is not triggered from a terminal.
+- Bug in transforming recursive calls arguments as tuples.
+- Bug in renaming of catchall patterns into fresh variables.
+- Structural termination verified by the compiler.
+- Warnings removed in the compiler.
+
 
 # Focalize 0.9.2
 ################

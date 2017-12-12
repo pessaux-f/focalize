@@ -408,6 +408,12 @@ let list_indices_of_present_in ~all ~subset =
 let list_index_of e l = list_first_index (fun a_e -> a_e = e) l ;;
 
 
+(** Try to guess if the ANSI escape codes should / can be activated. *)
+let color_available () =
+  let term = try Sys.getenv "TERM" with Not_found -> "" in
+  term <> "dumb" && term <> ""
+;;
+
 
 let pp_set_shaded ppf =
   if Configuration.get_fancy_ansi () then Format.fprintf ppf "@<0>\027[2m" ;;
