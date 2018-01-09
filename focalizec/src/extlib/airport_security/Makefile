@@ -17,23 +17,19 @@
 
 LIB_INSTALL_SUB_DIR = airport_security
 
-ROOT_DIR = ../../..
-
-include $(ROOT_DIR)/Makefile.config
+ROOT_DIR = ../../../..
 
 PROJECT_INSTALL_LIB_DIR = $(LIB_DIR)/$(PROJECT_NAME_FULL)
 
 INSTALL_LIB_DIR = $(PROJECT_INSTALL_LIB_DIR)/$(LIB_INSTALL_SUB_DIR)
 
-STDLIB_DIR = $(ROOT_DIR)/src/stdlib
+STDLIB_DIR = $(ROOT_DIR)/focalizec/src/stdlib
 
-FOCALIZE_COMPILER = $(ROOT_DIR)/src/toplevel/focalizec
+FOCALIZEC = $(ROOT_DIR)/focalizec/src/toplevel/focalizec
 
 FOCALIZE_COMP_FLAGS = -no-stdlib-path -I $(STDLIB_DIR)
 
-#From Makefile.config FOCALIZEC = $(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
-
-CAML_COMP_FLAGS = -w A -warn-error $(WARN_ERROR) -dtypes -I $(STDLIB_DIR)
+CAML_FLAGS = -w A -warn-error $(WARN_ERROR) -dtypes -I $(STDLIB_DIR)
 
 #From Makefile.config ZENON_LIB_DIR
 COQ_INCLUDES = -I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
