@@ -913,6 +913,23 @@ the {\tt --no-coq-code} option.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Unable to find Dedukti generation information for compiled file
+  '$file$'. Compilation unit may have been compiled without Dedukti code
+  generation enabled.}
+
+{\em Description}: The {\focal} compilation unit $file$.fcl was{\tt --no-dedukti-code}
+compiled but the object file doesn't contain information about {\dedukti}
+code generation. The {\focal} compiler allows to disable the {\dedukti} code
+production by the {\tt --no-dedukti-code} option. May be this option was
+used.
+
+{\em Hints}: Invoke the compiler on the source file $file$.fcl without
+the {\tt -no-dedukti-code} option and with the {\tt -dedukti-code}
+option.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Using a collection parameter's method ($name$) in a Zenon proof
   with "by definition" is not allowed.}
 

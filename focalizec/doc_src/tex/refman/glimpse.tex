@@ -104,8 +104,10 @@ of the species.
   \item Theorems ({\tt theorem}) made of a  name, a statement and a
     proof are {\em properties} packed with the formal proof that their
     statement holds in the context of the {\em species}. The proof
-    accompanying the statement will be processed by {\focal}, {\zenon} and
-    ultimately checked with the {\coq} theorem prover.
+    accompanying the statement will be processed by {\focal}, a
+    first-order theorem prover (either {\zenon} or {\zmod}) and
+    ultimately checked with a proof checker (either the {\coq} proof
+    assistant or the {\dedukti} logical framework).
 
 \end{compact-itemize}
 
@@ -519,9 +521,9 @@ and {\em proofs}.
 Stating a {\em property} declares that a {\em proof} that the property {\bf
 holds} will be given at some stage of the development. The {\em theorems} are
 properties for which the {\em proof} is given with the statement. All the proofs must be
-done by the developer; the compiler ultimately send them to the {\coq} proof assistant
+done by the developer; the compiler ultimately send them to the proof checker
 for verification: all the demonstrations made in {\focal} are automatically
-machine checked for consistency by {\coq}.
+machine checked for consistency (by {\coq} or {\dedukti}).
 
 {\focal} provides several ways to write proofs. The normal and encouraged way
 is to use the {\focal}'s proof language to write the proofs.  The {\focal}'s
@@ -536,7 +538,7 @@ numerous omitted details! The {\focal} system delegates this burden to a
 companion program: the {\zenon} proof finder.
 
 From the hints given in the {\focal} development, {\zenon} attempts to
-generate a complete proof and exhibit a {\coq} proof term suitable for
+generate a complete proof and exhibit a {\coq} or {\dedukti} proof term suitable for
 verification. So far so good! But what happens if {\zenon} fails to find the
 (complete) proof ? Well, you can consider this failure as a hint that the
 given proof was too sketchy: you have to develop it a bit, for instance by
@@ -588,8 +590,8 @@ elaborate the proof completely formally ``from scratch''.
 
 Like all other automatic theorem prover, {\zenon} may fail to find a
 demonstration. In this case, {\focal} allows the developer to write verbatim {\coq}
-proofs. Comfort of automation is lost in favor of an increase in expressive power:
-the entire {\coq} vernacular language is now available to the developer to
+or {\dedukti} proofs. Comfort of automation is lost in favor of an increase in expressive power:
+the entire {\dedukti} and {\coq} vernacular languages are now available to the developer to
 write the proof.
 
 Finally, the {\tt assumed} keyword is the ultimate proof backdoor: the proof
@@ -652,16 +654,16 @@ of redefinition, by using a certain kind of modularisation for the proofs.
 
 \subsection{Code Generation}
 
-{\focal} currently compiles programs toward two languages, {\ocaml} to
-get an executable standalone, and {\coq} to have a formal model
+{\focal} currently compiles programs toward three languages, {\ocaml} to
+get an executable standalone, and {\coq} and {\dedukti} \cite{focalide,} to have a formal model
 of the program, with theorems and proofs entirely machine checked.
 
 In the {\ocaml} code generation, all the logical aspects are discarded since
 they do not lead to executable code.
 
-In contrast, in {\coq}, all the {\em methods} are compiled,
+In contrast, in {\coq} and {\dedukti}, all the {\em methods} are compiled,
 i.e. ``computational'' {\em methods} and logical {\em methods} with their
-proofs. This allows {\coq} to check the entire consistence of the system
+proofs. This allows the proof checker to check the entire consistence of the system
 developed in {\focal}.
 
 

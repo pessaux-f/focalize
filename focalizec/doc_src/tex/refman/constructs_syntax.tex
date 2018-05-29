@@ -1997,12 +1997,12 @@ statement of the theorem, when such statement is admitted.
 
 \item {\bf Write an automated proof script}.  {\focal} provides a
   syntax, the {\focal} Proof Language, to split proofs into steps that
-  may be proved by the {\zenon} theorem prover. Without entering deeply
+  may be proved by the theorem prover. Without entering deeply
   into the syntax further described in chapter \ref{making-proofs},
   the main features are the following. The user may state hypotheses,
   demonstrate subgoals that will serve as lemmas for a higher level
   goal and may give hints about definitions or declarations of
-  methods. Then {\zenon} tries to automatically guess a proof of this
+  methods. Then the prover tries to automatically guess a proof of this
   goal, then tries to prove those lemmas, hence building a proof tree
   until the top goal (i.e. the theorem) is proved. Here is an
   example of such a proof.
@@ -2025,15 +2025,15 @@ statement of the theorem, when such statement is admitted.
   ;
 \end{lstlisting}}
 
-  \item {\bf Write a {\coq} script} This way is the most difficult
-     since it means to directly write {\coq} code. It
-    requires the understanding of both {\coq} and the mapping the
-    {\focal} compiler does to generate {\coq} code from {\focal} source
+  \item {\bf Write a {\coq} or {\dedukti} script} This way is the most difficult
+     since it means to directly write {\coq} or {\dedukti} code. It
+    requires the understanding of both the proof checker and the mapping the
+    {\focal} compiler does to generate {\coq}/{\dedukti} code from {\focal} source
     code. The section \ref{focal-coq-mapping} describes % [EJ] Reference mal formee
      how {\focal} definitions are mapped onto
-    {\coq} names.
+    {\coq} and {\dedukti} names.
 
-The {\coq} script is introduced by the keywords {\tt coq proof} and
+The script is introduced by the keywords {\tt coq proof} or {\tt dedukti proof} and
 surrounded by {\tt \{*} and {\tt *\}}.
 % But,
 %     anyway, such a way to make proofs require some skills in {\coq} and we try

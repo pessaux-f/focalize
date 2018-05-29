@@ -6,7 +6,7 @@
 As presented in \ref{proof-short-intro}, {\focal} proposes 3 ways to
 make proof of properties. We will only deal here with proofs written
 in the {\focal} Proof Language. As a reminder, the proofs written as
-direct {\coq} scripts will be addressed in \ref{coq-proofs}; the
+direct {\coq} or {\dedukti} scripts will be addressed in \ref{coq-proofs}; the
 last kind of proof, by \terminal{assumed} doesn't need anymore description
 since it consists in bypassing the formal proof mechanism.
 
@@ -250,12 +250,12 @@ section~\ref{sec:scoping}).
 
 Here are given some trivial theorems proven using the {\focal} Proof
 Language to get familiar with the syntax and the way to think when
-making proofs. It must be understood that {\zenon} aims at helping by
+making proofs. It must be understood that the prover aims at helping by
 combining intermediate proved properties. A proof is no more to be
 split up to a ``trivial'' level like it is the case in {\coq}. For
 instance, in the following theorem, the fact that from \verb"~ b" and
 \verb"(b \/ c)" one can deduce \verb"c" is automatically handled by
-{\zenon}.
+the prover.
 
 {\scriptsize
 \begin{lstlisting}

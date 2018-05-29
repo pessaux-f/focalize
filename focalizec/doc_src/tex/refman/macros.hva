@@ -14,8 +14,11 @@
 \def{\moca}{{\sf Moca}}
 \def{\focal}{{\sf FoCaLiZe}}
 \def{\coq}{{\sf Coq}}
+\def{\dedukti}{{\sf Dedukti}}
+\def{\sukerujo}{{\sf Sukerujo}}
 \def{\cime}{{\sf CiME}}
 \def{\zenon}{{\sf Zenon}}
+\def{\zmod}{{\sf Zenon Modulo}}
 \def\zvtov{{\sf zvtov}}
 \def{\focdoc}{{\sf FoCaLiZeDoc}}
 \def{\dotty}{{\sf dotty}}
