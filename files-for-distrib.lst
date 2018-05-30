@@ -189,6 +189,7 @@
 ./focalize/focalizec/src/docgen/docgen.spec
 ./focalize/focalizec/src/docgen/env_docgen.ml
 ./focalize/focalizec/src/docgen/env_docgen.mli
+./focalize/focalizec/src/docgen/fcd2html.in
 ./focalize/focalizec/src/docgen/focdoc.css
 ./focalize/focalizec/src/docgen/focdoc.dtd
 ./focalize/focalizec/src/docgen/focdoc.rnc
@@ -316,13 +317,11 @@
 ./focalize/focalizec/src/focalizetest/exemple/taquin/taquin.fml
 ./focalize/focalizec/src/focalizetest/exemple/triangle/length.fcl
 ./focalize/focalizec/src/focalizetest/exemple/triangle/Makefile
-./focalize/focalizec/src/focalizetest/exemple/triangle/Makefile.test
 ./focalize/focalizec/src/focalizetest/exemple/triangle/Makefile_length
 ./focalize/focalizec/src/focalizetest/exemple/triangle/Makefile_triangle
 ./focalize/focalizec/src/focalizetest/exemple/triangle/triangle.fcl
 ./focalize/focalizec/src/focalizetest/exemple/triangle_correct/length.fcl
 ./focalize/focalizec/src/focalizetest/exemple/triangle_correct/Makefile
-./focalize/focalizec/src/focalizetest/exemple/triangle_correct/Makefile.test
 ./focalize/focalizec/src/focalizetest/exemple/triangle_correct/Makefile_length
 ./focalize/focalizec/src/focalizetest/exemple/triangle_correct/Makefile_triangle
 ./focalize/focalizec/src/focalizetest/exemple/triangle_correct/triangle.fcl
