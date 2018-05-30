@@ -715,12 +715,25 @@ theorem int_le_trans:
 theorem int_lt_irrefl :
   all x y : int, x < y -> ~ x = y
   proof =
+(* Broken since Coq a version >(=?) 8.6
     coq proof {*
-    intros x y. unfold _lt_. unfold coq_builtins.bi__int_lt. elim Z_lt_dec. intros.
+    intros x y. unfold _lt_. unfold coq_builtins.bi__int_lt. elim Z_lt_dec.
+    intros.
     compute in H. intro. unfold _equal_ in H0.
     apply zenon_syntactic_equal with (S := int__t) (x := x) (y := y).
-    intro. apply zenon_focal_eqdec. auto with zarith. apply Zlt_not_eq.
-    trivial. trivial. intro. compute. intros. trivial. Qed.
+    intro. apply zenon_focal_eqdec. auto with zarith.
+
+    apply Zlt_not_eq. trivial. trivial. intro. compute. intros. trivial. Qed.
+    *}
+*)
+    coq proof {*
+    intros x y. unfold _lt_. unfold coq_builtins.bi__int_lt. elim Z_lt_dec.
+    intros.
+    compute in H. intro. unfold _equal_ in H0.
+    apply zenon_syntactic_equal with (S := int__t) (x := x) (y := y).
+    intro. apply zenon_focal_eqdec. auto with zarith.
+
+    auto. simpl. intros. auto. Qed.
     *}
 ;;
 
