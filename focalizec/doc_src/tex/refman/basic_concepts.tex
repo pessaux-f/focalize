@@ -329,10 +329,10 @@ collection MyFull_Instance =
   implement Full;
 end ;;
 
-let v = Full!create_random ;;
-Full!print (v) ;;
-let dv = Full!double (v) ;;
-Full!print (dv) ;;
+let v = MyFull_Instance!create_random ;;
+MyFull_Instance!print (v) ;;
+let dv = MyFull_Instance!double (v) ;;
+MyFull_Instance!print (dv) ;;
 \end{lstlisting}
 }
 
