@@ -321,7 +321,7 @@ only  be manipulated by the methods of the {\em implemented} species.
 species Full =
   rep = int ;
   let create_random : Self = random_foc#random_int (42) ;
-  let double (x : Self) = x + x ;
+  let double (x : Self) : Self = x + x ;
   let print (x : Self) = print_int (x) ;
 end ;;
 
