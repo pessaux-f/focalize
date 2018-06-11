@@ -320,19 +320,19 @@ only  be manipulated by the methods of the {\em implemented} species.
 \begin{lstlisting}
 species Full =
   rep = int ;
-  let create_random in Self = random_foc#random_int (42) ;
-  let double (x in Self) = x + x ;
-  let print (x in Self) = print_int (x) ;
+  let create_random : Self = random_foc#random_int (42) ;
+  let double (x : Self) : Self = x + x ;
+  let print (x : Self) = print_int (x) ;
 end ;;
 
 collection MyFull_Instance =
   implement Full;
 end ;;
 
-let v = Full.create_random ;;
-Full.print (v) ;;
-let dv = Full.double (v) ;;
-Full.print (dv) ;;
+let v = MyFull_Instance!create_random ;;
+MyFull_Instance!print (v) ;;
+let dv = MyFull_Instance!double (v) ;;
+MyFull_Instance!print (dv) ;;
 \end{lstlisting}
 }
 
