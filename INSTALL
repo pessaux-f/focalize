@@ -18,8 +18,7 @@
 (0) Forewords:
 ==============
 
-The installation of the FoCaLiZe will setup 3 components:
- - The Zenon automatic prover
+The installation of the FoCaLiZe will setup 2 components:
  - The Zvtov converter of proofs to various theorem provers
  - The FoCaLiZe compiler tool suit (compiler, dependencies checker, inheritance
    graph viewer, testing tool).
@@ -31,8 +30,13 @@ Installation requires some external tools, the most emblematic ones being:
   invoking:
       git clone http://focalize.inria.fr/zenon.git
   in the root directory of focalize (usually "focalize")).
- - Hevea (for the documentation in HTML) that can be fetched at
+ - Hevea (optional: for the documentation in HTML) that can be fetched at
       http://hevea.inria.fr.
+
+Optionally, if you intend to use Deduction Modulo you will also need:
+ - Zenon Modulo (from the modulo_focalide branch of the Zenon git repository)
+ - Dedukti (version 2.5)
+ - Sukerujo (version 2.5)
 
 Some the minor (but still needed) tools are also required (LaTeX, make, dvipdf,
 dvips) but are generally part of a standard installation on a development
