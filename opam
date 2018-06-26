@@ -17,6 +17,8 @@ depends: ["coq" "zenon" {>= "0.8.0"} ]
 
 depopts: ["dedukti" "sukerujo" "zenon_modulo_focalide"]
 
-conflicts: ["dedukti" {< "2.5"}
-            "sukerujo" {< "2.5"}
-            "zenon_modulo_focalide" {< "0.4.3"}]
+conflicts: ["dedukti" {< "2.6.0"}
+            "dedukti" {>= "2.7"}
+            "sukerujo" {< "2.6.0"}
+            "sukerujo" {>= "2.7"}
+            "zenon_modulo_focalide" {< "0.4.4"}]

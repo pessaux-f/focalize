@@ -155,7 +155,7 @@ let (type_def_name, type_descr) = List.hd ty_descrs in
       Dk_pprint.purge_type_simple_to_dk_variable_mapping () ;
       (* We compile toplevel expressions as "Strong normal form" orders under
          Dedukti. *)
-      Format.fprintf out_fmter "@[<1>#SNF@ (" ;
+      Format.fprintf out_fmter "@[<1>#EVAL@ (" ;
       let ctx = {
         Context.scc_current_unit = current_unit ;
         (* Dummy, since not under a species. *)
