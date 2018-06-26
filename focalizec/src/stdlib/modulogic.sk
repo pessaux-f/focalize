@@ -29,6 +29,21 @@ def existstype : (type -> prop) -> prop := dk_logic.exists_type.
 def equal      : a : type -> term a -> term a -> prop := dk_logic.equal.
 def triangle (x : prop) := x.
 
+(; Classical connectives are regular connectives ;)
+def triangle_c := triangle.
+def True_c := True.
+def False_c := False.
+def not_c := not.
+def and_c := and.
+def or_c := or.
+def imp_c := imp.
+def eqv_c := eqv.
+def forall_c := forall.
+def exists_c := exists.
+def foralltype_c := foralltype.
+def existstype_c := existstype.
+def tequal_c := equal.
+
 (; Definition of Proofs of Symbols ;)
 
 (; The Sequent Type ;)
