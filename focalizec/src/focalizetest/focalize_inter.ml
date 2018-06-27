@@ -699,7 +699,7 @@ let rec typ_of_foctyp =
   function
     | TE_ident (s) ->
         let m,s = convert_ident_no s.ast_desc in
-        if Char.lowercase_ascii (String.get s 0) = String.get s 0 then
+        if Handy.char_lowercase_ascii (String.get s 0) = String.get s 0 then
           TAtom(m, s)
         else TSpecPrm(s)
     | TE_fun (e1,e2) ->

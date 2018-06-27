@@ -228,7 +228,7 @@ let ident_letter_name s =
 let atom_of_cons_name n =
   let n1 = (string_letter_name n) in
   if n1 = "" then failwith "Un constructeur a pour nom une chaine vide ???"
-  else n1.[0] <- Char.lowercase_ascii (n1.[0]) ;
+  else n1.[0] <- Handy.char_lowercase_ascii (n1.[0]) ;
   n1
 ;;
 

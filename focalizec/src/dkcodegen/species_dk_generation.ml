@@ -1728,7 +1728,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
       Sourcify.pp_vname species_name ;
   (* Start the chapter encapsulating the species representation. *)
   let module_name =
-    String.capitalize_ascii (Parsetree_utils.name_of_vname species_name) in
+    Handy.string_capitalize_ascii (Parsetree_utils.name_of_vname species_name) in
   Format.fprintf out_fmter "@[<2>(; Module %s. ;)@\n" module_name;
   (* Insert in the environment the value bindings of the species methods and
      the species bindings for its parameters. This is needed since in Dk

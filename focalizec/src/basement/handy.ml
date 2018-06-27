@@ -450,3 +450,42 @@ let rec int_to_base_26 i =
     let ch = (i mod 26) + (Char.code 'a') in
     Char.escaped (Char.chr ch)
 ;;
+
+(* The function String.capitalize_ascii is not present in old versions
+   of OCaml standard library; we redefine it here to keep backward
+   compatibility. *)
+
+let bytes_apply1 f s =
+  if Bytes.length s = 0 then s else begin
+    let r = Bytes.copy s in
+    Bytes.unsafe_set r 0 (f(Bytes.unsafe_get s 0));
+    r
+  end
+
+let char_uppercase_ascii c =
+  if (c >= 'a' && c <= 'z')
+  then Char.unsafe_chr(Char.code c - 32)
+  else c
+
+let char_lowercase_ascii c =
+  if (c >= 'A' && c <= 'Z')
+  then Char.unsafe_chr(Char.code c + 32)
+  else c
+
+let bytes_capitalize_ascii s = bytes_apply1 char_uppercase_ascii s
+let bytes_uncapitalize_ascii s = bytes_apply1 char_lowercase_ascii s
+
+let string_capitalize_ascii s =
+  Bytes.unsafe_to_string (bytes_capitalize_ascii (Bytes.unsafe_of_string s))
+
+let string_uncapitalize_ascii s =
+  Bytes.unsafe_to_string (bytes_uncapitalize_ascii (Bytes.unsafe_of_string s))
+
+let bytes_lowercase_ascii s = Bytes.map char_lowercase_ascii s
+let bytes_uppercase_ascii s = Bytes.map char_uppercase_ascii s
+
+let string_lowercase_ascii s =
+  Bytes.unsafe_to_string (bytes_lowercase_ascii (Bytes.unsafe_of_string s))
+
+let string_uppercase_ascii s =
+  Bytes.unsafe_to_string (bytes_uppercase_ascii (Bytes.unsafe_of_string s))

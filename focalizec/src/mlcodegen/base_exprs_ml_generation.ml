@@ -139,7 +139,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
           compiled one, then do not qualify the identifier. *)
        if mod_name <> ctx.Context.rcc_current_unit then
          Format.fprintf out_fmter "%s.%a"
-           (String.capitalize_ascii mod_name)
+           (Handy.string_capitalize_ascii mod_name)
            Parsetree_utils.pp_vname_with_operators_expanded vname
        else
          Format.fprintf out_fmter "%a"
@@ -233,7 +233,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                       unit. May be a species from the toplevel of another
                       FoCaL source file. *)
                    let capitalized_modname =
-                     String.capitalize_ascii module_name in
+                     Handy.string_capitalize_ascii module_name in
                    Format.fprintf out_fmter
                      "%s.%a.%a"
                      capitalized_modname
@@ -294,7 +294,7 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
               one must not qualify it. *)
            if fname <> ctx.Context.rcc_current_unit then
              Format.fprintf ctx.Context.rcc_out_fmter "%s.%a"
-               (String.capitalize_ascii fname)
+               (Handy.string_capitalize_ascii fname)
                Parsetree_utils.pp_vname_with_operators_expanded name
            else
              Format.fprintf ctx.Context.rcc_out_fmter "%a"
@@ -321,7 +321,7 @@ let pp_to_ocaml_label_ident ctx ppf lab_ident =
               (* If the constructor belongs to the current compilation unit
                  then one must not qualify it. *)
               if modname <> ctx.Context.rcc_current_unit then
-                Format.fprintf ppf "%s." (String.capitalize_ascii modname) ;
+                Format.fprintf ppf "%s." (Handy.string_capitalize_ascii modname) ;
               n) in
        Format.fprintf ppf "%a"
          Parsetree_utils.pp_vname_with_operators_expanded vname

@@ -1545,7 +1545,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_dk_env
                print_ctx.Dk_pprint.dpc_collections_carrier_mapping } in
        (* Create a unique name seed for Sections of this theorem. *)
        let section_name_seed =
-         String.uppercase_ascii (Handy.int_to_base_26 (section_gen_sym ())) in
+         Handy.string_uppercase_ascii (Handy.int_to_base_26 (section_gen_sym ())) in
        (* Handle the proof, telling not to print the Theorem's body once the
           auto-proof is ended because this will be done directly by
           [generate_defined_theorem]. *)

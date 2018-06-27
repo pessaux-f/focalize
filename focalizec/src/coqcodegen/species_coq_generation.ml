@@ -2391,7 +2391,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
                print_ctx.Coq_pprint.cpc_collections_carrier_mapping } in
        (* Create a unique name seed for Sections of this theorem. *)
        let section_name_seed =
-         String.uppercase_ascii (Handy.int_to_base_26 (section_gen_sym ())) in
+         Handy.string_uppercase_ascii (Handy.int_to_base_26 (section_gen_sym ())) in
        (* Handle the proof, telling not to print the Theorem's body once the
           auto-proof is ended because this will be done directly by
           [generate_defined_theorem]. *)
@@ -4321,7 +4321,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
       Sourcify.pp_vname species_name ;
   (* Start the chapter encapsulating the species representation. *)
   let module_name =
-    String.capitalize_ascii (Parsetree_utils.name_of_vname species_name) in
+    Handy.string_capitalize_ascii (Parsetree_utils.name_of_vname species_name) in
   Format.fprintf out_fmter "@[<2>Module %s.@\n" module_name;
   (* Insert in the environment the value bindings of the species methods and
      the species bindings for its parameters. This is needed since in Coq

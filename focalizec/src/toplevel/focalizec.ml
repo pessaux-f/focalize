@@ -276,7 +276,7 @@ let dispatch_compilation files =
     (fun input_file_name ->
       (* Check for a FoCaLize source file to compile. *)
       let suffix =
-        String.lowercase_ascii (Files.get_file_name_suffix input_file_name) in
+        Handy.string_lowercase_ascii (Files.get_file_name_suffix input_file_name) in
       match suffix with
       | "fcl" ->
           let input_file_no_suffix = Filename.chop_extension input_file_name in
@@ -320,7 +320,7 @@ let dispatch_compilation files =
           (* Finally, pass it to Coq or Dedukti. *)
           let input_file_no_suffix = Filename.chop_extension input_file_name in
           let suffix2 =
-            String.lowercase_ascii
+            Handy.string_lowercase_ascii
               (Files.get_file_name_suffix input_file_no_suffix) in
           if suffix2 = ".dk" then
             compile_dk (input_file_no_suffix)

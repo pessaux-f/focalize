@@ -101,3 +101,9 @@ val pp_reset_effects : Format.formatter -> unit
     write type variables. *)
 val int_to_base_26 : int -> string
 
+(* String capitalisation *)
+val char_lowercase_ascii : char -> char
+val string_capitalize_ascii : string -> string
+val string_uncapitalize_ascii : string -> string
+val string_lowercase_ascii : string -> string
+val string_uppercase_ascii : string -> string
