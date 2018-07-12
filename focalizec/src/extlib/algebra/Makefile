@@ -123,7 +123,7 @@ EXTERNAL_DKOS=\
  weak_structures_externals.dko\
  randoms_externals.dko arrays_externals.dko
 
-SKDEP_CALL= $(SKDEP) $(EXTERNAL_DKOS:.dko=.sk) >> .depend
+SKDEP_CALL= $(SKDEP) -I $(STDLIB_DIR) --ignore $(EXTERNAL_DKOS:.dko=.sk) >> .depend
 
 FOCALIZE_COMP_FLAGS += -dedukti-code
 

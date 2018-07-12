@@ -107,7 +107,7 @@ cc.dko: cc.dk
 builtins.dko: builtins.dk cc.dko
 	$(DKCHECK) -e $<
 
-SKDEP_CALL=$(SKDEP) -v *.sk >> ./.depend
+SKDEP_CALL=$(SKDEP) *.sk >> ./.depend
 
 FOCALIZE_COMP_FLAGS += -dedukti-code
 endif
