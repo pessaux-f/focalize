@@ -294,7 +294,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
        Format.fprintf out_fmter "cc.uT.@\n";
        if not as_zenon_fact then
          (* Link both types *)
-         Format.fprintf out_fmter "[%a] cc.eT (%a__t %a) --> __%a__t %a.@\n"
+         Format.fprintf out_fmter "[%a] sttforall.etap (sttforall.p (%a__t %a)) --> __%a__t %a.@\n"
            (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas print_ctx false ~final_comma:false)
            type_def_params
            Parsetree_utils.pp_vname_with_operators_expanded type_def_name

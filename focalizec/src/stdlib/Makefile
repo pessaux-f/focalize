@@ -80,6 +80,7 @@ FOCALIZE_SKZVS=$(FOCALIZE_SRC:.fcl=.sk.zv)
 FOCALIZE_DKS=$(FOCALIZE_SRC:.fcl=.sk)
 FOCALIZE_DKOS=$(FOCALIZE_DKS:.sk=.dko)
 EXTERNAL_DKOS=\
+ sttforall.dko\
  cc.dko\
  builtins.dko\
  dk_bool.dko\
@@ -107,7 +108,7 @@ cc.dko: cc.dk
 builtins.dko: builtins.dk cc.dko
 	$(DKCHECK) -e $<
 
-SKDEP_CALL=$(SKDEP) *.sk >> ./.depend
+SKDEP_CALL=$(DKDEP) *.dk >> ./.depend && $(SKDEP) *.sk >> ./.depend
 
 FOCALIZE_COMP_FLAGS += -dedukti-code
 endif

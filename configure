@@ -303,14 +303,22 @@ fi
 if [ "$DKDIR" != "" ] ;
 then
     DKCHECK=$DKDIR/dkcheck
+    DKDEP=$DKDIR/dkdep
 else
     DKCHECK=dkcheck
+    DKDEP=dkdep
 fi
 
 # Check that the file $DKCHECK is executable
 if [ ! `which $DKCHECK` ] ;
 then
     DKCHECK=""
+fi
+
+# Check that the file $DKDEP is executable
+if [ ! `which $DKDEP` ] ;
+then
+    DKDEP=""
 fi
 
 if [ $TOOLS_PREFIX_GIVEN != true ]
@@ -591,6 +599,7 @@ echo "COQC=$COQC" >> $CONFIGURATION_VARS_FILE
 echo "COQDEP=$COQDEP" >> $CONFIGURATION_VARS_FILE
 echo "COQ_VERSION=$COQ_VERSION" >> $CONFIGURATION_VARS_FILE
 echo "DKCHECK=$DKCHECK" >> $CONFIGURATION_VARS_FILE
+echo "DKDEP=$DKDEP" >> $CONFIGURATION_VARS_FILE
 echo "SKDEP=$SKDEP" >> $CONFIGURATION_VARS_FILE
 echo "SKCHECK=$SKCHECK" >> $CONFIGURATION_VARS_FILE
 echo "ZENON=$ZENON" >> $CONFIGURATION_VARS_FILE
@@ -648,6 +657,7 @@ echo "  Coq version: $COQ_VERSION"
 echo "  zenon = $ZENON"
 echo "  zvtov = $INSTALL_BIN_DIR/zvtov"
 echo "  coqdep = $COQDEP"
+echo "  dkdep = $DKDEP"
 echo "  dkcheck = $DKCHECK"
 echo "  skdep = $SKDEP"
 echo "  skcheck = $SKCHECK"

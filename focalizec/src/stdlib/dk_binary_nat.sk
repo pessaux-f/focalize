@@ -5,7 +5,7 @@ def Bool : Type := dk_bool.Bool.
 
 bNat : cc.uT.
 BNat : Type.
-[] cc.eT bNat --> BNat.
+[] sttforall.etap (sttforall.p bNat) --> BNat.
 
 O : BNat.
 def S0 : BNat -> BNat.

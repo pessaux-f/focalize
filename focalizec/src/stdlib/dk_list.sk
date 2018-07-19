@@ -4,7 +4,7 @@
 
 (; Polymorphic lists ;)
 List : cc.uT -> Type.
-[A] cc.eT (list A) --> List A.
+[A] sttforall.etap (sttforall.p (list A)) --> List A.
 
 def call_by_value_list : A : cc.uT ->
                          R : cc.uT ->

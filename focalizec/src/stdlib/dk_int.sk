@@ -9,7 +9,7 @@ def B : Type := cc.eT dk_bool.bool.
  ;)
 int : cc.uT.
 I : Type.
-[] cc.eT int --> I.
+[] sttforall.etap (sttforall.p int) --> I.
 def Int := I.
 (; the only constructor of Int,make n m builds the integer n - m ;)
 def make : Nat -> Nat -> I.

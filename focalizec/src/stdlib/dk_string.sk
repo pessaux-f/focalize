@@ -2,7 +2,7 @@
 (; lists of ascii characters ;)
 
 String : Type.
-[] cc.eT string --> String.
+[] sttforall.etap (sttforall.p string) --> String.
 
 def call_by_value_string : R : cc.uT -> (String -> cc.eT R) -> String -> cc.eT R.
 [f] call_by_value_string _ f "" --> f ""

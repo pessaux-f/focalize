@@ -5,7 +5,7 @@ standard library into Dedukti ;)
 Object : Type.
 collection : cc.uT.
 Collection : Type.
-[] cc.eT collection --> Collection.
+[] sttforall.etap (sttforall.p collection) --> Collection.
 collmeth__rep : Collection -> cc.uT.
 
 unknown_type : cc.uT.
@@ -50,7 +50,7 @@ def call_by_value :
 [A,R,f,a]   call_by_value (dk_opt.option A)   R f a --> dk_opt.call_by_value_option A   R f a
 [A,R,f,a]   call_by_value (list A)            R f a --> dk_list.call_by_value_list A    R f a
 [A,B,R,f,a] call_by_value (dk_tuple.prod A B) R f a --> dk_tuple.call_by_value_prod A B R f a
-[A,B,R,f,a] call_by_value (cc.Pi A B)         R f a --> f a.
+[A,B,R,f,a] call_by_value (sttforall.arr A B) R f a --> f a.
 
 def cbv_eq : A : cc.uT -> R : cc.uT -> f : (cc.eT A -> cc.eT R) -> a : cc.eT A -> dk_logic.eP (dk_logic.equal R (call_by_value A R f a) (f a)).
 [R,f]         cbv_eq unit                R f tt                      --> dk_logic.refl R (f tt)
@@ -67,4 +67,4 @@ def cbv_eq : A : cc.uT -> R : cc.uT -> f : (cc.eT A -> cc.eT R) -> a : cc.eT A -
 [A,R,f]       cbv_eq (list A)            R f (nil _)                 --> dk_logic.refl R (f (nil A))
 [A,R,f,a,l]   cbv_eq (list A)            R f (cons _ a l)            --> dk_logic.refl R (f (cons A a l))
 [A,B,R,f,a,b] cbv_eq (dk_tuple.prod A B) R f (dk_tuple.pair _ _ a b) --> dk_logic.refl R (f (dk_tuple.pair A B a b))
-[A,B,R,f,a]   cbv_eq (cc.Pi A B)         R f a                       --> dk_logic.refl R (f a).
+[A,B,R,f,a]   cbv_eq (sttforall.arr A B) R f a                       --> dk_logic.refl R (f a).

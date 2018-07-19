@@ -10,11 +10,10 @@ def or := dk_bool.or.
 def xor := dk_bool.xor.
 def if := dk_bool.ite.
 def ifb := dk_bool.iteb.
-def match := dk_bool.match.
+def case := dk_bool.case.
 
 def Prop := dk_logic.Prop.
 def eP := dk_logic.eP.
-def eeP : Prop -> cc.uT := dk_logic.eeP.
 def Is_true : Bool -> Prop := dk_logic.ebP.
 def is_true := Is_true.
 def True := dk_logic.True.
@@ -61,10 +60,9 @@ def zenon_focal_truenotequal :
   eP (NotNot (Is_true x)) ->
   eP (NotNot (eqb true x))
   :=
-    match (x : Bool =>
-           eeP (Imp
+    case (x : Bool => Imp
                  (NotNot (Is_true x))
-                 (NotNot (eqb true x))))
+                 (NotNot (eqb true x)))
           (H : eP (NotNot True) =>
            G : eP (Not (eqb true true)) =>
            G (refl true))
@@ -85,10 +83,9 @@ def zenon_focal_falseequal :
   eP (NotNot (Is_true x)) ->
   eP (Not (eqb false x))
   :=
-    match (x : Bool =>
-           eeP (Imp
+    case (x : Bool => Imp
                  (NotNot (Is_true x))
-                 (Not (eqb false x))))
+                 (Not (eqb false x)))
           (H : eP (NotNot True) =>
            G : eP (eqb false true) =>
            G (x : Bool => Is_true (not x)) tt)
@@ -107,10 +104,9 @@ def zenon_focal_falsenotequal :
   eP (Not (Is_true x)) ->
   eP (NotNot (eqb false x))
   :=
-    match (x : Bool =>
-           eeP (Imp
+    case (x : Bool => Imp
                  (Not (Is_true x))
-                 (NotNot (eqb false x))))
+                 (NotNot (eqb false x)))
           (H : eP (Not True) =>
            G : eP (Not (eqb false true)) =>
            H tt)
@@ -131,9 +127,9 @@ def zenon_focal_not :
   eP (NotNot (Is_true a)) ->
   eP (Not (Is_true (not a)))
   :=
-    match (a : Bool =>
-           eeP (Imp (NotNot (Is_true a))
-                    (Not (Is_true (not a)))))
+    case (a : Bool =>
+           Imp (NotNot (Is_true a))
+                    (Not (Is_true (not a))))
           (H : eP (NotNot True) =>
            G : FalseT => G)
           (H : eP (NotNot False) =>
@@ -144,9 +140,9 @@ def zenon_focal_notnot :
   eP (Not (Is_true a)) ->
   eP (NotNot (Is_true (not a)))
   :=
-    match (a : Bool =>
-           eeP (Imp (Not (Is_true a))
-                    (NotNot (Is_true (not a)))))
+    case (a : Bool =>
+           Imp (Not (Is_true a))
+                    (NotNot (Is_true (not a))))
           (H : eP (Not True) =>
            G : eP (Not False) => H tt)
           (H : eP (Not False) =>
@@ -159,11 +155,11 @@ def zenon_focal_and :
   eP (Is_true (and a b)) ->
   FalseT
   :=
-    match (a : Bool =>
-           eeP (Forallb (b : Bool =>
+    case (a : Bool =>
+           Forallb (b : Bool =>
                          Imp (Not (And (Is_true a)
                                        (Is_true b)))
-                             (Not (Is_true (and a b))))))
+                             (Not (Is_true (and a b)))))
           (b : Bool =>
            H : eP (Not (And True (Is_true b))) =>
            G : eP (Is_true b) =>
@@ -179,11 +175,11 @@ def zenon_focal_notand :
   eP (NotNot (And (Is_true a) (Is_true b))) ->
   eP (NotNot (Is_true (and a b)))
   :=
-    match (a : Bool =>
-           eeP (Forallb (b : Bool =>
+    case (a : Bool =>
+           Forallb (b : Bool =>
                          Imp (NotNot (And (Is_true a)
                                           (Is_true b)))
-                             (NotNot (Is_true (and a b))))))
+                             (NotNot (Is_true (and a b)))))
           (b : Bool =>
            H : eP (NotNot (And True (Is_true b))) =>
            G : eP (Not (Is_true b)) =>
@@ -201,11 +197,11 @@ def zenon_focal_or :
   eP (Not (Or (Is_true a) (Is_true b))) ->
   eP (Not (Is_true (or a b)))
   :=
-    match (a : Bool =>
-           eeP (Forallb (b : Bool =>
+    case (a : Bool =>
+           Forallb (b : Bool =>
                          Imp (Not (Or (Is_true a)
                                       (Is_true b)))
-                             (Not (Is_true (or a b))))))
+                             (Not (Is_true (or a b)))))
           (b : Bool =>
            H : eP (Not (Or True (Is_true b))) =>
            G : TrueT =>
@@ -221,11 +217,11 @@ def zenon_focal_notor :
   eP (NotNot (Or (Is_true a) (Is_true b))) ->
   eP (NotNot (Is_true (or a b)))
   :=
-    match (a : Bool =>
-           eeP (Forallb (b : Bool =>
+    case (a : Bool =>
+           Forallb (b : Bool =>
                          Imp (NotNot (Or (Is_true a)
                                          (Is_true b)))
-                             (NotNot (Is_true (or a b))))))
+                             (NotNot (Is_true (or a b)))))
           (b : Bool =>
            H : eP (NotNot (Or True (Is_true b))) =>
            G : eP (Not True) =>
@@ -247,11 +243,11 @@ def zenon_focal_xor :
   eP (NotNot (Eqv (Is_true a) (Is_true b))) ->
   eP (Not (Is_true (xor a b)))
   :=
-    match (a : Bool =>
-           eeP (Forallb (b : Bool =>
+    case (a : Bool =>
+           Forallb (b : Bool =>
                          Imp (NotNot (Eqv (Is_true a)
                                           (Is_true b)))
-                             (Not (Is_true (xor a b))))))
+                             (Not (Is_true (xor a b)))))
           (b : Bool =>
            H : eP (NotNot (Eqv True (Is_true b))) =>
            zenon_focal_not
@@ -273,11 +269,11 @@ def zenon_focal_notxor :
   eP (Not (Eqv (Is_true a) (Is_true b))) ->
   eP (NotNot (Is_true (xor a b)))
   :=
-    match (a : Bool =>
-           eeP (Forallb (b : Bool =>
+    case (a : Bool =>
+           Forallb (b : Bool =>
                          Imp (Not (Eqv (Is_true a)
                                        (Is_true b)))
-                             (NotNot (Is_true (xor a b))))))
+                             (NotNot (Is_true (xor a b)))))
           (b : Bool =>
            H : eP (Not (Eqv True (Is_true b))) =>
            zenon_focal_notnot
@@ -305,9 +301,8 @@ def zenon_focal_ite_bool :
           (Not (Is_true els))) ->
   eP (Not (Is_true (ifb cond thn els)))
   :=
-    match (cond : Bool =>
-           eeP
-             (Forallb
+    case (cond : Bool =>
+           Forallb
                (thn : Bool =>
                 Forallb
                   (els : Bool =>
@@ -318,7 +313,7 @@ def zenon_focal_ite_bool :
                               (Not (Is_true els)))
                             (Not
                               (Is_true
-                                (ifb cond thn els))))))))
+                                (ifb cond thn els)))))))
           (thn : Bool =>
            els : Bool =>
            H : (TrueT ->
@@ -344,9 +339,8 @@ def zenon_focal_ite_bool_n :
           (NotNot (Is_true els))) ->
   eP (NotNot (Is_true (ifb cond thn els)))
   :=
-    match (cond : Bool =>
-           eeP
-             (Forallb
+    case (cond : Bool =>
+           Forallb
                (thn : Bool =>
                 Forallb
                   (els : Bool =>
@@ -359,7 +353,7 @@ def zenon_focal_ite_bool_n :
                                 (Is_true els)))
                             (NotNot
                               (Is_true
-                                (ifb cond thn els))))))))
+                                (ifb cond thn els)))))))
           (thn : Bool =>
            els : Bool =>
            H : (TrueT ->
@@ -386,9 +380,7 @@ def zenon_focal_ite_rel_l (A : cc.uT)
                           eP (Imp (Not (Is_true cond)) (Not (r els e2))) ->
                           eP (Not (r (if A cond thn els) e2))
 :=
-  match (cond : Bool =>
-         eeP
-           (Forall
+  case (cond : Bool => Forall
              A
              (thn : cc.eT A =>
               Forall
@@ -401,7 +393,7 @@ def zenon_focal_ite_rel_l (A : cc.uT)
                               (Not (r thn e2)))
                          (Imp (Imp (Not (Is_true cond))
                                    (Not (r els e2)))
-                              (Not (r (if A cond thn els) e2)))))))))
+                              (Not (r (if A cond thn els) e2))))))))
         (thn : cc.eT A =>
          els : cc.eT A =>
          e2 : cc.eT B =>
@@ -467,8 +459,7 @@ def zenon_focal_istrue_true :
   eP (Not (eqb e true)) ->
   eP (Not (Is_true e))
   :=
-    match (e : Bool =>
-           eeP (Imp (Not (eqb e true)) (Not (Is_true e))))
+    case (e : Bool => Imp (Not (eqb e true)) (Not (Is_true e)))
           (H : eP (Not (eqb true true)) =>
            G : TrueT =>
            H (refl true))
@@ -479,9 +470,8 @@ def zenon_focal_notistrue_false :
   eP (Not (eqb e false)) ->
   eP (NotNot (Is_true e))
   :=
-    match (e : Bool =>
-           eeP (Imp (Not (eqb e false))
-                    (NotNot (Is_true e))))
+    case (e : Bool => Imp (Not (eqb e false))
+                    (NotNot (Is_true e)))
           (H : eP (Not (eqb true false)) =>
            G : eP (Not True) => G tt)
           (H : eP (Not (eqb false false)) =>
@@ -670,8 +660,7 @@ def zenon_focal_not_all_bool (P : Bool -> Prop)
                              (h2 : eP (NotNot (P false)))
                              (hc : eP (Not (dk_logic.forall bool P)))
 :=
-  hc (match
-       (b : Bool => eeP (P b))
+  hc (case P
        (zen.nnpp (P true) h1)
        (zen.nnpp (P false) h2)).
 
@@ -682,4 +671,4 @@ def zenon_focal_ex_bool (P : Bool -> Prop)
                         (hc : eP (dk_logic.exists bool P))
                         : eP False
 :=
-  hc False (match (b : Bool => eeP (Not (P b))) h1 h2).
+  hc False (case (b : Bool => Not (P b)) h1 h2).

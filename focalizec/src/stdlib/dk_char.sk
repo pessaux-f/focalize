@@ -2,7 +2,7 @@
 (; 7bits (ascii) characters ;)
 
 Char : Type.
-[] cc.eT char --> Char.
+[] sttforall.etap (sttforall.p char) --> Char.
 
 def call_by_value_char : R : cc.uT -> (Char -> cc.eT R) -> Char -> cc.eT R.
 [f,n] call_by_value_char _ f (char_of_nat n) --> f (char_of_nat n).

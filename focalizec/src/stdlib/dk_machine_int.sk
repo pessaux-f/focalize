@@ -7,7 +7,7 @@ def US : UNat -> UNat := S.
 
 Mint : UNat -> cc.uT.
 MInt : UNat -> Type.
-[N] cc.eT (Mint N) --> MInt N.
+[N] sttforall.etap (sttforall.p (Mint N)) --> MInt N.
 
 O : MInt UO.
 S0 : N : UNat -> MInt N -> MInt (US N).

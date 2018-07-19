@@ -2,7 +2,7 @@
 
 sum : cc.uT -> cc.uT -> cc.uT.
 Sum : cc.uT -> cc.uT -> Type.
-[A,B] cc.eT (sum A B) --> Sum A B.
+[A,B] sttforall.etap (sttforall.p (sum A B)) --> Sum A B.
 
 left  : A : cc.uT -> B : cc.uT -> cc.eT A -> Sum A B.
 right : A : cc.uT -> B : cc.uT -> cc.eT B -> Sum A B.

@@ -4,7 +4,7 @@
 
 def Bool : Type := dk_bool.Bool.
 Nat : Type.
-[] cc.eT nat --> Nat.
+[] sttforall.etap (sttforall.p nat) --> Nat.
 
 def call_by_value_nat : R : cc.uT -> (Nat -> cc.eT R) -> Nat -> cc.eT R.
 [f]   call_by_value_nat _ f 0 --> f 0

@@ -2,7 +2,7 @@
 
 prod : cc.uT -> cc.uT -> cc.uT.
 Prod : cc.uT -> cc.uT -> Type.
-[A,B] cc.eT (prod A B) --> Prod A B.
+[A,B] sttforall.etap (sttforall.p (prod A B)) --> Prod A B.
 
 pair : A : cc.uT ->
        B : cc.uT ->
@@ -42,7 +42,7 @@ def match__pair : A : cc.uT ->
 
 dprod : A : cc.uT -> (cc.eT A -> cc.uT) -> cc.uT.
 Dprod : A : cc.uT -> (cc.eT A -> cc.uT) -> Type.
-[A,B] cc.eT (dprod A B) --> Dprod A B.
+[A,B] sttforall.etap (sttforall.p (dprod A B)) --> Dprod A B.
 
 dpair : A : cc.uT ->
        B : (cc.eT A -> cc.uT) ->

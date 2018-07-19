@@ -3,7 +3,7 @@
 (; options ;)
 option : cc.uT -> cc.uT.
 Option : cc.uT -> Type.
-[A] cc.eT (option A) --> Option A.
+[A] sttforall.etap (sttforall.p (option A)) --> Option A.
 
 None : A : cc.uT -> Option A.
 Some : A : cc.uT -> cc.eT A -> Option A.

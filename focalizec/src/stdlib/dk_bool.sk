@@ -26,6 +26,19 @@ def match :
 [H] match _ H _ true  --> H
 [H] match _ _ H false --> H.
 
+def prop := sttforall.bool.
+def proof := sttforall.eps.
+
+(; Proof by case on a boolean ;)
+def case :
+  P : (Bool -> cc.eT prop) ->
+  proof (P true) ->
+  proof (P false) ->
+  b : Bool ->
+  proof (P b).
+[H] case _ H _ true  --> H
+[H] case _ _ H false --> H.
+
 (; Operations ;)
 (; polymorphic if .. then .. else .. ;)
 def ite :
