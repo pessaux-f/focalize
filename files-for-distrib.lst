@@ -459,13 +459,14 @@
 ./focalize/focalizec/src/stdlib/dk_string.sk
 ./focalize/focalizec/src/stdlib/dk_sum.sk
 ./focalize/focalizec/src/stdlib/dk_tuple.sk
+./focalize/focalizec/src/stdlib/sttforall.dk
+./focalize/focalizec/src/stdlib/zen.sk
 ./focalize/focalizec/src/stdlib/fix.fcl
 ./focalize/focalizec/src/stdlib/focal.sk
 ./focalize/focalizec/src/stdlib/generic_proof_cases.v
 ./focalize/focalizec/src/stdlib/lattices.fcl
 ./focalize/focalizec/src/stdlib/Makefile
 ./focalize/focalizec/src/stdlib/ml_builtins.ml
-./focalize/focalizec/src/stdlib/modulogic.sk
 ./focalize/focalizec/src/stdlib/orders.fcl
 ./focalize/focalizec/src/stdlib/orders_and_lattices.fcl
 ./focalize/focalizec/src/stdlib/products.fcl
