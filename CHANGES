@@ -10,7 +10,7 @@
   backend has been improved.
 - Support for recursive definitions in Dedukti backend has benn
   developped.
-- The targeted Dedukti version has been updated to v2.4
+- The targeted Dedukti version has been updated to v2.6.0.
 - Mutually recursive structural methods allowed.
 - Mutually recursive type definitions allowed.
 - Multiple structural termination proofs for mutually recursive functions.
@@ -21,7 +21,7 @@
 - Bug in renaming of catchall patterns into fresh variables.
 - Structural termination verified by the compiler.
 - Warnings removed in the compiler.
-- Various bug fixes
+- Various bug fixes.
 
 
 # Focalize 0.9.1
