@@ -57,11 +57,10 @@ $(focal)
 
 <div id="content">
   <p>
-    Mirrors: <a href="http://focalize.inria.fr/">INRIA</a>,
-    <a href="https://focalize.ensta-paristech.fr">ENSTA</a>,
-    ENSIIE (<img src="imgs/warn_icon.gif" align="middle"> currently down).
+    Mirror: <a href="http://focalize.inria.fr/">INRIA</a>,
+    <a href="https://focalize.ensta-paristech.fr">ENSTA</a>
   </p>
-</div>
+-</div>
 
 <div class="spacer"></div>
 
@@ -116,6 +115,21 @@ $(focal)
   </p>
   </h3>
 </div>
+
+<div class="spacer"></div>
+
+<div id="main">
+<h3>Git migration to GitHub (2018-08-07)</h3><h3>
+<p>
+  $(focal) git repository moved to GitHub. You may find
+  <a href="https://github.com/pessaux-f/focalize">the project page</a> and
+  clone the repository from
+  <a href="https://github.com/pessaux-f/focalize.git">
+    https://github.com/pessaux-f/focalize.git</a>.
+</p>
+</h3>
+</div>
+
 
 <div class="spacer"></div>
 
