@@ -52,7 +52,7 @@ Since Zenon is now in a separate GIT repository, it must be cloned apart
 
 
 <div id="main">
-<h3>The latest release (as of 2016-05-30)<h3>
+<h3>The latest release (as of 2018-09-03)<h3>
 <p>
 <a href="$(project_archive_name)">$(project_archive_name)</a> (tar-gzip).
 <br />
