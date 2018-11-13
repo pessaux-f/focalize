@@ -17,7 +17,7 @@
 include ../.config_var
 
 
-CAMLFLAGS = -warn-error $(WARN_ERROR)
+CAMLFLAGS = -warn-error $(WARN_ERROR) -unsafe-string
 
 # Variables CAMLBYT, CAMLBIN, CAMLLEX, CAMLYACC, CAMLDEP and CAMLDOC are
 # defined at configuration time their value is recorded in ../.config_var.
