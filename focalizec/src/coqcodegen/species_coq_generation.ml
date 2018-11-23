@@ -3198,7 +3198,7 @@ let generate_termination_proof_for_Function ctx print_ctx env ~self_manifest
 
     {b Visibility}: Not exported outside this module.
  *************************************************************************** *)
-let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
+let generate_defined_recursive_let_definition_non_structural ctx print_ctx env
     ~self_manifest generated_fields from name params scheme body opt_term_pr
     ai =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -3414,9 +3414,9 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
 
 
 (** ***************************************************************************
-    {b Descr}: Generates the definition of a recursive function using
-    "Fixpoint" instead of "Function". This function is assumed to be
-    structurally recursive with its argument [decr_arg_name] decreasing.
+    {b Descr}: Generates the definition of a structurally terminating recursive
+    function using "Function". This function is assumed to be structurally
+    recursive with its argument [decr_arg_name] decreasing.
 
     {b Note}: The [ctx] must already contain the
     [scc_lambda_lift_params_mapping] for all the mutually recursive defined
@@ -3424,7 +3424,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
 
     {b Visibility}: Not exported outside this module.
  *************************************************************************** *)
-let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
+let generate_defined_recursive_let_definition_structural ctx print_ctx env
     generated_fields from name params decr_arg_name proof_loc scheme body ai
     ~self_manifest ~is_first ~is_last =
   (* First, ensure that the stated structural termination proof is valid. *)
@@ -3447,7 +3447,7 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Now, generate the prelude of the method introduced by "let rec". *)
   if is_first then
-    Format.fprintf out_fmter "@[<2>Fixpoint %a@ "
+    Format.fprintf out_fmter "@[<2>Function %a@ "
       Parsetree_utils.pp_vname_with_operators_expanded name
   else
     Format.fprintf out_fmter "@[<2>with %a@ "
@@ -3515,13 +3515,13 @@ let rec generate_recursive_let_definitions ctx print_ctx env ~self_manifest
                (* For the moment, if no termination proof is stated, we continue
                   using the "Function" scheme until better thing is
                   available. *)
-               generate_defined_recursive_let_definition_With_Function
+               generate_defined_recursive_let_definition_non_structural
                  ctx print_ctx env ~self_manifest generated_fields from name
                  params scheme body opt_term_pr ai
            | Some term_pr -> (
                match term_pr.Parsetree.ast_desc with
                | Parsetree.TP_structural decr_arg_name ->
-                   generate_defined_recursive_let_definition_With_Fixpoint
+                   generate_defined_recursive_let_definition_structural
                      ctx print_ctx env generated_fields from name params
                      decr_arg_name term_pr.Parsetree.ast_loc scheme body ai
                      ~self_manifest ~is_first ~is_last: (q = [])
@@ -3531,7 +3531,7 @@ let rec generate_recursive_let_definitions ctx print_ctx env ~self_manifest
                    (* For the moment, in other kinds of termination proof, we
                       continue using the "Function" scheme until better thing is
                       available. *)
-                   generate_defined_recursive_let_definition_With_Function
+                   generate_defined_recursive_let_definition_non_structural
                      ctx print_ctx env ~self_manifest generated_fields from name
                      params scheme body opt_term_pr ai
               )

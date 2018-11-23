@@ -133,7 +133,7 @@ let toplevel_let_def_compile ctx env let_def =
            | Some { Parsetree.ast_desc = Parsetree.TP_structural decr_arg ;
                     Parsetree.ast_loc = term_pr_loc } ->
                 ignore
-                  (Species_coq_generation.generate_defined_recursive_let_definition_With_Fixpoint
+                  (Species_coq_generation.generate_defined_recursive_let_definition_structural
                      ctx print_ctx env2
                      [(*generated_fields*)] dummy_history
                      one_bnd.Parsetree.ast_desc.Parsetree.b_name
@@ -153,7 +153,7 @@ let toplevel_let_def_compile ctx env let_def =
                    what is needed to enrich the environment is already
                    available in the [one_pre_comp_info]. *)
                 ignore
-                  (Species_coq_generation.generate_defined_recursive_let_definition_With_Function
+                  (Species_coq_generation.generate_defined_recursive_let_definition_non_structural
                      ctx print_ctx env2
                      ~self_manifest: None [(*generated_fields*)] dummy_history
                      one_bnd.Parsetree.ast_desc.Parsetree.b_name

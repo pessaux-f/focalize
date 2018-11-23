@@ -31,7 +31,7 @@ exception Attempt_proof_by_unknown_step of (Location.t * Parsetree.node_label)
 
 exception Termination_is_not_structural of (Location.t * Parsetree.vname)
 
-val generate_defined_recursive_let_definition_With_Function :
+val generate_defined_recursive_let_definition_non_structural :
   Context.species_compil_context ->
   Coq_pprint.coq_print_context ->
   Env.CoqGenEnv.t ->
@@ -46,7 +46,7 @@ val generate_defined_recursive_let_definition_With_Function :
   Env.TypeInformation.field_abstraction_info ->
   Misc_common.compiled_field_memory
 
-val generate_defined_recursive_let_definition_With_Fixpoint :
+val generate_defined_recursive_let_definition_structural :
   Context.species_compil_context ->
   Coq_pprint.coq_print_context ->
   Env.CoqGenEnv.t ->
