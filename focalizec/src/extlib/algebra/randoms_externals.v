@@ -13,7 +13,7 @@
 
 (* $Id: randoms_externals.v,v 1.1 2008-09-28 15:06:48 rr Exp $ *)
 
-Require basics.
+Require Import basics.
 Require ZArith.
 Open Scope Z_scope.
 
