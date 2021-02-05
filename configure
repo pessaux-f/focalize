@@ -43,6 +43,26 @@ usage () {
 }
 
 
+# Version strings < comparison. Do not use < since 5.12 is > 5.5 but compared
+# with the standard string comparison, 5.12 is < 5.5
+# Attention, return is interpreted in the context of a command return code.
+# Hence 0 means ok, hence "true" and different from 0 means error,
+# hence "false".
+version_lt ()
+{
+  if [ "$1" = "$2" ] ;
+  then return 1
+  fi
+  SORTED="`echo "$1\n$2" | sort -V | head -n1`"
+  echo $SORTED
+  if [ "$1" = "$SORTED" ] ;
+  then
+      return 0
+  fi
+  return 1
+}
+
+
 INTERACTIVE=false;
 INSTALL_PREFIX_GIVEN=false;
 INSTALL_PREFIX=/usr/local
@@ -686,7 +706,7 @@ then
 else
     echo "  Hevea DVI to HTML utility NOT found, HTML docs won't be generated."
 fi
-if [ "$COQ_VERSION" \< "8.5" ] ;
+if version_lt "$COQ_VERSION" "8.5" ;
 then
     echo $BOLDTAG"ATTENTION:$NORMALTAG you are using a version of Coq < 8.5. FoCaliZeC must be called with"
     echo "the $BOLDTAG\$COQ_VERSION_OPTION$NORMALTAG option."

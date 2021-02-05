@@ -95,7 +95,7 @@ FOCALIZE_COMP_FLAGS= -no-stdlib-path -I $(STDLIB_DIR) \
 CAMLBIN=ocamlopt
 CAMLBYT=ocamlc
 CAML_FLAGS=-w A -warn-error  $(WARN_ERROR) -dtypes -I $(STDLIB_DIR)
-CAML_INCLUDES=-I $(STDLIB_DIR)
+CAML_INCLUDES=-I $(STDLIB_DIR) -I `ocamlfind query num`
 
 ZVTOV_COMP_FLAGS=-script -zenon $(ZENON_COMPILER) -new
 ZENON_LIB_DIR=$(shell $(ZENON) -where)
