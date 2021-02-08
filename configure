@@ -708,7 +708,7 @@ fi
 if version_lt "$COQ_VERSION" "8.5" ;
 then
     echo $BOLDTAG"ATTENTION:$NORMALTAG you are using a version of Coq < 8.5. FoCaliZeC must be called with"
-    echo "the $BOLDTAG\$COQ_VERSION_OPTION$NORMALTAG option."
+    echo "the $BOLDTAG\-coq-version $COQ_VERSION_OPTION$NORMALTAG option."
 fi
 
 echo "Done. Now, please invoke: 'make all'"
