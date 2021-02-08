@@ -54,7 +54,6 @@ version_lt ()
   then return 1
   fi
   SORTED="`echo "$1\n$2" | sort -V | head -n1`"
-  echo $SORTED
   if [ "$1" = "$SORTED" ] ;
   then
       return 0
