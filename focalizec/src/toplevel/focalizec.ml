@@ -189,7 +189,7 @@ let compile_zv input_file_name =
     it is the most recent supported by FoCaLiZe. *)
 let make_coq_loadpath_string lib_paths =
   let coq_v = Configuration.get_coq_version () in
-  if coq_v <> "" && coq_v < "8.5" then (
+  if coq_v <> "" && Handy.version_string_lt coq_v "8.5" then (
     (* Same remark about the order of path than below for -Q. But here
        really need to reverse the list. *)
     String.concat " -I " ("" :: (List.rev (Files.get_lib_paths ())))
@@ -217,7 +217,7 @@ let compile_coq input_file_name =
   (* Coq always requires Zenon .v files. *)
   let for_zenon =
     let coq_v = Configuration.get_coq_version () in
-    if coq_v <> "" && coq_v < "8.5" then
+    if coq_v <> "" && Handy.version_string_lt coq_v "8.5" then
       " -I " ^ Installation.zenon_libdir
     else " -Q " ^ Installation.zenon_libdir ^ " \"\"" in
   let includes =

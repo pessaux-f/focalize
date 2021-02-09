@@ -107,3 +107,6 @@ val string_capitalize_ascii : string -> string
 val string_uncapitalize_ascii : string -> string
 val string_lowercase_ascii : string -> string
 val string_uppercase_ascii : string -> string
+
+(* Version string (<). *)
+val version_string_lt : string -> string -> bool

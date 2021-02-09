@@ -66,7 +66,18 @@ FOCALIZE_COMP_FLAGS=-no-stdlib-path \
  -coq-version $(COQ_VERSION) -focalize-doc
 FOCALIZEDEP=../focalizedep/focalizedep
 
-ifeq ($(shell test "$(COQ_VERSION)" != "" -a "$(COQ_VERSION)" \< "8.5"; echo $$?),0)
+VERSION_LT=bash -c '\
+  if [ "$$1" = "$$2" ] ; \
+  then return 1 \
+  fi \
+  SORTED="`echo "$$1\n$$2" | sort -V | head -n1`" \
+  if [ "$$1" = "$SORTED" ] ; \
+  then \
+      return 0 \
+  fi \
+  return 1' VERSION_LT
+
+ifeq ($(shell test "$(COQ_VERSION)" != "" -a ${VERSION_LT} "$(COQ_VERSION)" "8.5"; echo $$?),0)
 	COQ_INCLUDES= -I $(shell $(ZENON) -where)
 else
 	COQ_INCLUDES= -Q $(shell $(ZENON) -where) ""

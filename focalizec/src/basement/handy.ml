@@ -489,3 +489,23 @@ let string_lowercase_ascii s =
 
 let string_uppercase_ascii s =
   Bytes.unsafe_to_string (bytes_uppercase_ascii (Bytes.unsafe_of_string s))
+
+(* {b Descr} : performs [v1] < [v2] with these strings assumed to represent
+   version numbers. We cannot directly use string comparison since
+   "1.1O" is < "1.9" with regular comparison. *)
+let version_string_lt v1 v2 =
+  let rec check_lists l1 l2 =
+    match (l1, l2) with
+    | ([], []) -> false
+    | ([], _) -> true
+    | (_, []) -> false
+    | ((h1 :: q1), (h2 :: q2)) ->
+        let h1 = int_of_string h1 in
+        let h2 = int_of_string h2 in
+        if h1 < h2 then true
+        else if h1 > h2 then false
+        else check_lists q1 q2 in
+  let l1 = String.split_on_char '.' v1 in
+  let l2 = String.split_on_char '.' v2 in
+  check_lists l1 l2
+;;
