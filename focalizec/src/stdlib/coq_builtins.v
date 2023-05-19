@@ -405,16 +405,16 @@ Unset Implicit Arguments.
 
 (* A simple wf relation on Z *)
 Require Import ZArith.
-Definition Z_lt_wf (x y : Z) := Zabs_nat x < Zabs_nat y.
+Definition Z_lt_wf (x y : Z) := Z.abs_nat x < Z.abs_nat y.
 Lemma wf_Z_lt_wf : well_founded Z_lt_wf.
 Require Import Wf_nat.
 unfold Z_lt_wf in |- *.
-cut (well_founded (ltof _ Zabs_nat)).
+cut (well_founded (ltof _ Z.abs_nat)).
 intros H.
 simpl in H.
 unfold ltof in H.
 trivial.
-exact (well_founded_ltof Z Zabs_nat).
+exact (well_founded_ltof Z Z.abs_nat).
 Qed.
 
 (** The weak proof !!! Give it a Prop, and abracadabra ... it's proved ! *)
@@ -505,7 +505,7 @@ Let bi__int_max (x : Z) (y : Z) := if (Z_lt_dec y x) then x else y.
 Let bi__int_min (x : Z) (y : Z) := if (Z_lt_dec x y) then x else y.
 
 (* The equality on Z * Z. *)
-Let bi__int_eq (x : Z) (y : Z) := dec_to_bool (Z_eq_dec x y).
+Let bi__int_eq (x : Z) (y : Z) := dec_to_bool (Z.eq_dec x y).
 
 (* The < on Z * Z. *)
 Let bi__int_lt (x : Z) (y : Z) := dec_to_bool (Z_lt_dec x y).
@@ -520,7 +520,7 @@ Let bi__int_geq (x : Z) (y : Z) := dec_to_bool (Z_ge_dec x y).
 Let bi__int_gt (x : Z) (y : Z)  := dec_to_bool (Z_gt_dec x y).
 
 (* The absolute value on Z. *)
-Let bi__int_abs (x : Z) := Zabs x.
+Let bi__int_abs (x : Z) := Z.abs x.
 
 
 

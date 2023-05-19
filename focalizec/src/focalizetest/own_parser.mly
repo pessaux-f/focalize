@@ -25,19 +25,19 @@ let print_pos n =
                      (s.pos_cnum - s.pos_bol)
                      (e.pos_cnum - s.pos_bol)
      else
-      let end_pos = lb.lex_buffer_len - pos0 - 1 in     
+      let end_pos = lb.lex_buffer_len - pos0 - 1 in
       let line_start = ref 0 and line_end = ref 0 in
       for pos = 0 to end_pos do
-        if lb.lex_buffer.[pos + pos0] = '\n' then begin
+        if (Bytes.get lb.lex_buffer (pos + pos0)) = '\n' then begin
           if s.pos_cnum > pos then incr line_start;
           if e.pos_cnum > pos then incr line_end;
         end
       done;
      let line = ref 0 in
-     prerr_string "  "; 
+     prerr_string "  ";
      for pos = 0 to end_pos do
-       let c = lb.lex_buffer.[pos + pos0] in
-       if !line <= !line_start && c <> '\n' then 
+       let c = Bytes.get lb.lex_buffer (pos + pos0) in
+       if !line <= !line_start && c <> '\n' then
           prerr_char c;
        if c = '\n' then
          begin

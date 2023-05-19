@@ -66,6 +66,8 @@ FOCALIZE_COMP_FLAGS=-no-stdlib-path \
  -coq-version $(COQ_VERSION) -focalize-doc
 FOCALIZEDEP=../focalizedep/focalizedep
 
+# Bug hack to compare version string. Indeed, lexicographic order sucks since
+# for example 8.12 < 8.5.
 VERSION_LT=bash -c '\
   if [ "$$1" = "$$2" ] ; \
   then return 1 \

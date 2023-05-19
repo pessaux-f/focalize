@@ -53,15 +53,15 @@ let rec bw s1 s2 =
 
     [Rem] : Not exported outside this module.               *)
 (* ******************************************************** *)
-let prefix_string c s = String.concat c [String.create (0) ; s] ;;
+let prefix_string c s = String.concat c ["" ; s] ;;
 
 
 
 (* Préfixe une chaîne de caractères par "v" *)
 (* et la suffixe par un entier n donné.     *)
 let createNewVar s n =
-  let s1 = String.concat "v" [ String.create (0) ; s] in
-  String.concat s1 [String.create (0) ; string_of_int (n)]
+  let s1 = String.concat "v" [ "" ; s] in
+  String.concat s1 ["" ; string_of_int (n)]
 ;;
 
 

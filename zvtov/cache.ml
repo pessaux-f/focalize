@@ -22,9 +22,9 @@ let table = (Hashtbl.create 97 : (string, (int * int)) Hashtbl.t);;
 
 let read_const ic s =
   let l = String.length s in
-  let buf = String.create l in
+  let buf = Bytes.create l in
   really_input ic buf 0 l;
-  if buf <> s then raise Exit;
+  if (Bytes.to_string buf) <> s then raise Exit;
 ;;
 
 let rec read_len ic accu =
@@ -36,10 +36,10 @@ let rec read_len ic accu =
 let read_block ic =
   let n = read_len ic 0 in
   if n > 0 then begin
-    let buf = String.create n in
+    let buf = Bytes.create n in
     really_input ic buf 0 n;
     read_const ic "\x0A";
-    Some buf
+    Some (Bytes.to_string buf)
   end else begin
     None
   end
@@ -55,10 +55,10 @@ let rec skip_to_check ic =
 ;;
 
 let rec read_check ic =
-  let buf = String.create 32 in
+  let buf = Bytes.create 32 in
   really_input ic buf 0 32;
   read_const ic "\x0A";
-  buf
+  Bytes.to_string buf
 ;;
 
 let read_item ic =
@@ -81,7 +81,7 @@ let write_block oc data len =
   assert (String.length data >= len);
   if !with_cache then begin
     fprintf oc "%d\x0A" len;
-    output oc data 0 len;
+    output oc (Bytes.of_string data) 0 len;
     output_string oc "\x0A";
   end
 ;;
@@ -91,11 +91,11 @@ let write_checksum oc chk = fprintf oc "0\x0A%s\x0A" (Digest.to_hex chk);;
 let write_file oc file =
   let ic = open_in_bin file in
   let buflen = 4096 in
-  let buf = String.create buflen in
+  let buf = Bytes.create buflen in
   let rec loop () =
     let n = input ic buf 0 buflen in
     if n = 0 then () else begin
-      write_block oc buf n;
+      write_block oc (Bytes.to_string buf) n;
       loop ();
     end;
   in

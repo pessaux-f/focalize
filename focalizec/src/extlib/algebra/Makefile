@@ -100,7 +100,20 @@ CAML_INCLUDES=-I $(STDLIB_DIR) -I `ocamlfind query num`
 ZVTOV_COMP_FLAGS=-script -zenon $(ZENON_COMPILER) -new
 ZENON_LIB_DIR=$(shell $(ZENON) -where)
 
-ifeq ($(shell test "$(COQ_VERSION)" != "" -a "$(COQ_VERSION)" \< "8.5"; echo $$?),0)
+# Bug hack to compare version string. Indeed, lexicographic order sucks since
+# for example 8.12 < 8.5.
+VERSION_LT=bash -c '\
+  if [ "$$1" = "$$2" ] ; \
+  then return 1 \
+  fi \
+  SORTED="`echo "$$1\n$$2" | sort -V | head -n1`" \
+  if [ "$$1" = "$SORTED" ] ; \
+  then \
+      return 0 \
+  fi \
+  return 1' VERSION_LT
+
+ifeq ($(shell test "$(COQ_VERSION)" != "" -a ${VERSION_LT} "$(COQ_VERSION)" "8.5"; echo $$?),0)
 	COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
 else
 	COQ_INCLUDES=-Q $(ZENON_LIB_DIR) "" -Q $(STDLIB_DIR) ""

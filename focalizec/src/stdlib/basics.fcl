@@ -15,6 +15,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
+coq_require "coq_builtins" ;;
+
 (** {3 The very basic definitions for focalize code} *)
 
 (** [basics.fcl] contents:
@@ -662,7 +664,7 @@ theorem int_lt_le_trans :
     elim (Z_lt_dec x y). elim (Z_le_dec y z).
     intros Hle Hlt foo bar; clear foo bar.
     elim (Z_lt_dec x z). intros H; compute in |- *; trivial.
-    intros H; absurd (x < z)%Z; trivial. apply (Zlt_le_trans x y z); trivial.
+    intros H; absurd (x < z)%Z; trivial. apply (Z.lt_le_trans x y z); trivial.
     intros b a H Habs; compute in |- *; contradiction.
     intros b H; compute in H; contradiction. Qed.
     *}
@@ -769,8 +771,8 @@ proof =
     intros x y. unfold _gt_, _gt__equal_, _dash_.
     unfold coq_builtins.bi__int_gt, coq_builtins.bi__int_geq, coq_builtins.bi__int_minus. elim (Z_ge_dec x y).
     intros. compute in H. elim (Z_ge_dec (x - y) 0). intros. compute. auto.
-    intros. compute. apply Zge_le in a.  (* n <= m -> m >= n *)
-    elim b. apply Zle_ge. apply Zle_minus_le_0.  (* m <= n -> 0 <= n - m *)
+    intros. compute. apply Z.ge_le in a.  (* n <= m -> m >= n *)
+    elim b. apply Z.le_ge. apply Zle_minus_le_0.  (* m <= n -> 0 <= n - m *)
     assumption. intro. intro. elim (Z_ge_dec (x - y) 0). intros. compute.
     auto. intros. compute. compute in H. assumption. Qed.
     *}
@@ -785,7 +787,7 @@ theorem int_0_plus:
       unfold coq_builtins.bi__int_plus in |- *; intros x y Hxz;
       unfold _equal_, syntactic_equal;
       apply EQ_syntactic_equal; replace x with 0%Z; eauto with zarith.
-      symmetry  in |- *. apply decidable. apply Z_eq_dec. assumption. Qed.
+      symmetry  in |- *. apply decidable. apply Z.eq_dec. assumption. Qed.
     *}
 ;;
 
@@ -796,7 +798,7 @@ theorem int_lt_le_S:
     coq proof {*
       unfold _lt_, _lt__equal_, _plus_ in |- *; intros x y Hlt;
       unfold coq_builtins.bi__int_lt, coq_builtins.bi__int_leq, coq_builtins.bi__int_plus;
-      apply dec_IsTrue; fold (Zsucc x) in |- *; apply Zlt_le_succ;
+      apply dec_IsTrue; fold (Z.succ x) in |- *; apply Zlt_le_succ;
       trivial. exact (IsTrue_dec Hlt). Qed.
     *}
 ;;
@@ -830,8 +832,8 @@ theorem int_plus_plus:
       intros x y z t H1 H2;
       unfold _equal_;
       apply EQ_syntactic_equal; replace y with x. replace t with z. reflexivity.
-      apply decidable. apply Z_eq_dec. assumption.
-      apply decidable. apply Z_eq_dec. assumption. Qed.
+      apply decidable. apply Z.eq_dec. assumption.
+      apply decidable. apply Z.eq_dec. assumption. Qed.
     *}
 ;;
 
@@ -884,7 +886,7 @@ theorem int_plus_minus: all x y z : int,
       intros H;
       unfold coq_builtins.bi__int_minus, _equal_, syntactic_equal;
       apply EQ_syntactic_equal; apply Zplus_minus_eq;
-      symmetry  in |- *; apply (decidable _ _ _ (Z_eq_dec (x + y) z) H). Qed.
+      symmetry  in |- *; apply (decidable _ _ _ (Z.eq_dec (x + y) z) H). Qed.
     *}
 ;;
 
@@ -898,7 +900,7 @@ proof =
     intros H;
     unfold coq_builtins.bi__int_minus, _equal_, syntactic_equal;
     apply EQ_syntactic_equal; rewrite <- (Zplus_minus y x);
-    apply Zplus_eq_compat; trivial; apply decidable. apply Z_eq_dec.
+    apply Zplus_eq_compat; trivial; apply decidable. apply Z.eq_dec.
     assumption. Qed.
   *}
 ;;
