@@ -338,7 +338,6 @@
 ./focalize/focalizec/src/focalizetest/focalize_inter.mli
 ./focalize/focalizec/src/focalizetest/fresh_variable.ml
 ./focalize/focalizec/src/focalizetest/fresh_variable.mli
-./focalize/focalizec/src/focalizetest/lexer.ml
 ./focalize/focalizec/src/focalizetest/lexer.mli
 ./focalize/focalizec/src/focalizetest/lexer.mll
 ./focalize/focalizec/src/focalizetest/Makefile
