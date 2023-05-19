@@ -69,7 +69,7 @@ Axiom
     forall (A : Set) (x y : A),
     {x = y} + {x <> y} -> Is_true (bi__syntactic_equal _ x y) -> x = y.
 
-Hint Resolve syntactic_equal_refl syntactic_equal_sym syntactic_equal_trans EQ_syntactic_equal decidable:
+Local Hint Resolve syntactic_equal_refl syntactic_equal_sym syntactic_equal_trans EQ_syntactic_equal decidable:
   FoCeq.
 
 Theorem zenon_syntactic_equal :
@@ -112,7 +112,7 @@ Inductive In_list_Prop : Prop -> list_Prop -> Prop :=
       forall (P0 P : Prop) (l : list_Prop),
       In_list_Prop P l -> In_list_Prop P (Chce P0 l).
 
-Hint Immediate Here Deeper: in_list.
+Local Hint Immediate Here Deeper: in_list.
 
 (* Note: Null can not be exhaustive. *)
 Inductive exhaustive : list_Prop -> Prop :=
@@ -121,7 +121,7 @@ Inductive exhaustive : list_Prop -> Prop :=
       forall (P : Prop) (l : list_Prop),
       exhaustive l -> exhaustive (Chce P l).
 
-Hint Immediate Chce_left Chce_right: lst_Prop_dec.
+Local Hint Immediate Chce_left Chce_right: lst_Prop_dec.
 
 Lemma proof_lst_prop :
  forall (P : Prop) (l : list_Prop),
@@ -296,7 +296,7 @@ Proof.
 auto with bool.
 Defined.
 
-Hint Resolve simpl_contr: my_bool.
+Local Hint Resolve simpl_contr: my_bool.
 
 Lemma ContrIstrueFalse : forall A : Prop, Is_true false -> A.
 Proof.
@@ -317,7 +317,7 @@ Proof.
 exact I.
 Defined.
 
-Hint Resolve IstrueTrue: my_bool.
+Local Hint Resolve IstrueTrue: my_bool.
 
 (* a few lemmas very useful when dealing with bool *)
 
@@ -335,7 +335,7 @@ intros a b.
 case a; case b; auto with bool.
 Defined.
 
-Hint Resolve if_andb andb_if: my_bool.
+Local Hint Resolve if_andb andb_if: my_bool.
 
 (* Lemmas about andb *)
 
@@ -359,7 +359,7 @@ intros a.
 case a; simpl in |- *; trivial.
 Defined.
 
-Hint Resolve andb_elim1 andb_elim2 andb_intro: my_bool.
+Local Hint Resolve andb_elim1 andb_elim2 andb_intro: my_bool.
 
 Lemma notb_intro : forall a : bool, Is_true (negb a) -> ~ Is_true a.
 
@@ -370,7 +370,7 @@ Lemma notb_elim : forall a : bool, ~ Is_true a -> Is_true (negb a).
 intros a; case a; simpl in |- *; auto.
 Qed.
 
-Hint Resolve notb_intro notb_elim: my_bool.
+Local Hint Resolve notb_intro notb_elim: my_bool.
 (* Since a lot of lemmas begins with Is_true, it should be declared as opaque *
  * so that Auto can unify goals and theorems *)
 (* Rq: not so sure this is still needed if we construct explicit terms as

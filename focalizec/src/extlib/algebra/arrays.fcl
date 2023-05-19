@@ -39,7 +39,7 @@ let array_set =
 let array_create =
   internal basics#int ->'a -> array ('a)
   external
-  | caml -> {* Array.create *}
+  | caml -> {* Array.make *}
   | coq -> {* arrays_externals.bi__array_create __var_a *}
   | dedukti -> {* arrays_externals.bi__array_create __var_a *}
 ;;

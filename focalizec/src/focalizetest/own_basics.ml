@@ -229,7 +229,7 @@ let atom_of_cons_name n =
   let n1 = (string_letter_name n) in
   if n1 = "" then failwith "Un constructeur a pour nom une chaine vide ???" ;
   let mutable_n1 = Bytes.of_string n1 in
-  mutable_n1.[0] <- Handy.char_lowercase_ascii (n1.[0]) ;
+  Bytes.set mutable_n1 0 (Handy.char_lowercase_ascii (n1.[0])) ;
   Bytes.to_string mutable_n1
 ;;
 

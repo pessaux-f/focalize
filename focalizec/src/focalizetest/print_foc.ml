@@ -59,7 +59,7 @@ module MyFormat :
                   current := !current + !sep + l
                  );;
 
-        let print_int i = print_string (Pervasives.string_of_int i);;
+        let print_int i = print_string (Stdlib.string_of_int i);;
 
 end
 

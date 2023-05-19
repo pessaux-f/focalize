@@ -24,8 +24,8 @@ The installation of the FoCaLiZe will setup 2 components:
    graph viewer, testing tool).
 
 Installation requires some external tools, the most emblematic ones being:
- - OCaml (any recent version -- >= 3.11 --) should be fine.
- - Coq (any recent version -- >= 8.1pl5 --) should be fine.
+ - OCaml (any recent version -- >= 5.0 --) should be fine.
+ - Coq (any recent version -- >= 8.17.0 --) should be fine.
  - Zenon (either download an archive or get it from the GIT repository by
   invoking:
       git clone http://focalize.inria.fr/zenon.git

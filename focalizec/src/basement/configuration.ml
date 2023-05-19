@@ -17,7 +17,7 @@
 exception No_input_file ;;
 
 
-let focalize_version_number = (0, 9, 4) ;;
+let focalize_version_number = (0, 9, 5) ;;
 
 let focalize_short_version =
   let (major, minor, patch_level) = focalize_version_number in
