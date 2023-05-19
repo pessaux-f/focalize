@@ -119,6 +119,7 @@ clean:
 	rm -f parser_coq.mli
 	rm -f parser_dk.mli
 	rm -f zvtov *.bin *.byt
+	rm -f lexer.ml
 
 .PHONY: depend
 depend: $(IMPL) $(INTF)
