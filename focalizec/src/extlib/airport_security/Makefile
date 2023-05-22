@@ -32,7 +32,7 @@ FOCALIZE_COMP_FLAGS = -no-stdlib-path -I $(STDLIB_DIR)
 CAML_FLAGS = -w A -warn-error $(WARN_ERROR) -dtypes -I $(STDLIB_DIR)
 
 #From Makefile.config ZENON_LIB_DIR
-COQ_INCLUDES = -I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
+COQ_INCLUDES = -Q $(ZENON_LIB_DIR) "" -Q $(STDLIB_DIR) ""
 
 include $(ROOT_DIR)/Makefile.common
 
