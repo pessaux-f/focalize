@@ -120,6 +120,24 @@ $(focal)
 
 
 <div id="main">
+<h3>New release (0.9.5) of the $(focal) environment (2023-05-22)</h3><h3>
+<p>
+  The new release of the $(focal) environment,
+  <code>$(project_name) 0.9.5</code>,
+  is now available.
+  <br>
+  After being broken for a long time due to changes in <code>OCaml</code> and
+  <code>Coq</code>, this version is now compatible with the recent versions
+  of <code>OCaml</code> (5.0.0) and <code>Coq</code> (8.17.0). As a side
+  effect, this makes $(focal) available on Mac Silicon (M1/M2).
+  <br>
+  The distribution is available from the dedicated
+  <a href="https://github.com/pessaux-f/focalize">GitHub repository</a>.
+</p>
+</h3>
+</div>
+
+<div id="main">
 <h3>New release (0.9.2) of the $(focal) environment (2018-09-03)</h3><h3>
 <p>
   The new release of the $(focal) environment,
