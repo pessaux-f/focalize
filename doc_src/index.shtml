@@ -35,8 +35,6 @@ $(focal)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <a href="resources/">Resources</a>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<a href="bugzilla/">Bug Tracking (<img src="imgs/warn_icon.gif" align="middle"> currently down)</a>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <a href="contacts/">Contacts</a>
 
 </div>
@@ -55,12 +53,6 @@ $(focal)
   </p>
 </div>
 
-<div id="content">
-  <p>
-    Mirror: <a href="http://focalize.inria.fr/">INRIA</a>,
-    <a href="https://focalize.ensta-paristech.fr">ENSTA</a>
-  </p>
--</div>
 
 <div class="spacer"></div>
 
