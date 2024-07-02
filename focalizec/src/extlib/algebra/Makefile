@@ -223,7 +223,7 @@ clean:
 
 # Do not yet compile in Coq
 big_integers.ml: big_integers.fcl
-	$(FOCALIZEC) -no-stdlib-path -I $(STDLIB_DIR) -no-coq-code -no-dedukti-code $<
+	$(FOCALIZEC) -no-stdlib-path $(CAML_INCLUDES) -no-coq-code -no-dedukti-code $<
 #End temporary
 
 # Should be generated ?
